@@ -1,5 +1,6 @@
 import { isIP } from "node:net";
 import type { Scenario } from "./types";
+import { assertValidSlo } from "./slo";
 
 export interface TargetPolicy {
   readonly allowRemoteTargets: boolean;
@@ -37,6 +38,7 @@ export function validateScenario(input: Scenario, policy: TargetPolicy): Scenari
     (!Number.isInteger(input.arrivalRate) || (input.arrivalRate ?? 0) < 1 || (input.arrivalRate ?? 0) > 500)) {
     throw new Error("Arrival rate must be between 1 and 500 iterations/s");
   }
+  if (input.slo) assertValidSlo(input.slo);
   if (!input.id || !input.name || input.name.length > 80) throw new Error("Invalid scenario identity");
   return input;
 }

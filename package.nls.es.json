@@ -16,5 +16,7 @@
   "setting.duration": "Duración de cada prueba en segundos (5–120).",
   "setting.vus": "Límite máximo de usuarios virtuales concurrentes (1–100).",
   "command.profile": "Capturar perfil del runtime Go",
-  "setting.goProfilerOrigin": "Origen local net/http/pprof de Go (127.0.0.1 o [::1] literal). La captura nunca se ejecuta automáticamente."
+  "setting.goProfilerOrigin": "Origen local net/http/pprof de Go (127.0.0.1 o [::1] literal). La captura nunca se ejecuta automáticamente.",
+  "command.slo": "Configurar objetivo de servicio P95",
+  "setting.sloP95": "Latencia P95 máxima opcional en milisegundos; 0 desactiva la evaluación SLO."
 }

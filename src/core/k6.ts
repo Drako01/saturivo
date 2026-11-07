@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { cpus } from "node:os";
+import { cpus, totalmem } from "node:os";
 import { join } from "node:path";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import type { RunResult, Scenario } from "./types";
 import { readK6Summary } from "./metrics";
 import { runBoundedProcess } from "./process";
 import { fingerprintScenario } from "./fingerprint";
+import { assessSlo } from "./slo";
 import { validateScenario, type TargetPolicy } from "./validation";
 
 export function renderK6Script(scenario: Scenario, output: string): string {
@@ -48,6 +49,13 @@ export async function runK6(
 ): Promise<RunResult> {
   const safeScenario = validateScenario(scenario, policy);
   if (signal.aborted) throw new Error("Cancelled");
+  const version = await runBoundedProcess({
+    binary, args: ["version"], cwd: workspaceStorage,
+    timeoutMs: 5000, maxOutputBytes: 2048, signal,
+    env: { ...process.env, K6_NO_USAGE_REPORT: "true" },
+  });
+  if (version.exitCode !== 0) throw new Error("Could not determine k6 version");
+  const k6Version = (version.stdout + version.stderr).trim().slice(0, 160);
   const id = randomUUID();
   const startedAt = new Date().toISOString();
   const runDirectory = join(workspaceStorage, "temporary", id);
@@ -84,8 +92,10 @@ export async function runK6(
     return {
       schemaVersion: 1, id, startedAt, endedAt: new Date().toISOString(),
       engine: "k6", scenario: safeScenario, scenarioHash: fingerprintScenario(safeScenario), metrics,
+      sloAssessment: assessSlo(metrics, safeScenario.slo),
       environment: { platform: process.platform, arch: process.arch,
-        node: process.version, cpuCount: cpus().length },
+        node: process.version, cpuCount: cpus().length,
+        cpuModel: cpus()[0]?.model ?? "unknown", totalMemoryBytes: totalmem(), k6Version },
       warnings,
     };
   } finally {

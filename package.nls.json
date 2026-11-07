@@ -16,5 +16,7 @@
   "setting.duration": "Duration per test in seconds (5–120).",
   "setting.vus": "Hard ceiling on concurrent virtual users (1–100).",
   "command.profile": "Capture Go Runtime Profile",
-  "setting.goProfilerOrigin": "Local Go net/http/pprof origin (literal 127.0.0.1 or [::1]). Profiles are never collected automatically."
+  "setting.goProfilerOrigin": "Local Go net/http/pprof origin (literal 127.0.0.1 or [::1]). Profiles are never collected automatically.",
+  "command.slo": "Configure P95 Service Level Objective",
+  "setting.sloP95": "Optional maximum P95 latency in milliseconds; 0 disables SLO evaluation."
 }

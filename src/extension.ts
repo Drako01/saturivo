@@ -45,6 +45,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
         runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
         compare: "saturivo.compare", export: "saturivo.export",
+        configureSlo: "saturivo.configureSlo",
         goRace: "saturivo.goRace", goBench: "saturivo.goBench",
         captureGoProfile: "saturivo.captureGoProfile", cancel: "saturivo.cancel",
       };
@@ -97,10 +98,28 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     this.refresh();
   }
 
+  async configureSlo(): Promise<void> {
+    const value = await vscode.window.showInputBox({
+      title: this.t("configureSlo"),
+      prompt: this.t("sloPrompt"),
+      value: String(this.config().get<number>("sloMaxP95Ms", 0)),
+      validateInput: input => {
+        const parsed = Number(input);
+        return Number.isFinite(parsed) && (parsed === 0 || parsed >= 1 && parsed <= 120_000) ?
+          undefined : "P95 SLO must be 0 (disabled) or 1–120000 ms";
+      },
+    });
+    if (value === undefined) return;
+    await this.config().update("sloMaxP95Ms", Number(value), vscode.ConfigurationTarget.Workspace);
+    this.refresh();
+  }
+
   private scenario(preset: Preset): Scenario {
     const max = this.maxVus();
     const duration = this.config().get<number>("durationSeconds", 10);
-    const common = { target: this.target(), method: "GET" as const, durationSeconds: duration };
+    const maxP95Ms = this.config().get<number>("sloMaxP95Ms", 0);
+    const common = { target: this.target(), method: "GET" as const, durationSeconds: duration,
+      ...(maxP95Ms > 0 ? { slo: { maxP95Ms } } : {}) };
     switch (preset) {
       case "smoke":
         return { ...common, id: "smoke", name: "Smoke", model: "constant-vus", virtualUsers: 1 };
@@ -280,6 +299,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const actions: Record<string, () => Promise<void> | void> = {
     openHome: () => app.openHome(),
     configureTarget: () => app.configureTarget(),
+    configureSlo: () => app.configureSlo(),
     runSmoke: () => app.runPreset("smoke"),
     runStress: () => app.runPreset("stress"),
     runArrival: () => app.runPreset("arrival"),

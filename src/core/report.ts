@@ -17,6 +17,8 @@ export function markdownReport(run: RunResult, comparison?: Comparison): string 
     "- Engine: k6",
     "- Scenario: " + safe(run.scenario.name),
     "- Scenario SHA-256: `" + fingerprintScenario(run.scenario) + "`",
+    "- SLO: " + (run.sloAssessment?.status ?? "not-configured"),
+    "- k6 version: " + safe(run.environment.k6Version ?? "unknown"),
     "- Target: " + safe(run.scenario.target),
     "- Model: " + run.scenario.model,
     "- VUs: " + run.scenario.virtualUsers,
@@ -33,6 +35,8 @@ export function markdownReport(run: RunResult, comparison?: Comparison): string 
     "| P99 | " + num(run.metrics.p99Ms) + " ms |",
     "| Dropped iterations | " + run.metrics.droppedIterations + " |",
   ];
+  if (run.sloAssessment?.violations.length) lines.push("", "## SLO findings", "",
+    ...run.sloAssessment.violations.map(value => "- " + safe(value)));
   if (comparison) lines.push("", "## Relative comparison", "", "- Classification: " + comparison.status,
     "- P95 delta: " + num(comparison.deltaP95Percent) + "%",
     "- RPS delta: " + num(comparison.deltaRpsPercent) + "%",

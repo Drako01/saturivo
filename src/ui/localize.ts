@@ -15,6 +15,7 @@ const english: Dictionary = {
   profileConsent: "Collect sensitive Go runtime profiling evidence from",
   profileAuthorize: "Capture profile", profileRunning: "Collecting Go profile",
   profileSaved: "Profile saved locally",
+  slo: "SLO", configureSlo: "Configure P95 SLO", sloPrompt: "Maximum acceptable P95 latency in ms (0 disables SLO)",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -31,6 +32,7 @@ const spanish: Dictionary = {
   profileConsent: "Recopilar evidencia sensible del runtime Go desde",
   profileAuthorize: "Capturar perfil", profileRunning: "Capturando perfil Go",
   profileSaved: "Perfil guardado localmente",
+  slo: "SLO", configureSlo: "Configurar SLO P95", sloPrompt: "Latencia P95 máxima aceptable en ms (0 desactiva el SLO)",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;

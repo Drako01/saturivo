@@ -1,6 +1,18 @@
 export type LoadModel = "constant-vus" | "constant-arrival-rate";
 export type HttpMethod = "GET" | "HEAD";
 
+export interface SloDefinition {
+  readonly maxP95Ms?: number;
+  readonly maxP99Ms?: number;
+  readonly maxErrorPercent?: number;
+  readonly minThroughputRps?: number;
+}
+
+export interface SloAssessment {
+  readonly status: "pass" | "fail" | "inconclusive" | "not-configured";
+  readonly violations: readonly string[];
+}
+
 export interface Scenario {
   readonly id: string;
   readonly name: string;
@@ -10,6 +22,7 @@ export interface Scenario {
   readonly durationSeconds: number;
   readonly virtualUsers: number;
   readonly arrivalRate?: number;
+  readonly slo?: SloDefinition;
 }
 
 export interface Metrics {
@@ -32,12 +45,16 @@ export interface RunResult {
   readonly scenario: Scenario;
   /** Added in the Phase 1 rollout; older schemaVersion 1 reports omit this field. */
   readonly scenarioHash?: string;
+  readonly sloAssessment?: SloAssessment;
   readonly metrics: Metrics;
   readonly environment: {
     readonly platform: string;
     readonly arch: string;
     readonly node: string;
     readonly cpuCount: number;
+    readonly cpuModel?: string;
+    readonly totalMemoryBytes?: number;
+    readonly k6Version?: string;
   };
   readonly warnings: readonly string[];
 }

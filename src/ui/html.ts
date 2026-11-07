@@ -20,7 +20,7 @@ export function dashboard(state: DashboardState, locale: string): string {
   const t = (key: string): string => html(translate(locale, key));
   const nonce = randomBytes(16).toString("hex");
   const actions = [
-    ["configureTarget", "configure", false],
+    ["configureTarget", "configure", false], ["configureSlo", "configureSlo", state.busy],
     ["runSmoke", "smoke", state.busy], ["runStress", "stress", state.busy],
     ["runArrival", "arrival", state.busy], ["compare", "compare", state.busy],
     ["export", "export", !state.latest], ["goRace", "race", state.busy],
@@ -34,6 +34,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     ["requests", String(metric.requests)], ["rps", format(metric.requestsPerSecond)],
     ["p95", format(metric.p95Ms)], ["p99", format(metric.p99Ms)],
     ["errors", format(metric.failedRate * 100) + "%"],
+    ["slo", state.latest?.sloAssessment?.status ?? "not-configured"],
   ].map(([label, value]) => "<div class='metric'><span>" + t(String(label)) +
     "</span><strong>" + html(String(value)) + "</strong></div>").join("") : "";
   const history = state.history.length
