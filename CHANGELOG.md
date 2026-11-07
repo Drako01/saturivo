@@ -2,6 +2,9 @@
 
 ## [Unreleased] — 0.1.1 Enterprise AAAA implementation
 
+- Hardened v2 evidence roundtrip, SLO/status consistency and independent 3×3 host comparisons; rejected incomplete k6 HTTP metrics rather than reporting false zeros.
+- Fixed Markdown reporter string escaping and redacted URL query parameters by default; full-fidelity JSON export now requires an explicit bilingual privacy confirmation.
+
 - Upgrade work begins from the verified 0.1.0 preview baseline.
 - Rebuilt the Control Center as a reusable editor-tab WebviewPanel launched from the Activity Bar, with four responsive ES/EN sections, accessible tab navigation, metric cards, an observed-P95 trend and reorganized diagnostics/history.
 - Added an editor-tab custom HTTP scenario v2 form (GET/HEAD, closed/open loop) with strict host-side validation, workload budgets and local form state.

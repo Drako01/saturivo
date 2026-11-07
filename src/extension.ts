@@ -486,6 +486,12 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
 
   async exportJson(): Promise<void> {
     if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: run a test first."); return; }
+    // JSON exports remain lossless for reimport; explicit consent protects target URLs and host metadata.
+    const confirm = this.t("exportJsonConfirm");
+    const approval = await vscode.window.showWarningMessage(
+      this.t("exportJsonDisclosure"), { modal: true }, confirm
+    );
+    if (approval !== confirm) return;
     const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
     const uri = await vscode.window.showSaveDialog({
       defaultUri: vscode.Uri.joinPath(folder, "saturivo-run.json"),
@@ -506,8 +512,11 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     const metadata = await vscode.workspace.fs.stat(uri);
     if (metadata.size <= 0 || metadata.size > 100_000) throw new Error(this.t("importInvalid"));
     let candidate: unknown;
-    try { candidate = JSON.parse(Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf8")); }
-    catch { throw new Error(this.t("importInvalid")); }
+    try {
+      const bytes = await vscode.workspace.fs.readFile(uri);
+      if (bytes.byteLength > 100_000) throw new Error(this.t("importInvalid"));
+      candidate = JSON.parse(Buffer.from(bytes).toString("utf8"));
+    } catch { throw new Error(this.t("importInvalid")); }
     if (!isStoredRun(candidate)) throw new Error(this.t("importInvalid"));
     await this.store.save(candidate);
     await this.loadHistory();

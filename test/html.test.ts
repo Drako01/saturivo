@@ -189,3 +189,9 @@ test("busy state identifies indeterminate progress and blocks unsafe scenario co
   assert.match(markup, /data-preset="ramp" disabled/);
   assert.match(markup, /type="submit" disabled/);
 });
+
+test("sensitive JSON export disclosure is available in English and Spanish", () => {
+  assert.match(translate("en", "exportJsonDisclosure"), /unredacted JSON/);
+  assert.match(translate("es-AR", "exportJsonDisclosure"), /JSON sin redactar/);
+  assert.match(translate("es-AR", "exportJsonConfirm"), /Exportar JSON/);
+});

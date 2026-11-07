@@ -5,15 +5,24 @@
 Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) define el alcance; [tracker de versión](RELEASE_0_1_1_CHECKLIST.md) registra los gates de release. PASS significa implementación, prueba y evidencia del **SHA indicado**. PARTIAL indica funciones implementadas sin todos los casos o plataformas. NOT RUN nunca equivale a aprobado.
 
 
+
+## Engineering block — export privacy and faithful reporting (2026-11-07)
+
+- Markdown reports now preserve ordinary letters and redact URL query values by default, with an explicit statement that the workload fingerprint refers to the original target.
+- Lossless JSON export remains available only after a modal privacy disclosure/consent, because redacting the URL without schema/provenance migration would silently change experiment identity.
+- JSON import additionally checks actual read size (not only pre-read stat). ES/EN strings cover disclosure and approval.
+- Tests target report redaction/preserved characters and bilingual disclosure. **CI: PENDING** until verified on its final SHA.
+- Remaining risks: path-based tokens and intentionally exported raw JSON can still carry sensitive values; manual review and release adversarial QA remain mandatory.
+
 ## Engineering block — evidence integrity (2026-11-07)
 
-**Implementation staged for the next PR #5 commit. CI for these modifications: NOT RUN until the exact SHA is checked.**
+**Verified on `b54f902e3418ef86a545d3aca2452254a486aa0d`: [CI #42412224059](https://github.com/Drako01/saturivo/actions/runs/42412224059) completed SUCCESS (7/7, Linux/Windows/macOS, k6, Go, VS Code Extension Host and screenshots).**
 
 - `src/core/history.ts`: validates v2 scenario SHA, SLO conclusions against the stored metrics and effective request cap, nonzero requests/P95 and HTTP status counts; legacy v1 remains readable.
 - `src/core/metrics.ts`: rejects incomplete k6 HTTP summaries rather than converting missing failure rates/P99 into fabricated zeroes.
 - `src/core/statistics.ts`: rejects repeated run IDs across 3+3 cohorts and dissimilar or partially missing environment fingerprints; `src/core/comparison.ts` treats one-sided environment evidence as INCONCLUSIVE.
 - Focused regression cases added in `test/history.test.ts`, `test/metrics.test.ts`, `test/statistics.test.ts`, `test/comparison.test.ts`.
-- **Status:** IMPLEMENTED (pending pushed commit and CI). Prior CI 42411578910 was 7/7 green on `5fabbbb`, not on these edits.
+- **Status:** PASS for the integrity block at `b54f902` with CI #42412224059; this is not release sign-off for subsequent modifications.
 - **Next:** exact-SHA CI inspection; then further security/export/release gaps. No automatic load, publication, merge or tag.
 
 ## Handoff 2026-11-07 — auditoría de continuación

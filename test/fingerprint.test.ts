@@ -47,3 +47,13 @@ test("v2 ramp stages participate in the stable workload fingerprint", () => {
   }));
   assert.equal(fingerprintScenario(ramp), fingerprintScenario({ ...ramp, id: "other", name: "Other" }));
 });
+
+test("Markdown report retains ordinary letters and redacts sensitive query strings", () => {
+  const exposed = run({ ...scenario, name: "Concurrent runners",
+    target: "http://127.0.0.1:8080/health?api_key=DO_NOT_LEAK&token=secret" });
+  const rendered = markdownReport(exposed);
+  assert.match(rendered, /Concurrent runners/);
+  assert.match(rendered, /health\?\[query redacted\]/);
+  assert.doesNotMatch(rendered, /DO_NOT_LEAK|token=secret/);
+  assert.match(rendered, /scenario SHA identifies the original workload/);
+});

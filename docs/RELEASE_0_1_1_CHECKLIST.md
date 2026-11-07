@@ -6,7 +6,9 @@ This document is the **release subset** of [the single current AAAA checklist](E
 
 ## Handoff de release — 2026-11-07
 
-- Integridad de evidencias/comparaciones reforzada en el bloque siguiente a `5fabbbb`; ver checklist maestro. **Sin PASS** hasta CI verde del SHA del cambio.
+- Export Markdown con query de URL redactada; JSON sin pérdida bajo confirmación de privacidad. **CI/UX todavía pendientes de comprobar en el SHA final.**
+
+- Integridad de evidencias/comparaciones reforzada en el bloque siguiente a `5fabbbb`; ver checklist maestro. **PASS en bloque de integridad:** `b54f902` con [CI #42412224059](https://github.com/Drako01/saturivo/actions/runs/42412224059) 7/7. El siguiente bloque vuelve a quedar pendiente de verificación SHA.
 
 
 - El estado técnico consolidado y los gates medibles están en [ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); este archivo se limita a las condiciones de publicación.

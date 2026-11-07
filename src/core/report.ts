@@ -3,7 +3,12 @@ import { fingerprintScenario } from "./fingerprint";
 import type { StatisticalComparison } from "./statistics";
 
 function safe(value: string): string {
-  return value.replace(/[|\\r\\n]/g, " ").replace(/[<>]/g, "");
+  return value.replace(/[|\r\n]/g, " ").replace(/[<>]/g, "");
+}
+/** Preserve the experiment fingerprint, but never print URL query secrets in Markdown. */
+function reportTarget(raw: string): string {
+  const queryStart = raw.indexOf("?");
+  return safe(queryStart >= 0 ? raw.slice(0, queryStart) + "?[query redacted]" : raw);
 }
 function num(value: number, digits = 2): string {
   return Number.isFinite(value) ? value.toFixed(digits) : "n/a";
@@ -21,7 +26,10 @@ export function markdownReport(run: RunResult, comparison?: Comparison,
     "- Scenario SHA-256: `" + fingerprintScenario(run.scenario) + "`",
     "- SLO: " + (run.sloAssessment?.status ?? "not-configured"),
     "- k6 version: " + safe(run.environment.k6Version ?? "unknown"),
-    "- Target: " + safe(run.scenario.target),
+    "- Target: " + reportTarget(run.scenario.target),
+    ...(run.scenario.target.includes("?") ? [
+      "- Privacy: URL query redacted in this Markdown report; the scenario SHA identifies the original workload.",
+    ] : []),
     "- Model: " + run.scenario.model,
     "- VUs: " + run.scenario.virtualUsers,
     "- Duration: " + run.scenario.durationSeconds + " seconds",
@@ -64,7 +72,7 @@ export function markdownReport(run: RunResult, comparison?: Comparison,
     "- P95 delta: " + num(comparison.deltaP95Percent) + "%",
     "- RPS delta: " + num(comparison.deltaRpsPercent) + "%",
     "- Error rate delta: " + num(comparison.deltaFailedPercentagePoints) + " percentage points",
-    "- Caveats: " + (comparison.reasons.join("; ") || "One-run heuristic, not a statistical proof"));
+    "- Caveats: " + (comparison.reasons.map(safe).join("; ") || "One-run heuristic, not a statistical proof"));
   if (trials) lines.push("", "## Repeated trials (independent runs)", "",
     "- Method: " + trials.method,
     "- Result: " + trials.status,
@@ -73,7 +81,7 @@ export function markdownReport(run: RunResult, comparison?: Comparison,
     "- Median P95 delta: " + num(trials.deltaPercent) + "%",
     "- Empirical 95% interval: [" + num(trials.ciLowerPercent) + "%, " +
       num(trials.ciUpperPercent) + "%]",
-    "- Caveats: " + (trials.reasons.join("; ") || "Bootstrap interval, not a production guarantee"));
+    "- Caveats: " + (trials.reasons.map(safe).join("; ") || "Bootstrap interval, not a production guarantee"));
   if (run.warnings.length) lines.push("", "## Warnings", "", ...run.warnings.map(w => "- " + safe(w)));
   lines.push("", "> Measurements are local observations, not a guarantee of production capacity.", "");
   return lines.join("\n");
