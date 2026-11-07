@@ -8,6 +8,8 @@
 - Added explicit baseline choice before comparisons while preserving the 3+3 non-overlapping group constraint.
 - Added opt-in local Go runtime trace capture; real Go integration now also captures mutex and block profiles.
 - Added disposable Go, Node.js and Python HTTP fixtures executing the same real bounded k6 workload in CI.
+- Added a local-only WebSocket k6 probe with explicit consent, protocol-specific evidence and RFC6455 fixture-backed E2E.
+- Added controlled Go runtime fixtures for mutex contention and bounded goroutine growth; findings are observational, not causal claims.
 - Added reproducible npm license inventory, split by production/dev dependencies, and included the evidence in CI and protected release artifacts.
 - Removed the manifest's private flag: the repository and source package are public, while publication remains approval-gated.
 - Added a security threat model and reconciled the Master Plan checklist with the actual PR #5 state.
