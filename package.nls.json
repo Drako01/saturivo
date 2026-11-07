@@ -27,5 +27,6 @@
   "command.importJson": "Import Saved Run JSON",
   "command.clearProfiles": "Delete Captured Go Profiles",
   "command.ramp": "Run Bounded VU Ramp",
-  "command.correlateGo": "Capture Go Load Correlation"
+  "command.correlateGo": "Capture Go Load Correlation",
+  "command.websocket": "Probe local WebSocket"
 }
