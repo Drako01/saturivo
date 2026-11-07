@@ -77,3 +77,30 @@ test("bootstrap classifications are inconclusive when any trial reaches the requ
   assert.equal(gc.status, "inconclusive");
   assert.match(gc.reasons.join(" "), /Request budget reached/);
 });
+
+test("seeded repeatability: bounded identical noise is rarely misclassified as a regression", () => {
+  // A deterministic fixture-level risk probe, not a production false-positive guarantee.
+  let seed = 0x31415926;
+  const random = (): number => {
+    seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const noisy = (offset: number): number[] =>
+    Array.from({ length: 3 }, () => 100 + offset + 25 * (2 * random() - 1));
+  let falseClaims = 0;
+  let detectedRegressions = 0;
+  const rounds = 64;
+  for (let i = 0; i < rounds; i++) {
+    const before = runs(noisy(0));
+    const after = runs(noisy(0));
+    const control = compareTrialGroups(before, after);
+    if (control.status === "regression" || control.status === "improvement") falseClaims++;
+    // A separately seeded, intentionally delayed group should still produce evidence.
+    const worse = compareTrialGroups(before, runs(noisy(60)));
+    if (worse.status === "regression") detectedRegressions++;
+  }
+  assert(falseClaims <= 4,
+    "Excess false claims on unchanged noisy synthetic fixtures: " + falseClaims + "/" + rounds);
+  assert(detectedRegressions >= 56,
+    "Excess missed regressions with synthetic +60 ms latency: " + detectedRegressions + "/" + rounds);
+});
