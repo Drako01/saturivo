@@ -17,14 +17,14 @@ an older CI run as evidence of the final candidate.
 | A04 | VU/rate/duration/requests constrained across all v2 phases; cancellation stops process descendants | PARTIAL — WSL/Windows hostile cases pending |
 | A05 | Real k6 closed/open/ramp/phased fixture, valid P50/P95/P99 and observed arrival/status | IMPLEMENTED — exact release CI pending |
 | A06 | Scenario fingerprints and v1/v2 imports roundtrip without loss | PARTIAL — Extension Host migration E2E pending |
-| A07 | Independent 3×3 comparison never treats noise, missing environment or samples as proof | PARTIAL — repeated real-world noise pilot pending |
-| A08 | Go race/pprof/trace/source evidence and controlled GC observations without causal marketing claims | PARTIAL — overhead control, source E2E pending |
+| A07 | Independent 3×3 comparison never treats noise, missing environment or samples as proof | PARTIAL — 64 synthetic-noise probes added; CI and real-host variability pending |
+| A08 | Go race/pprof/trace/source evidence and controlled GC observations without causal marketing claims | PARTIAL — control/profile experiment added; CI and source E2E pending |
 | A09 | HTTP Go/Node/Python and opt-in WebSocket fixture evidence; unsupported capabilities explicit | PARTIAL — remote env E2E pending |
 | A10 | Keyboard, screen reader, ES/EN, light/dark, zoom 200% on complete editor workflow | PARTIAL — manual WCAG audit pending |
 | A11 | Redacted Markdown, explicit JSON export consent, SARIF verified findings, import/delete/retention | PARTIAL — roundtrip hosted QA pending |
 | A12 | TS strict + Linux/Windows/macOS unit/build + real Go/k6/Webview/Extension Host on **same final SHA** | NOT RUN for final SHA |
 | A13 | Threat model signed; SSRF, proxy, symlink, process and profile DoS matrices pass | PARTIAL — remaining adversarial matrix |
-| A14 | SBOM, notices/licenses, audit shipped code, checksum/provenance, install/upgrade from 0.1.0 | PARTIAL — final VSIX sign-off pending |
+| A14 | SBOM, notices/licenses, audit shipped code, checksum/provenance, install/upgrade from 0.1.0 | PARTIAL — notice requirement added, CI/final VSIX and external attestation pending |
 | A15 | Marketplace branding/icons/4 screenshots reflect final UI, no Preview, correct 0.2.0 version | PARTIAL — final screenshots intentionally deferred |
 | A16 | Manual owner authorization independently for merge, Git tag and marketplace/Open VSX publication | BLOCKED by design |
 

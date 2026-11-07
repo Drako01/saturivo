@@ -12,12 +12,12 @@
 |---|---|---|
 | R01 · Versionado/branding | Manifest 0.2.0, sin `preview`, 23 keywords, íconos, README/ES | Revisar screenshots finales después de finalizar código/UX |
 | R02 · Lockfile/CI | `npm ci` y TypeScript estricto Linux/Windows/macOS; [CI #42419518364](https://github.com/Drako01/saturivo/actions/runs/42419518364) PASS en SHA `18b5069` | Volver a ejecutar únicamente sobre el SHA final congelado |
-| R03 · Tráfico medido | k6 closed/open/ramp, fases v2, Go/Node/Python, WebSocket, Docker Compose; [CI #42419034596](https://github.com/Drako01/saturivo/actions/runs/42419034596) PASS | Revisar regresiones estadísticas/noise y migración E2E |
-| R04 · Go/IDE | Race/pprof/trace/GC/stack timeline y navegación de race a archivo-línea implementada | Validación CI exacta de source navigation, overhead inducido e IDE E2E |
+| R03 · Tráfico medido | k6/Go/Node/Python/WebSocket/Compose PASS en e8f8efa | Noise probe nuevo CI pendiente; host real y migración UI E2E abiertos |
+| R04 · Go/IDE | Race/pprof/trace/GC/navegación PASS en e8f8efa; experimento overhead agregado | Medidas nuevas CI pendiente, fuente IDE E2E por comprobar |
 | R05 · UX/accesibilidad | Centro de Control editor, formularios/inspector, ES/EN y Chromium keyboard smoke | NVDA/VoiceOver, contraste, zoom 200%, light/dark, flujos host y foco |
-| R06 · Seguridad | Threat model, DNS pinning, SSRF IPv6, no-follow, quotas, kill-tree, audit VSIX; **nuevo: trap real k6 proxy/302 local, CI pendiente** | DNS/proxy/rebinding remoto y procesos hostiles multi-OS, revisión |
-| R07 · Artifact | VSIX ZIP audit, hash SHA-256, manifest exact git HEAD, SBOM/licencias. [CI #42417954563](https://github.com/Drako01/saturivo/actions/runs/42417954563) PASS | Revisar el VSIX final exacto, notices/shipped audit y attestation |
-| R08 · Install/upgrade | VS Code 1.99 Extension Host Linux, VSIX 0.1.0→0.2.0 en Linux CI | E2E de persistencia/roundtrip y plataformas remotas soportadas |
+| R06 · Seguridad | DNS/SSRF IPv6, no-follow, kill-tree y trap k6 proxy/302 real PASS en e8f8efa | DNS/proxy remoto, procesos hostiles Windows/WSL y sign-off |
+| R07 · Artifact | ZIP audit/SHA-256/HEAD/SBOM/licencias PASS en e8f8efa; notices obligatorios agregados | Audit shipped, attestation externa y firma del VSIX definitivo |
+| R08 · Install/upgrade | VS Code 1.99 Extension Host Linux y VSIX 0.1.0→0.2.0 PASS en e8f8efa | Persistencia/roundtrip UI y plataformas remotas BLOCKED sin host |
 | R09 · Documentación visual | Render de producción y Chrome `--verify-only` sin crear imágenes | Generar y revisar **cuatro capturas únicamente al final** del PR |
 | R10 · Release governance | CI con checkout SHA del PR, pipeline protegido y sin deploy en PR | Firma maintainer y autorización independiente de merge / tag / Marketplace / Open VSX |
 
@@ -32,7 +32,8 @@
 
 ## Último estado verificable (2026-11-07)
 
-- Último SHA de CI **verde conocido** antes del bloque de navegación Go: `18b50695f1e40b41b8b37d3db0bb9ac7f0c5b0e0`, [run #42419518364](https://github.com/Drako01/saturivo/actions/runs/42419518364), 7 jobs PASS y screenshots SKIPPED deliberadamente.
-- Código nuevo de navegación Go: implementado en PR #5, **CI SHA exacto pendiente**, nunca asumir PASS hasta verificar el job.
-- Publicación: **BLOCKED**. Ningún tag, release, merge o despliegue fue autorizado.
+- [CI #42420415145](https://github.com/Drako01/saturivo/actions/runs/42420415145), SHA `e8f8efa7fb255d125b05188f8aca26403c462f2b`: siete jobs PASS, screenshot job skipped. La instalación/upgrade del VSIX y el test proxy/redirect local estuvieron incluidos.
+- Commits posteriores: overhead Go con JSON, statistical noise probe y `THIRD_PARTY_NOTICES.md` auditado. **No** heredar PASS hasta concluir CI del HEAD nuevo.
+- **BLOCKED:** WSL/SSH/Dev Containers, NVDA/VoiceOver y 200% manual, procesos Windows/WSL hostiles, pruebas DNS/proxy remoto, attestation externa y aprobación del owner. [Instrucciones de prueba](REMOTE_VALIDATION.md).
+- **NO MERGE, TAG, MARKETPLACE u OPEN VSX.** El PR permanece Draft.
 

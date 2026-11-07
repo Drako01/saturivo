@@ -87,3 +87,10 @@ single-line literal Markdown text, including image/link syntax. Rendering an
 attacker-provided `![image](https://...)` inside the Markdown preview must not
 initiate a fetch solely because it was an imported scenario name. This is
 defense-in-depth; JSON exports remain lossless by design and require consent.
+
+## Nueva evidencia y bloqueantes de seguridad (2026-11-07)
+
+- El fixture real local contra proxy heredado/redirect 302 está respaldado por [CI #42420415145](https://github.com/Drako01/saturivo/actions/runs/42420415145) en `e8f8efa`. No prueba redes remotas ni DNS rebinding.
+- `THIRD_PARTY_NOTICES.md` distingue shipped de dependencias de desarrollo. La auditoría VSIX exige el notice; CI del nuevo SHA pendiente. `saturivo.release.json` enlaza HEAD/SHA-256, **no** sustituye una attestation criptográfica externa.
+- El experimento `scripts/go-overhead.cjs` registra observaciones P95/RPS con control; no atribuye causalidad ni garantiza overhead nulo. Revisar JSON del mismo CI SHA.
+- WSL, Remote-SSH, Dev Containers, cleanup de procesos hostiles Windows/WSL, DNS/proxy remoto, zoom 200% y screen reader continúan sin evidencia de ejecución en los hosts correspondientes. Ver [REMOTE_VALIDATION.md](REMOTE_VALIDATION.md).
