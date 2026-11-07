@@ -69,3 +69,21 @@ test("busy state shows cancel and disables starting concurrent load", () => {
   assert.match(markup, /data-action="cancel"/);
   assert.match(markup, /aria-busy="true"/);
 });
+
+test("custom scenario editor is accessible, bounded, localized and explicit-action-only", () => {
+  const markup = dashboard({
+    target: "http://127.0.0.1:9090/health", busy: false, history: [], message: "",
+    maxVirtualUsers: 12, maxRequests: 1500, durationSeconds: 25,
+  }, "es-AR");
+  assert.match(markup, /id="custom-scenario"/);
+  assert.match(markup, /name="virtualUsers" required min="1" max="12"/);
+  assert.match(markup, /name="maxRequests" required min="100" max="1500"/);
+  assert.match(markup, /name="durationSeconds" required min="5" max="120"/);
+  assert.match(markup, /action:"runCustom",payload/);
+  assert.match(markup, /Editor de escenarios propios/);
+  assert.match(markup, /Destino autorizado activo/);
+  assert(!markup.includes("onload="));
+  const running = dashboard({ target: "http://127.0.0.1/", busy: true,
+    history: [], message: "" }, "en");
+  assert.match(running, /type="submit" disabled/);
+});
