@@ -94,3 +94,12 @@ defense-in-depth; JSON exports remain lossless by design and require consent.
 - `THIRD_PARTY_NOTICES.md` distingue shipped de dependencias de desarrollo. La auditoría VSIX exige el notice; CI del nuevo SHA pendiente. `saturivo.release.json` enlaza HEAD/SHA-256, **no** sustituye una attestation criptográfica externa.
 - El experimento `scripts/go-overhead.cjs` registra observaciones P95/RPS con control; no atribuye causalidad ni garantiza overhead nulo. Revisar JSON del mismo CI SHA.
 - WSL, Remote-SSH, Dev Containers, cleanup de procesos hostiles Windows/WSL, DNS/proxy remoto, zoom 200% y screen reader continúan sin evidencia de ejecución en los hosts correspondientes. Ver [REMOTE_VALIDATION.md](REMOTE_VALIDATION.md).
+
+## Evidencia auditada pre-capturas y límites del release (2026-11-07)
+
+- [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667), SHA `0d73879b63204010f4cccaef329cd611c0e9b48f`: 7/7 PASS. Incluye cancelación hostil de descendientes Windows, fixture real loopback k6 con proxy heredado y redirect 302 bloqueados, análisis de ZIP malicioso, `THIRD_PARTY_NOTICES.md`, inventario shipped, SBOM y hashes/manifiesto de origen.
+- VSIX 0.1.0→0.2.0 instalado con CLI real en Windows/macOS/Linux y almacenamiento v1/v2 preservado/migrado. Esto **no** demuestra diálogos de usuario reales o instalación remota WSL/SSH/Dev Containers.
+- El inventario `require()` de JavaScript distribuido y el ZIP auditor son verificaciones estructurales, **no** una auditoría binaria integral ni una attestation criptográfica externa. `saturivo.release.json` enlaza SHA/origen/hash, pero no firma el artefacto.
+- Cuatro capturas con datos sintéticos generadas en commit `6387739`, [workflow #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472). No prueban accesibilidad manual, seguridad ni condiciones reales de tráfico.
+- **BLOCKED para release:** DNS rebinding/proxy/remoto contra red de pruebas controlada, WSL procesos hostiles, NVDA/VoiceOver y zoom 200%, revisión manual de licencias/dependencias shipped, attestation externa en entorno protegido, CI definitivo posterior a capturas y firma del responsable.
+- Ningún test de estas matrices debe usar sistemas de terceros ni infraestructura productiva. [Comandos de host remoto](REMOTE_VALIDATION.md).
