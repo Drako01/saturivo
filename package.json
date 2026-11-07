@@ -250,7 +250,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.cjs",
     "smoke:manifest": "node scripts/verify-manifest.cjs",
-    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
     "vscode:prepublish": "npm run build",
     "test:integration:k6": "node scripts/k6-smoke.cjs",
@@ -263,7 +263,9 @@
     "verify:release": "node scripts/release-gate.cjs",
     "test:release-manifest": "node --test test/release-artifact.test.cjs",
     "screenshots:readme": "node scripts/capture-readme.cjs",
-    "test:integration:runtimes": "node scripts/runtime-matrix.cjs"
+    "test:integration:runtimes": "node scripts/runtime-matrix.cjs",
+    "licenses:report": "node scripts/license-inventory.cjs",
+    "test:licenses": "node --test test/license-inventory.test.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
