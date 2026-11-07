@@ -4,6 +4,12 @@
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
+## Auditoría VSIX estructural — gate de release 0.2.0
+
+- [x] Detección de entradas duplicadas/case-colliding, rutas peligrosas, symlinks, ZIP cifrado, ZIP64/multipart, metadata local/central inconsistente y compresión excesiva.
+- [x] Tests locales sintéticos 5/5 PASS; CI ejecuta el nuevo test en `npm run verify`.
+- [ ] Evidencia del artefacto real y CI del commit exacto; checksum/SBOM/provenance y upgrade instalable siguen gates separados.
+
 ## Seguridad IPv6 (implementación en rama; CI exacto pendiente)
 
 - Bloqueo de prefijos IPv6 de transición (6to4/Teredo/ORCHID), rangos de documentación con ceros no canónicos y 6bone; unit tests de DNS y URL literal. Resta matriz adversarial completa antes del sign-off.

@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Hardened VSIX ZIP central/local header audit against duplicate paths, symlink entries, encrypted archives, ZIP bombs, and unsupported metadata; added five adversarial tests to the multi-OS verification gate (exact commit CI pending).
+
 - Fixed exported SARIF tool metadata to read the packaged extension version instead of advertising 0.1.0; added a manifest-parity regression test. Consolidated v0.2.0 acceptance criteria and the six-phase gate summary (CI of exact commit pending).
 
 - Integrated optional local Go expvar GC/allocation observations into the before/during/after load timeline, with strictly allowlisted counters, bilingual consent, noncausal reporting and real Go fixture verification; CI of exact commit pending.

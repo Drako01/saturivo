@@ -9,6 +9,13 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Auditoría de la estructura VSIX (fase 5, 2026-11-07)
+
+- [x] Auditor del paquete endurecido: detecta ZIP con entradas duplicadas o colisiones case-insensitive, rutas inseguras, enlaces simbólicos, ZIP cifrado, ZIP64/multipart, inconsistencias entre cabeceras, compresión anómala y descompresión excesiva.
+- [x] Pruebas adversariales ZIP sintéticas ejecutadas localmente: **5/5 PASS**; integradas en `npm run verify` para los tres sistemas operativos del CI.
+- [ ] Validar auditor sobre VSIX real del SHA exacto en CI; verificar bytes y contenido firmado con checksum/provenance. El auditor de metadatos no reemplaza la validación criptográfica ni la instalación en VS Code.
+- [ ] Los gates de seguridad hostil/WSL/proxy y la publicación siguen pendientes; PR #5 continúa Draft.
+
 ## Estado de aceptación — fase 0 a 5 (PR #5, versión 0.2.0)
 
 **Semántica:** `[x]` = código, pruebas o documento implementado; `[ ]` = falta el gate íntegro. `PASS` sólo con CI/evidencia de su SHA. El PR sigue **Draft**. Capturas README se regeneran **exclusivamente al final**.

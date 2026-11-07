@@ -277,7 +277,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.cjs",
     "smoke:manifest": "node scripts/verify-manifest.cjs",
-    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses && node --test test/vsix-audit.test.cjs",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
     "vscode:prepublish": "npm run build",
     "test:integration:k6": "node scripts/k6-smoke.cjs",

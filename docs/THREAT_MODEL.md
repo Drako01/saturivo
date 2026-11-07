@@ -65,3 +65,17 @@ Record the exact commit, job URL, runtime versions, scenario fingerprint, approv
 - History JSON and Go goroutine text are read through a single verified file descriptor (POSIX O_NOFOLLOW, pre/post identity check and nlink=1); symlinks/hardlinks are rejected. Byte limits are enforced **while** reading, even if files grow after stat.
 - Unit tests: normal UTF-8, oversized files, symbolic/hard links, and valid external evidence cannot enter HistoryStore through a hardlink. **Status:** implementation in PR #5; exact-commit CI and Windows reparse-point adversarial QA remain open.
 - Residual: Windows identity checks are defense-in-depth but not equivalent to a kernel-enforced no-follow open; no generalized untrusted-file-system claim.
+
+## Adversarial VSIX ZIP structure and release artifact validation
+
+The release auditor now rejects duplicate or case-colliding ZIP entry paths,
+unsafe path segments, symlinks (UNIX mode), encrypted entries, unsupported ZIP64
+or multipart archives, disagreement between local and central entry headers,
+oversized uncompressed entries and implausible compression ratios. Synthetic
+ZIP adversarial tests are included in the standard verification gate.
+
+**Limits:** This guard inspects the ZIP envelope and declared sizes, not the
+decompressed data or every ZIP parser implementation. The final exact VSIX must
+still pass VS Code installation, SHA-256 checksum/provenance, SBOM/license audit,
+and the protected publish preflight. A passing metadata check alone does not
+establish supply-chain integrity.
