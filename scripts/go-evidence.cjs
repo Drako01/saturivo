@@ -7,7 +7,7 @@ const { spawn } = require("node:child_process");
 const { runBoundedProcess } = require("../out/src/core/process.js");
 const { parseGoRaceOutput } = require("../out/src/core/race.js");
 const { captureGoProfile } = require("../out/src/core/go-profiler.js");
-const { summarizeGoPprof } = require("../out/src/core/go-profile-analysis.js");
+const { summarizeGoPprof, analyzeGoroutineStacks } = require("../out/src/core/go-profile-analysis.js");
 const root = path.resolve(__dirname, "..");
 
 async function main() {
@@ -52,6 +52,21 @@ async function main() {
     const goroutines = await captureGoProfile(origin, "goroutine", temp, signal);
     const stacks = await fs.readFile(goroutines.localPath, "utf8");
     assert.match(stacks, /goroutine \d+ \[/);
+    const beforeCount = analyzeGoroutineStacks(stacks).observedStacks;
+    const response = await fetch(origin + "grow?count=8");
+    assert.equal(response.status, 200, "Fixture must produce bounded goroutine growth");
+    await response.arrayBuffer();
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const afterFile = await captureGoProfile(origin, "goroutine", temp, signal);
+    const afterCount = analyzeGoroutineStacks(await fs.readFile(afterFile.localPath, "utf8")).observedStacks;
+    assert(afterCount - beforeCount >= 6, "Expected observed goroutine growth after controlled fixture");
+    console.log("Go goroutine growth: before=" + beforeCount + " after=" + afterCount +
+      " (observation only; no asserted leak root cause)");
+    await Promise.all(Array.from({ length: 12 }, async () => {
+      const result = await fetch(origin + "contend");
+      assert.equal(result.status, 200);
+      await result.arrayBuffer();
+    }));
     const heap = await captureGoProfile(origin, "heap", temp, signal);
     assert(heap.bytes > 0);
     const top = await summarizeGoPprof(heap.localPath, runtimeFolder, signal);
