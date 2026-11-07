@@ -1,57 +1,33 @@
-# Saturivo — Product roadmap
+# Saturivo — Product Roadmap
 
-Status legend: [x] implemented; [ ] pending. PR #1 was merged into main. Enterprise AAAA is a plan, not a current claim. See docs/ENTERPRISE_AAAA_MASTER_PLAN.md.
+**0.2.0 non-preview, todavía no publicado:** [PR #5 Draft](https://github.com/Drako01/saturivo/pull/5). Los estados exactos por SHA se mantienen en el [checklist Enterprise AAAA](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); este roadmap no implica certificación.
 
-## M0 — Functional foundation (0.1.0)
+## Base 0.1.0
 
-- [x] TypeScript strict, VS Code extension manifest and Control Center.
-- [x] Spanish/English UI, isolated extension Webview with CSP.
-- [x] k6 load presets: smoke, bounded stress, open-loop arrival rate.
-- [x] Local-only targets by default, explicit remote opt-in and confirmation.
-- [x] Run history, P95/P99/RPS/errors/dropped iterations, Markdown export.
-- [x] Go race detector and benchmark command wrappers with confirmation.
-- [x] Unit tests and cross-platform CI configuration.
-- [x] Strict TS, unit tests and manifest passed on Linux/Windows/macOS; preview VSIX packaged on Linux (CI 42390990344). [ ] Real packaged VSIX smoke and local k6 load remain pending.
-- [ ] Lockfile, package/SBOM audit and release-readiness verification.
+- [x] TypeScript estricto, extensión VS Code, Webview CSP, ES/EN, k6 acotado, Go race/bench e historial básico.
 
-## M1 — Reproducible load engineering
+## 0.2.0 — Código implementado y verificado en CI #42422983667 (SHA 0d73879)
 
-- [ ] User-defined scenarios, ramps, warm-up, cooldown and scenario versioning.
-- [ ] Full environment fingerprint with runtime, CPU model, Go toolchain, git SHA and host load; **workload SHA-256 only** implemented on Phase 0 branch (awaiting CI).
-- [ ] Repeated trials, bootstrap confidence intervals, statistical uncertainty and stable baselines.
-- [x] Piloto acotado de capacidad (up to 3 stages, literal loopback, P95 SLO, early abort); [ ] descubrimiento completo con saturación confirmada y ensayos repetidos.
-- [ ] Backpressure, rate limiting, response status distribution and coordinated-omission awareness.
-- [ ] Live progress, timeout/no-progress kill, expanded result provenance and cancellation test.
+- [x] Control Center en editor principal, Scenario Studio GET/HEAD cerrado/abierto/ramp, modelos v2 con warm-up/medición/cool-down, presets y SLO.
+- [x] Fingerprints, historial, baseline seleccionable, comparaciones 3×3 e incertidumbre; 64 controles de ruido sintético.
+- [x] Migración explícita v1/v2, validación de integridad y persistencia de historial entre VSIX 0.1.0→0.2.0 por CLI en Linux/Windows/macOS.
+- [x] Go race con hallazgos verificables archivo/línea, pprof CPU/heap/goroutine/mutex/block, trace, GC, snapshots y overhead controlado con JSON.
+- [x] k6 real contra HTTP Go/Node/Python, WebSocket RFC6455, Docker Compose aislado y proceso runtime Linux read-only.
+- [x] Controles SSRF/DNS, bloqueo de proxy/redirect local, kill-tree POSIX/Windows, cuotas, ZIP audit, SBOM, licencias, notices e inventario shipped.
+- [x] ES/EN del host, teclado/foco y CSS forced-colors responsive probados en Chromium.
+- [x] Cuatro capturas README nuevas del renderer real con datos sintéticos: commit `6387739`, [run #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472).
 
-## M2 — Go observability
+## Pendientes de aceptación obligatoria
 
-- [ ] Opt-in pprof CPU, heap, mutex, block and goroutine profiles from local service.
-- [ ] Trace analysis, goroutine growth/leak heuristic, per-profile Go version capability detection.
-- [ ] Correlate load time windows to profiles and VS Code source locations.
-- [ ] Race detector parser that links concrete findings to file/line with evidence.
-- [ ] Redaction of stack traces and URLs before any optional export.
+- [ ] CI del SHA definitivo **posterior** a imágenes y documentación y revisión visual humana de las cuatro capturas.
+- [ ] E2E UI real en VS Code instalado de importar/exportar/borrar/reload/navegar Go y cambios de baseline.
+- [ ] WSL, Remote-SSH y Dev Containers con selección de host y cleanup real; [runbook](docs/REMOTE_VALIDATION.md).
+- [ ] NVDA/VoiceOver, zoom 200%, light/dark, alto contraste, teclado-only y estados de error.
+- [ ] DNS/proxy/rebinding remoto, procesos WSL adversariales, attestation externa y revisión legal/manual de amenazas y artefacto.
+- [ ] Firma del responsable y permisos independientes para merge, tag, Marketplace y Open VSX.
 
-## M3 — Cross-runtime protocol adapters
+## Diferido por YAGNI
 
-- [ ] Optional ghz for gRPC, k6 scenarios for WebSocket, Vegeta/Fortio adapters.
-- [ ] Go, Node, Java and Python profiler plugins with capability-based detection.
-- [ ] Docker Compose/devcontainer opt-in orchestration; never launch remote targets implicitly.
+gRPC/ghz, Vegeta/Fortio, profilers especializados de Node/Java/Python e IA BYO. No anunciar capacidades no probadas ni atribuir causalidad a correlaciones de runtime.
 
-## M4 — Enterprise AAAA readiness
-
-- [ ] Multi-root, remote development/WSL/SSH tests, Windows/macOS/Linux extension-host E2E.
-- [ ] Threat model, robust DNS resolution controls, process-tree termination and quotas.
-- [ ] Export SARIF/JSON with schema, migration tests, workspace-scoped retention controls.
-- [ ] i18n completeness, accessibility/keyboard tests, UX polish and images.
-- [ ] Trusted Publisher/marketplace verification, release tag provenance, pinned CI dependencies.
-- [ ] Optional BYO AI integration only with explicit opt-in and artifact redaction.
-
-**Release policy:** no publication while acceptance criteria or security gates are incomplete.
-
-## Enterprise AAAA follow-up
-
-Execution phases and quantifiable acceptance gates are documented in [Enterprise AAAA Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). The plan is NOT implementation evidence.
-
-## Estado verificado del PR #4 (2026-11-07)
-
-Se completaron en CI sobre `a819a894`: TypeScript/unit/manifest Linux/Windows/macOS, fixture real k6, VSIX instalado en VS Code 1.99 Linux, race/pprof Go real, SBOM CycloneDX. Los avances de SLO, fingerprint, perfiles Go, historial limitado y exportadores están implementados, pero **la fase AAAA completa no se considera cerrada**. Matriz precisa y próximos gates en [docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md).
+[Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md) · [Criterios medibles](docs/ACCEPTANCE_CRITERIA.md) · [Release tracker](docs/RELEASE_0_2_0_CHECKLIST.md).
