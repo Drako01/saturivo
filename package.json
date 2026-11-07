@@ -161,6 +161,11 @@
         "command": "saturivo.websocketProbe",
         "title": "%command.websocket%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.runtimeProbe",
+        "title": "%command.runtimeProbe%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {
