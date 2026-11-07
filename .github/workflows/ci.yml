@@ -87,5 +87,7 @@ jobs:
           node-version: 22
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run build
+      - name: Package VSIX for real CLI installation
+        run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
       - name: Launch actual VS Code 1.99 Extension Host
         run: xvfb-run -a npm run test:integration:vscode
