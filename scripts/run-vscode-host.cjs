@@ -34,10 +34,18 @@ async function main() {
     if (!installed.toLowerCase().includes("armotusitio.saturivo")) {
       throw new Error("VSIX is not listed as installed by VS Code CLI");
     }
-    console.log("Packaged Saturivo VSIX installation: PASS");
+    const installedName = fs.readdirSync(installedExtensions)
+      .find(name => name.toLowerCase().startsWith("armotusitio.saturivo-"));
+    if (!installedName) throw new Error("Installed extension folder not found");
+    const installedPath = path.join(installedExtensions, installedName);
+    if (!fs.existsSync(path.join(installedPath, "out", "src", "extension.js"))) {
+      throw new Error("Installed VSIX is missing the compiled extension entrypoint");
+    }
+    console.log("Packaged Saturivo VSIX installation: PASS (" + installedName + ")");
     await runTests({
       vscodeExecutablePath,
-      extensionDevelopmentPath: root,
+      // Exercise the exact installed VSIX, not the unpackaged source tree.
+      extensionDevelopmentPath: installedPath,
       extensionTestsPath: path.join(root, "out", "test", "vscode-host.js"),
       launchArgs: [
         path.join(root, "test"),
