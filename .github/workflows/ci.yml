@@ -35,12 +35,18 @@ jobs:
         run: |
           mkdir -p reports
           npm sbom --sbom-format cyclonedx > reports/saturivo-sbom.cdx.json
+      - name: Generate exact-lockfile license inventory
+        if: runner.os == 'Linux'
+        run: npm run licenses:report
       - name: Archive dependency SBOM
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: saturivo-sbom
-          path: reports/saturivo-sbom.cdx.json
+          path: |
+            reports/saturivo-sbom.cdx.json
+            reports/saturivo-licenses.json
+            reports/saturivo-licenses.md
           if-no-files-found: error
       - name: Package preview VSIX
         if: runner.os == 'Linux'
