@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
 import { tmpdir } from "node:os";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { join } from "node:path";
 import { runBoundedProcess } from "../src/core/process";
 
 test("bounded subprocess captures stdout and exit status", async () => {
@@ -69,4 +71,31 @@ test("invalid subprocess budgets cannot spawn arbitrary commands", async () => {
     cwd: tmpdir(), timeoutMs: 5000, maxOutputBytes: 1000001,
     signal: new AbortController().signal,
   }), /Invalid output budget/);
+});
+
+test("cancelling a subprocess also stops descendants before they can perform delayed work", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "saturivo-killtree-"));
+  const marker = join(folder, "descendant-survived");
+  const controller = new AbortController();
+  try {
+    const childCode = [
+      "const fs=require('node:fs');",
+      "setTimeout(()=>{fs.writeFileSync(process.argv[1],'survived')},1200);",
+    ].join("");
+    const parentCode = [
+      "const {spawn}=require('node:child_process');",
+      "spawn(process.execPath,['-e',", JSON.stringify(childCode), ",process.argv[1]],{stdio:'ignore'});",
+      "setInterval(()=>{},1000);",
+    ].join("");
+    const running = runBoundedProcess({
+      binary: process.execPath, args: ["-e", parentCode, marker],
+      cwd: folder, timeoutMs: 5000, maxOutputBytes: 1024, signal: controller.signal,
+    });
+    await new Promise(resolve => setTimeout(resolve, 300));
+    controller.abort();
+    await assert.rejects(running, /Cancelled/);
+    await new Promise(resolve => setTimeout(resolve, 1400));
+    await assert.rejects(readFile(marker, "utf8"), { code: "ENOENT" },
+      "A descendant must not survive cancellation to perform delayed filesystem writes");
+  } finally { controller.abort(); await rm(folder, { recursive: true, force: true }); }
 });
