@@ -1,6 +1,6 @@
 # Saturivo — Product roadmap
 
-Status legend: [x] implemented in branch; [ ] planned and NOT claimed complete.
+Status legend: [x] implemented; [ ] pending. PR #1 was merged into main. Enterprise AAAA is a plan, not a current claim. See docs/ENTERPRISE_AAAA_MASTER_PLAN.md.
 
 ## M0 — Functional foundation (0.1.0)
 
@@ -11,7 +11,7 @@ Status legend: [x] implemented in branch; [ ] planned and NOT claimed complete.
 - [x] Run history, P95/P99/RPS/errors/dropped iterations, Markdown export.
 - [x] Go race detector and benchmark command wrappers with confirmation.
 - [x] Unit tests and cross-platform CI configuration.
-- [ ] Successful CI runs on Linux/Windows/macOS, packaged VSIX smoke and actual local k6 load run.
+- [x] Strict TS, unit tests and manifest passed on Linux/Windows/macOS; preview VSIX packaged on Linux (CI 42390990344). [ ] Real packaged VSIX smoke and local k6 load remain pending.
 - [ ] Lockfile, package/SBOM audit and release-readiness verification.
 
 ## M1 — Reproducible load engineering
@@ -47,3 +47,7 @@ Status legend: [x] implemented in branch; [ ] planned and NOT claimed complete.
 - [ ] Optional BYO AI integration only with explicit opt-in and artifact redaction.
 
 **Release policy:** no publication while acceptance criteria or security gates are incomplete.
+
+## Enterprise AAAA follow-up
+
+Execution phases and quantifiable acceptance gates are documented in [Enterprise AAAA Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). The plan is NOT implementation evidence.
