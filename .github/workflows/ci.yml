@@ -125,6 +125,13 @@ jobs:
       - run: npm run build
       - name: Verify real Go race evidence and pprof
         run: node scripts/go-evidence.cjs
+      - uses: grafana/setup-k6-action@43b9fc21641a76002687994433dd586f56e791b1 # v1
+        with:
+          k6-version: '1.8.2'
+      - name: Verify real HTTP k6 on Go, Node.js and Python
+        run: npm run test:integration:runtimes
+        env:
+          K6_NO_USAGE_REPORT: 'true'
 
   screenshots:
     name: Capture actual Control Center views for README
