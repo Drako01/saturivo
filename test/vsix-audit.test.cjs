@@ -8,6 +8,7 @@ const { filenamesFromZip, audit } = require("../scripts/audit-vsix.cjs");
 
 const required = [
   "extension/package.json", "extension/readme.md", "extension/LICENSE.txt",
+    "extension/THIRD_PARTY_NOTICES.md",
   "extension/out/src/extension.js", "extension/media/saturivo-icon.png",
   "extension/media/activity.svg",
 ];
