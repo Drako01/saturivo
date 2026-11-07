@@ -62,11 +62,12 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 | **Load testing** | k6 presets, ramping VUs, and a bilingual editor for bounded v2 HTTP GET/HEAD workloads | HTTP(S) GET/HEAD only; local target by default |
 | **Metrics & SLOs** | RPS, failures, P50/P95/P99, dropped iterations; configurable P95 SLO | Single-run status is not a statistical confidence guarantee |
 | **Comparisons & capacity pilot** | Workload SHA-256, explicit baseline choice, 3-vs-3 P95 bootstrap, bounded literal-loopback arrival-rate pilot | Evidence is local and scenario-specific; **not a production capacity guarantee** |
+| **WebSocket probe** | Explicit local ws:// loopback handshake/message probe backed by k6, with a fixture-backed E2E gate | Session duration is not HTTP latency; 5 seconds, 1 VU, 100 attempts; remote WebSocket targets are blocked |
 | **Go concurrency** | Race detection, benchmarks, CPU/heap/goroutine/mutex/block profiles, Go runtime trace and before/during/after stack observations | Tests only inspect executed paths; no automated root-cause proof |
 | **Evidence** | Markdown/JSON export; SARIF for observed Go race findings | Profiling files and reports may contain sensitive project information |
 | **Developer experience** | Full editor-tab Control Center launched from Activity Bar, ES/EN interface, scenario form persistence, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
 
-**Limited preview:** an opt-in **local capacity pilot** now runs up to three bounded arrival-rate steps against a literal loopback HTTP target with a required P95 SLO. It reports only the highest observed passing arrival rate, not production capacity. **Still planned:** full statistically robust capacity discovery, per-stage warm-up exclusion, richer Go profiling correlation and verified source navigation, gRPC/WebSocket adapters, specialized Node/Java/Python runtime profiling, remote-development adapters and optional opt-in AI. A real HTTP Go/Node/Python integration gate is being added to CI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
+**Limited preview:** an opt-in **local capacity pilot** now runs up to three bounded arrival-rate steps against a literal loopback HTTP target with a required P95 SLO. It reports only the highest observed passing arrival rate, not production capacity. **Still planned:** full statistically robust capacity discovery, per-stage warm-up exclusion, richer Go profiling correlation and verified source navigation, general-purpose gRPC/WebSocket scenario adapters (beyond the bounded local WebSocket probe), specialized Node/Java/Python runtime profiling, remote-development adapters and optional opt-in AI. A real HTTP Go/Node/Python integration gate is being added to CI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
 
 ## Quick start
 
@@ -97,7 +98,9 @@ Open VS Code → **Extensions: Install from VSIX…** → select `saturivo.vsix`
 2. Click the **Saturivo** Activity Bar icon. The Control Center opens; **opening the view never starts traffic**.
 3. Choose **Configure Target**. Set the explicit local endpoint.
 4. Run **Smoke** (1 virtual user), **Bounded Stress** (up to 20 VUs) or **Arrival Rate** (25 attempted iterations/sec, bounded by available VUs). Each operation is user-initiated and can be cancelled.
-5. Inspect **P95/P99, RPS, failures, dropped iterations and run history**. Repeat comparable scenarios, choose **Compare Runs** and export the evidence.
+5. Inspect **P95/P99, RPS, failures, dropped iterations and run history**. Repeat comparable scenarios, choose **Compare Runs** and select an explicit baseline before exporting evidence.
+
+**Custom scenarios:** the Load Testing section includes a v2 editor for bounded GET/HEAD traffic (constant VUs or arrivals), with the current authorized target, per-run request limit and an optional P95 objective. Input is validated again inside the extension. **WebSocket:** the separate local-only probe explicitly asks for a ws:// loopback endpoint and confirmation; its report shows session and handshake metrics, not HTTP request latency.
 
 **Experimental local capacity pilot:** first configure a **P95 SLO**, keep the target on a literal loopback HTTP address (for example `http://127.0.0.1:8080/health`), then explicitly choose **Local Capacity Pilot**. It attempts 10, 20 and 40 arrivals/s at most, with three 10-second stages, resource budgets and stop-on-SLO/inconclusive behavior. Review the evidence in the output channel and run history. This is **not a production capacity benchmark**.
 
@@ -222,6 +225,9 @@ npm run verify
 npm run package:vsix
 # Requires k6 and a local fixture; CI sets it up explicitly:
 npm run test:integration:k6
+# CI also runs real Go/Node/Python k6 and WebSocket fixtures:
+npm run test:integration:runtimes
+npm run test:integration:websocket
 # Requires a VS Code download / GUI-capable environment:
 npm run test:integration:vscode
 ~~~
