@@ -70,6 +70,28 @@ export function dashboard(state: DashboardState, locale: string): string {
     '" aria-selected="' + initial + '" tabindex="' + (initial ? 0 : -1) +
     '" data-tab="' + key + '">' + t('tab_' + key) + '</button>';
 
+  const hasEvidence = state.history.length > 0;
+  const guidance = '<section class="workflow" aria-labelledby="workflow-title">' +
+    '<div class="workflow-heading"><div><span class="eyebrow">' + t("workflowEyebrow") +
+    '</span><h2 id="workflow-title">' + t("workflowTitle") +
+    '</h2><p>' + t("workflowDescription") + '</p></div>' +
+    '<span class="workflow-progress">' + (hasEvidence ? t("workflowHasEvidence") : t("workflowGettingStarted")) +
+    '</span></div><ol class="workflow-steps">' +
+    '<li class="workflow-step"><div class="step-index" aria-hidden="true">01</div><div class="step-content"><h3>' +
+    t("workflowTargetTitle") + '</h3><p>' + t("workflowTargetDescription") +
+    '</p><button type="button" class="inline-action" data-action="configureTarget">' +
+    t("workflowTargetAction") + '<span aria-hidden="true"> ↗</span></button></div></li>' +
+    '<li class="workflow-step"><div class="step-index" aria-hidden="true">02</div><div class="step-content"><h3>' +
+    t("workflowLoadTitle") + '</h3><p>' + t("workflowLoadDescription") +
+    '</p><button type="button" class="inline-action" data-tab="load">' +
+    t("workflowLoadAction") + '<span aria-hidden="true"> →</span></button></div></li>' +
+    '<li class="workflow-step' + (hasEvidence ? ' complete' : '') +
+    '"><div class="step-index" aria-hidden="true">03</div><div class="step-content"><h3>' +
+    t("workflowEvidenceTitle") + '</h3><p>' + t("workflowEvidenceDescription") +
+    '</p><button type="button" class="inline-action" data-tab="history">' +
+    t("workflowEvidenceAction") + '<span aria-hidden="true"> →</span></button></div></li>' +
+    '</ol></section>';
+
   const cards = ([
     ['p95', metric ? numeric(metric.p95Ms) + ' ms' : '—', 'cardLatency'],
     ['rps', metric ? numeric(metric.requestsPerSecond) : '—', 'cardRps'],
@@ -116,7 +138,11 @@ export function dashboard(state: DashboardState, locale: string): string {
       t('p95') + '</th><th scope="col" class="num">' + t('rps') +
       '</th><th scope="col">' + t('slo') +
       '</th></tr></thead><tbody>' + historyRows + '</tbody></table></div>'
-    : '<div class="empty">' + t('emptyHistory') + '</div>';
+    : '<div class="empty-state"><div class="empty-symbol" aria-hidden="true">◎</div>' +
+      '<h3>' + t("emptyEvidenceTitle") + '</h3><p>' + t("emptyHistory") +
+      '</p><button type="button" class="button button-primary" data-tab="load">' +
+      t("emptyEvidenceAction") + '</button><span class="empty-caution">' +
+      t("historyPrivacy") + '</span></div>';
 
   const scenarios = ([
     ['runSmoke', 'smokeTitle', 'smoke', 'scenarioClosed'],
@@ -135,7 +161,7 @@ export function dashboard(state: DashboardState, locale: string): string {
   const customEditor = '<article class="panel custom-editor"><div class="panel-heading"><div><h3>' +
     t('customScenarioTitle') + '</h3><p>' + t('customScenarioDescription') +
     '</p></div><span class="small-badge">v2</span></div>' +
-    '<form id="custom-scenario" class="custom-form"><div class="editor-fields">' +
+    '<div class="scenario-workspace"><form id="custom-scenario" class="custom-form"><div class="editor-fields">' +
     '<label class="editor-field editor-wide"><span>' + t('customName') +
     '</span><input type="text" name="name" maxlength="80" required value="Custom local load"></label>' +
     '<label class="editor-field"><span>' + t('model') +
@@ -157,7 +183,23 @@ export function dashboard(state: DashboardState, locale: string): string {
     '<code>' + escapeHtml(state.target) + '</code></p>' +
     '<div class="action-row"><button class="button button-primary" type="submit"' +
     (busy ? ' disabled' : '') + '>' + t('customRun') + '</button>' +
-    button('configureTarget', 'configure', 'secondary', busy) + '</div></form></article>';
+    button('configureTarget', 'configure', 'secondary', busy) +
+    '</div><p class="editor-disclaimer">' + t("editorDisclaimer") +
+    '</p></form><aside class="scenario-preview" aria-labelledby="preview-title">' +
+    '<div class="preview-eyebrow">' + t("previewEyebrow") + '</div>' +
+    '<h4 id="preview-title">' + t("previewTitle") + '</h4>' +
+    '<div class="preview-meta"><span>' + t("previewWorkload") +
+    '</span><strong id="preview-model">—</strong></div>' +
+    '<div class="preview-track-heading"><span>' + t("previewProfile") +
+    '</span><span id="preview-duration">—</span></div>' +
+    '<div id="preview-stage-chart" class="preview-stage-chart" role="img" aria-label="' +
+    t("previewProfileA11y") + '"></div>' +
+    '<div class="preview-grid"><div><span>' + t("previewConcurrency") +
+    '</span><strong id="preview-vus">—</strong></div><div><span>' + t("previewBudget") +
+    '</span><strong id="preview-budget">—</strong></div></div>' +
+    '<div class="preview-callout" id="preview-warning" role="status" aria-live="polite">' +
+    t("previewReady") + '</div><div class="preview-safety"><span aria-hidden="true">◇</span>' +
+    t("previewSafety") + '</div></aside></div></article>';
 
   const overview = '<section role="tabpanel" id="view-overview" data-view="overview" aria-labelledby="tab-overview">' +
     '<div class="hero"><div><span class="eyebrow green">' + t('workspaceHeading') +
@@ -186,7 +228,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</strong></div><div class="line"><span>' + t('dropped') + '</span><strong>' +
     count(metric?.droppedIterations) + '</strong></div><div class="bottom-action">' +
     button('compare', 'compare', 'secondary', busy || state.history.length < 2) +
-    '</div></article></div>' + comparator + '</section>';
+    '</div></article></div>' + comparator + guidance + '</section>';
 
   const load = '<section role="tabpanel" id="view-load" data-view="load" aria-labelledby="tab-load" hidden>' +
     '<div class="section-title"><div><span class="eyebrow">' + t('workloads') +
