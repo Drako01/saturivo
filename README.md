@@ -73,7 +73,7 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 | **Evidence** | Markdown/JSON export; SARIF for observed Go race findings | Profiling files and reports may contain sensitive project information |
 | **Developer experience** | Full editor-tab Control Center launched from Activity Bar, ES/EN interface, scenario form persistence, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
 
-**Limited preview:** an opt-in **local capacity pilot** now runs up to three bounded arrival-rate steps against a literal loopback HTTP target with a required P95 SLO. It reports only the highest observed passing arrival rate, not production capacity. **Still planned:** full statistically robust capacity discovery, per-stage warm-up exclusion, richer Go profiling correlation and verified source navigation, general-purpose gRPC/WebSocket scenario adapters (beyond the bounded local WebSocket probe), specialized Node/Java/Python runtime profiling, remote-development adapters and optional opt-in AI. A real HTTP Go/Node/Python integration gate is being added to CI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
+**Experimental bounded capacity pilot:** up to three explicitly authorized loopback arrival-rate steps with a P95 SLO; passing rates do not certify production capacity. Saturivo 0.2.0 includes isolated warm-up/measurement/cool-down for v2, 3×3 regressions with uncertainty, Go race source evidence, pprof/trace/GC observations, real fixture-backed HTTP Go/Node/Python and bounded RFC6455 WebSocket. **Not implemented or not verified:** general gRPC/ghz, language-specific profilers Node/Java/Python, WSL/SSH/Dev Containers E2E and BYO AI. See [roadmap](ROADMAP.md).
 
 ## Quick start
 
@@ -219,7 +219,7 @@ An earlier PR #5 commit, `cbd3724`, passed [GitHub Actions run #42404881890](htt
 | Real Go race and pprof fixture (Linux) | **PASS** |
 | VSIX candidate and CycloneDX SBOM artifact generation (historical SHA) | **PASS** |
 
-These are **commit-specific historical CI results**, not validation of subsequent development commits or release certification. The 0.2.0 version bump and removal of the Preview badge must pass a new exact-SHA CI run. Additional threat modeling, language/protocol adapters, broader VS Code host coverage and final release validation remain pending.
+CI is commit-specific and does not certify later revisions. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) passed 7/7 on SHA `0d73879` (including real VSIX CLI upgrade/persisted history Windows/macOS/Linux). Four screenshots were regenerated from the production renderer with synthetic data in [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f). **Final post-screenshot/documentation SHA still requires CI, manual UX/security review and separate maintainer authorization**. PR #5 remains Draft; no merge, tags or publication.
 
 Development commands:
 
