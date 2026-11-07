@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import { compareRuns } from "./core/comparison";
 import { runGo, type GoTask } from "./core/go";
 import { captureGoProfile, localPprofEndpoint, type GoProfileKind } from "./core/go-profiler";
+import { analyzeGoroutineStacks, summarizeGoPprof } from "./core/go-profile-analysis";
+import { readFile } from "node:fs/promises";
 import { HistoryStore } from "./core/history";
 import { runK6 } from "./core/k6";
 import { markdownReport } from "./core/report";
@@ -303,11 +305,35 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         " (" + evidence.bytes + " bytes)");
       this.message = this.t("profileSaved") + " (" + evidence.bytes + " bytes)";
       if (kind === "goroutine") {
-        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(evidence.localPath));
+        const snapshotText = await readFile(evidence.localPath, "utf8");
+        const snapshot = analyzeGoroutineStacks(snapshotText);
+        const summary = [
+          "Go goroutine snapshot · observed stacks: " + snapshot.observedStacks,
+          ...Object.entries(snapshot.states).map(([state, count]) => state + ": " + count),
+          "",
+          "Snapshot alone is not evidence of a goroutine leak.",
+          "",
+          snapshotText,
+        ].join("\n");
+        const document = await vscode.workspace.openTextDocument({
+          content: summary, language: "plaintext",
+        });
         await vscode.window.showTextDocument(document, { preview: false });
       } else {
-        void vscode.window.showInformationMessage(this.t("profileSaved") +
-          " — " + evidence.localPath);
+        try {
+          const workspace = this.folder() ?? this.storageDir;
+          const top = await summarizeGoPprof(evidence.localPath, workspace, this.controller.signal);
+          const document = await vscode.workspace.openTextDocument({
+            content: "Saturivo · Go " + kind + " profile\n" +
+              "Saved locally: " + evidence.localPath + "\n\n" + top,
+            language: "plaintext",
+          });
+          await vscode.window.showTextDocument(document, { preview: false });
+        } catch (error) {
+          this.output.appendLine("Profile saved but pprof summary unavailable: " + String(error));
+          void vscode.window.showWarningMessage(this.t("profileSaved") + " — " + evidence.localPath +
+            " (Go tool pprof unavailable)");
+        }
       }
     } catch (error) {
       this.message = error instanceof Error ? error.message : String(error);
