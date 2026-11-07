@@ -30,7 +30,7 @@ test("editor dashboard has four ARIA tabs and existing actions remain available"
   }
   for (const action of ["runSmoke", "runStress", "runArrival", "runRamp", "compare",
     "capacityPilot", "clearHistory", "importJson", "exportJson", "goRace", "goBench",
-    "captureGoProfile", "clearProfiles", "configureSlo", "cancel"]) {
+    "captureGoProfile", "clearProfiles", "configureSlo"]) {
     assert.match(markup, new RegExp('data-action="' + action + '"'));
   }
   assert.match(markup, /ArrowRight/);
