@@ -1,0 +1,18 @@
+"use strict";
+const fs = require("node:fs");
+const assert = require("node:assert/strict");
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const en = JSON.parse(fs.readFileSync("package.nls.json", "utf8"));
+const es = JSON.parse(fs.readFileSync("package.nls.es.json", "utf8"));
+assert.equal(pkg.publisher, "armotusitio");
+assert.equal(pkg.name, "saturivo");
+assert.equal(pkg.main, "./out/src/extension.js");
+assert.equal(pkg.capabilities.untrustedWorkspaces.supported, false);
+assert.equal(pkg.capabilities.virtualWorkspaces.supported, false);
+assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
+const commands = pkg.contributes.commands.map(x => x.command);
+assert.equal(new Set(commands).size, commands.length);
+assert(commands.includes("saturivo.cancel"));
+assert(fs.existsSync("media/activity.svg"));
+assert(fs.existsSync("out/src/extension.js"), "Extension must be compiled before manifest check");
+console.log("Saturivo manifest smoke: PASS");
