@@ -29,7 +29,7 @@ async function main() {
     const scenarios = [
       { ...base, id: "real-smoke", name: "Real smoke", model: "constant-vus", virtualUsers: 1 },
       { ...base, id: "real-arrival", name: "Real arrival", model: "constant-arrival-rate",
-        virtualUsers: 5, arrivalRate: 5 },
+        virtualUsers: 10, arrivalRate: 20 },
     ];
     for (const scenario of scenarios) {
       const result = await runK6(scenario, policy, "k6", dir, new AbortController().signal);
