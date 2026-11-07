@@ -132,6 +132,11 @@
         "command": "saturivo.clearHistory",
         "title": "%command.clearHistory%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.capacityPilot",
+        "title": "%command.capacity%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {

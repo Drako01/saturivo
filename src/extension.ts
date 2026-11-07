@@ -10,6 +10,7 @@ import { markdownReport } from "./core/report";
 import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
 import { compareTrialGroups } from "./core/statistics";
 import { fingerprintScenario } from "./core/fingerprint";
+import { discoverLocalCapacity } from "./core/capacity";
 import type { RunResult, Scenario } from "./core/types";
 import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/validation";
 import { dashboard, type DashboardState } from "./ui/html";
@@ -51,6 +52,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       const commands: Record<string, string> = {
         configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
         runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
+        capacityPilot: "saturivo.capacityPilot",
         compare: "saturivo.compare", export: "saturivo.export",
         exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
         clearHistory: "saturivo.clearHistory",
@@ -176,6 +178,70 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         void vscode.window.showErrorMessage("Saturivo: " + this.message +
           ". Check that k6 is installed and reachable.");
       }
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
+    }
+  }
+
+  async runCapacityPilot(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const maxP95Ms = this.config().get<number>("sloMaxP95Ms", 0);
+    if (!Number.isFinite(maxP95Ms) || maxP95Ms < 1) {
+      void vscode.window.showWarningMessage(this.t("capacityRequiresSlo"));
+      return;
+    }
+    const requestsLimit = this.config().get<number>("maxRequests", 10000);
+    const policy = {
+      allowRemoteTargets: false,
+      maxVirtualUsers: this.maxVus(),
+      maxRequests: requestsLimit,
+    };
+    const target = this.target();
+    const plannedBudget = Math.min(20_000, requestsLimit * 3);
+    const confirmed = await vscode.window.showWarningMessage(
+      this.t("capacityConsent") + " " + target +
+        " · 10–40 arrivals/s · ≤3 × 10s · ≤" + plannedBudget +
+        " " + this.t("capacityRequests"),
+      { modal: true }, this.t("capacityAuthorize")
+    );
+    if (confirmed !== this.t("capacityAuthorize")) return;
+    this.busy = true;
+    this.controller = new AbortController();
+    this.message = this.t("capacityRunning");
+    this.refresh();
+    try {
+      const result = await discoverLocalCapacity({
+        target, durationSeconds: 10, virtualUsers: Math.min(20, this.maxVus()),
+        startRate: 10, maxRate: 40, maxSteps: 3,
+        maxRequestsPerStep: Math.min(5000, requestsLimit),
+        totalRequestBudget: plannedBudget,
+        slo: { maxP95Ms, maxErrorPercent: 1 },
+      }, policy, async (scenario, signal) => {
+        const run = await runK6(
+          scenario, policy, this.config().get<string>("k6Path", "k6"),
+          this.storageDir, signal
+        );
+        await this.store.save(run);
+        await this.loadHistory();
+        this.latest = run;
+        return run;
+      }, this.controller.signal, (rate, step) => {
+        this.message = this.t("capacityRunning") + " " + step + "/3 · " + rate + " arrivals/s";
+        this.refresh();
+      });
+      this.output.appendLine("Saturivo local capacity pilot: " + JSON.stringify(result, null, 2));
+      this.message = this.t("capacityObserved") + ": " +
+        (result.highestPassingArrivalRate === null ?
+          this.t("capacityNone") : String(result.highestPassingArrivalRate) + " arrivals/s") +
+        " · " + result.stopReason + ". " + this.t("capacityCaution");
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      this.output.appendLine("Saturivo capacity pilot: " + this.message);
+      if (this.message !== "Cancelled") void vscode.window.showErrorMessage(
+        "Saturivo: " + this.message);
     } finally {
       this.busy = false;
       this.controller = undefined;
@@ -405,6 +471,7 @@ export function activate(context: vscode.ExtensionContext): void {
     runSmoke: () => app.runPreset("smoke"),
     runStress: () => app.runPreset("stress"),
     runArrival: () => app.runPreset("arrival"),
+    capacityPilot: () => app.runCapacityPilot(),
     cancel: () => app.cancel(),
     compare: () => app.compare(),
     export: () => app.exportReport(),

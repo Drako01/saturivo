@@ -22,5 +22,6 @@
   "setting.maxRequests": "Límite máximo de solicitudes por prueba local. No certifica capacidad (100–100000).",
   "command.json": "Exportar ejecución como JSON",
   "command.sarif": "Exportar evidencia de carreras Go como SARIF",
-  "command.clearHistory": "Eliminar historial local de ejecuciones"
+  "command.clearHistory": "Eliminar historial local de ejecuciones",
+  "command.capacity": "Ejecutar piloto acotado de capacidad local"
 }

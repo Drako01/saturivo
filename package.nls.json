@@ -22,5 +22,6 @@
   "setting.maxRequests": "Hard request budget per local test. Does not certify capacity (100–100000).",
   "command.json": "Export Run as JSON",
   "command.sarif": "Export Verified Go Race Evidence as SARIF",
-  "command.clearHistory": "Delete Local Run History"
+  "command.clearHistory": "Delete Local Run History",
+  "command.capacity": "Run Bounded Local Capacity Pilot"
 }
