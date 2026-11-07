@@ -1,0 +1,45 @@
+# One-shot documentation capture; remove from branch immediately after artifact review.
+# No release, merge, tag or marketplace actions. The committed four PNGs contain synthetic data.
+name: Saturivo one-shot final README screenshots
+on:
+  push:
+    branches: [feat/enterprise-aaaa-v0.1.1]
+permissions:
+  contents: read
+jobs:
+  capture:
+    if: github.repository == 'Drako01/saturivo' && github.ref == 'refs/heads/feat/enterprise-aaaa-v0.1.1' && github.event.head_commit.message == 'ci(ux): one-shot capture of final 0.2.0 README views'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: true
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run build
+      - name: Generate four actual renderer views using synthetic fixtures only
+        run: npm run screenshots:readme
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: saturivo-0-2-0-final-readme-views
+          path: media/screenshots/*.png
+          if-no-files-found: error
+      - name: Commit only four generated README screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add media/screenshots/control-center-overview.png media/screenshots/control-center-load.png media/screenshots/control-center-history.png media/screenshots/control-center-diagnostics.png
+          if git diff --cached --quiet; then
+            echo "Four renderer screenshots unchanged; no commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs(readme): refresh four 0.2.0 production-renderer screenshots"
+          git push origin HEAD:refs/heads/feat/enterprise-aaaa-v0.1.1
