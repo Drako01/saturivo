@@ -85,23 +85,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run build
       - name: Launch actual VS Code 1.99 Extension Host
         run: xvfb-run -a npm run test:integration:vscode
-
-  bootstrap-test-lockfile:
-    name: Refresh npm lockfile for VS Code test dependency (one-time)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Export dependency snapshot (temporary)
-        run: |
-          node -e "const fs=require('fs');const s=fs.readFileSync('package-lock.json').toString('base64');for(let i=0;i<s.length;i+=4000){console.log('SATURIVO_TESTLOCK_PART:'+i+':'+s.slice(i,i+4000))}"
