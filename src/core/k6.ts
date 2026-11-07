@@ -8,8 +8,11 @@ import { runBoundedProcess } from "./process";
 import { fingerprintScenario } from "./fingerprint";
 import { assessSlo } from "./slo";
 import { validateScenario, type TargetPolicy } from "./validation";
+import { pinnedTargetHosts } from "./network-safety";
 
-export function renderK6Script(scenario: Scenario, output: string): string {
+export function renderK6Script(
+  scenario: Scenario, output: string, verifiedHosts: Readonly<Record<string, string>> = {}
+): string {
   const executor = scenario.model === "constant-vus"
     ? { executor: "constant-vus", vus: scenario.virtualUsers, duration: scenario.durationSeconds + "s" }
     : scenario.model === "constant-arrival-rate"
@@ -29,7 +32,7 @@ export function renderK6Script(scenario: Scenario, output: string): string {
     userAgent: "Saturivo/0.1.1",
     // Explicit local host pinning prevents malicious host-file / DNS changes.
     hosts: ["localhost", "localhost."].includes(new URL(scenario.target).hostname.toLowerCase())
-      ? { localhost: "127.0.0.1", "localhost.": "127.0.0.1" } : {},
+      ? { localhost: "127.0.0.1", "localhost.": "127.0.0.1" } : verifiedHosts,
   };
   return [
     'import http from "k6/http";',
@@ -57,6 +60,7 @@ export async function runK6(
 ): Promise<RunResult> {
   const safeScenario = validateScenario(scenario, policy);
   if (signal.aborted) throw new Error("Cancelled");
+  const verifiedHosts = await pinnedTargetHosts(safeScenario.target, signal);
   await mkdir(workspaceStorage, { recursive: true });
   const version = await runBoundedProcess({
     binary, args: ["version"], cwd: workspaceStorage,
@@ -72,7 +76,7 @@ export async function runK6(
   const summary = join(runDirectory, "summary.json");
   await mkdir(runDirectory, { recursive: true });
   try {
-    await writeFile(script, renderK6Script(safeScenario, summary), { encoding: "utf8", mode: 0o600 });
+    await writeFile(script, renderK6Script(safeScenario, summary, verifiedHosts), { encoding: "utf8", mode: 0o600 });
     const processResult = await runBoundedProcess({
       binary,
       args: ["run", "--quiet", script],
