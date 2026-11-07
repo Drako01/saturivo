@@ -34,19 +34,38 @@ export function parseScenarioEditorInput(
   const method = fields.method;
   if (method !== "GET" && method !== "HEAD") throw new Error("Only GET and HEAD are supported");
   const model = fields.model;
-  if (model !== "constant-vus" && model !== "constant-arrival-rate") {
+  if (model !== "constant-vus" && model !== "constant-arrival-rate" &&
+      model !== "ramping-vus") {
     throw new Error("Unsupported editor load model");
   }
   const durationSeconds = integer(fields.durationSeconds, "Duration", 5, 120);
   const virtualUsers = integer(fields.virtualUsers, "Virtual users", 1, policy.maxVirtualUsers);
   const maxRequests = integer(fields.maxRequests, "Request budget", 100, 100000);
   const p95 = integer(fields.maxP95Ms, "P95 SLO", 0, 120000);
+  const stages = (() => {
+    if (model !== "ramping-vus") return undefined;
+    if (typeof fields.stages !== "string" || fields.stages.length > 160) {
+      throw new Error("Ramping requires 2–8 duration:VUs stages");
+    }
+    const tokens = fields.stages.split(",");
+    if (tokens.length < 2 || tokens.length > 8) {
+      throw new Error("Ramping requires 2–8 duration:VUs stages");
+    }
+    return tokens.map(token => {
+      const match = /^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$/.exec(token.trim());
+      if (!match) throw new Error("Ramp stages must use duration:VUs format");
+      const duration = integer(match[1], "Stage duration", 1, 120);
+      const vus = integer(match[2], "Stage VUs", 0, virtualUsers);
+      return { durationSeconds: duration, targetVus: vus };
+    });
+  })();
   const scenario: Scenario = {
     id: "custom-v2", name, target, method, model, workloadVersion: 2,
     durationSeconds, virtualUsers, maxRequests,
     ...(model === "constant-arrival-rate"
       ? { arrivalRate: integer(fields.arrivalRate, "Arrival rate", 1, 500) } : {}),
     ...(p95 > 0 ? { slo: { maxP95Ms: p95 } } : {}),
+    ...(stages ? { stages } : {}),
   };
   return validateScenario(scenario, policy);
 }
