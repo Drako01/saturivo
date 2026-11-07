@@ -1,0 +1,262 @@
+import * as vscode from "vscode";
+import { compareRuns } from "./core/comparison";
+import { runGo, type GoTask } from "./core/go";
+import { HistoryStore } from "./core/history";
+import { runK6 } from "./core/k6";
+import { markdownReport } from "./core/report";
+import type { RunResult, Scenario } from "./core/types";
+import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/validation";
+import { dashboard, type DashboardState } from "./ui/html";
+import { translate } from "./ui/localize";
+
+type Preset = "smoke" | "stress" | "arrival";
+
+class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
+  private view?: vscode.WebviewView;
+  private controller?: AbortController;
+  private busy = false;
+  private message = "";
+  private latest?: RunResult;
+  private history: RunResult[] = [];
+  private readonly store: HistoryStore;
+  private readonly output = vscode.window.createOutputChannel("Saturivo");
+  private readonly storageDir: string;
+
+  constructor(private readonly context: vscode.ExtensionContext) {
+    this.storageDir = context.storageUri?.fsPath ?? context.globalStorageUri.fsPath;
+    this.store = new HistoryStore(this.storageDir);
+    void this.loadHistory();
+  }
+
+  private t(key: string): string { return translate(vscode.env.language, key); }
+  private config(): vscode.WorkspaceConfiguration { return vscode.workspace.getConfiguration("saturivo"); }
+  private target(): string { return this.config().get<string>("target", "http://127.0.0.1:8080/"); }
+  private maxVus(): number { return this.config().get<number>("maxVirtualUsers", 100); }
+  private allowRemote(): boolean { return this.config().get<boolean>("allowRemoteTargets", false); }
+
+  async resolveWebviewView(view: vscode.WebviewView): Promise<void> {
+    this.view = view;
+    view.webview.options = { enableScripts: true };
+    view.webview.onDidReceiveMessage((raw: unknown) => {
+      if (!raw || typeof raw !== "object") return;
+      const message = raw as { action?: unknown };
+      const commands: Record<string, string> = {
+        configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
+        runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
+        compare: "saturivo.compare", export: "saturivo.export",
+        goRace: "saturivo.goRace", goBench: "saturivo.goBench", cancel: "saturivo.cancel",
+      };
+      if (typeof message.action !== "string") return;
+      const command = commands[message.action];
+      if (command) void vscode.commands.executeCommand(command);
+    }, undefined, this.context.subscriptions);
+    this.refresh();
+  }
+
+  private refresh(): void {
+    void vscode.commands.executeCommand("setContext", "saturivo.busy", this.busy);
+    const state: DashboardState = {
+      target: this.target(), busy: this.busy, history: this.history,
+      message: this.message, ...(this.latest ? { latest: this.latest } : {}),
+    };
+    if (this.view) this.view.webview.html = dashboard(state, vscode.env.language);
+  }
+
+  private async loadHistory(): Promise<void> {
+    try {
+      this.history = await this.store.list();
+      this.latest = this.history[0];
+      this.refresh();
+    } catch (error) { this.output.appendLine("History read failed: " + String(error)); }
+  }
+
+  async openHome(): Promise<void> {
+    await vscode.commands.executeCommand("workbench.view.extension.saturivo");
+    this.refresh();
+  }
+
+  async configureTarget(): Promise<void> {
+    const input = await vscode.window.showInputBox({
+      title: this.t("target"), value: this.target(),
+      placeHolder: "http://127.0.0.1:8080/health",
+      validateInput: value => {
+        try {
+          assertAllowedTarget(value, {
+            allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
+          });
+          return undefined;
+        } catch (error) { return String(error instanceof Error ? error.message : error); }
+      },
+    });
+    if (input === undefined) return;
+    assertAllowedTarget(input, { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus() });
+    await this.config().update("target", input, vscode.ConfigurationTarget.Workspace);
+    this.message = "";
+    this.refresh();
+  }
+
+  private scenario(preset: Preset): Scenario {
+    const max = this.maxVus();
+    const duration = this.config().get<number>("durationSeconds", 10);
+    const common = { target: this.target(), method: "GET" as const, durationSeconds: duration };
+    switch (preset) {
+      case "smoke":
+        return { ...common, id: "smoke", name: "Smoke", model: "constant-vus", virtualUsers: 1 };
+      case "stress":
+        return { ...common, id: "stress", name: "Bounded stress", model: "constant-vus",
+          virtualUsers: Math.min(20, max) };
+      case "arrival":
+        return { ...common, id: "arrival", name: "Arrival-rate", model: "constant-arrival-rate",
+          virtualUsers: Math.min(20, max), arrivalRate: 25 };
+    }
+  }
+
+  async runPreset(preset: Preset): Promise<void> {
+    if (this.busy) { void vscode.window.showWarningMessage("Saturivo: another task is already running."); return; }
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus() };
+    const scenario = validateScenario(this.scenario(preset), policy);
+    if (isRemoteTarget(scenario.target)) {
+      const agreed = await vscode.window.showWarningMessage(
+        "Saturivo will send load to " + scenario.target + ". Confirm that you own or are authorized to test this service.",
+        { modal: true }, "Run authorized test"
+      );
+      if (agreed !== "Run authorized test") return;
+    }
+    this.busy = true;
+    this.message = this.t("running") + ": " + scenario.name;
+    this.controller = new AbortController();
+    this.refresh();
+    try {
+      const run = await runK6(
+        scenario, policy, this.config().get<string>("k6Path", "k6"),
+        this.storageDir, this.controller.signal
+      );
+      await this.store.save(run);
+      await this.loadHistory();
+      this.latest = run;
+      this.message = scenario.name + " · P95 " + run.metrics.p95Ms.toFixed(2) +
+        " ms · " + run.metrics.requestsPerSecond.toFixed(2) + " req/s";
+      this.output.appendLine(this.message);
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      this.output.appendLine(this.message);
+      if (this.message !== "Cancelled") {
+        void vscode.window.showErrorMessage("Saturivo: " + this.message +
+          ". Check that k6 is installed and reachable.");
+      }
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
+    }
+  }
+
+  cancel(): void { this.controller?.abort(); }
+
+  async compare(): Promise<void> {
+    const items = await this.store.list(40);
+    if (items.length < 2) { void vscode.window.showInformationMessage("Saturivo: at least two runs are required."); return; }
+    const latest = items[0];
+    if (!latest) return;
+    const baseline = items.slice(1).find(item => item.scenario.id === latest.scenario.id);
+    if (!baseline) { void vscode.window.showInformationMessage("Saturivo: no matching baseline scenario."); return; }
+    const result = compareRuns(baseline, latest);
+    const report = markdownReport(latest, result);
+    const document = await vscode.workspace.openTextDocument({ content: report, language: "markdown" });
+    await vscode.window.showTextDocument(document, { preview: false });
+    this.message = "Comparison: " + result.status;
+    this.refresh();
+  }
+
+  async exportReport(): Promise<void> {
+    if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: run a test first."); return; }
+    const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.joinPath(folder, "saturivo-report.md"),
+      filters: { Markdown: ["md"] }, saveLabel: "Export report",
+    });
+    if (!uri) return;
+    await vscode.workspace.fs.writeFile(uri, Buffer.from(markdownReport(this.latest), "utf8"));
+    void vscode.window.showInformationMessage("Saturivo: report exported.");
+  }
+
+  private folder(): string | undefined {
+    const active = vscode.window.activeTextEditor?.document.uri;
+    if (active) {
+      const folder = vscode.workspace.getWorkspaceFolder(active);
+      if (folder) return folder.uri.fsPath;
+    }
+    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  }
+
+  async runGoTask(task: GoTask): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const folder = this.folder();
+    if (!folder) throw new Error("Open a folder containing a Go project first.");
+    const response = await vscode.window.showWarningMessage(
+      "Saturivo will execute Go " + task + " tests in " + folder +
+        ". Tests may run project code or access configured services.",
+      { modal: true }, "Execute"
+    );
+    if (response !== "Execute") return;
+    this.busy = true;
+    this.message = this.t("runningGo") + ": " + task;
+    this.controller = new AbortController();
+    this.refresh();
+    try {
+      const result = await runGo(task, folder, this.controller.signal);
+      this.output.appendLine("Go " + task + " exited: " + result.exitCode);
+      this.output.appendLine(result.output);
+      this.message = "Go " + task + ": exit code " + result.exitCode;
+      const doc = await vscode.workspace.openTextDocument({
+        content: result.output + (result.truncated ? "\n[Output truncated]" : ""),
+        language: "plaintext",
+      });
+      await vscode.window.showTextDocument(doc, { preview: false });
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      if (this.message !== "Cancelled") void vscode.window.showErrorMessage("Saturivo: " + this.message);
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
+    }
+  }
+
+  dispose(): void { this.cancel(); this.output.dispose(); }
+}
+
+export function activate(context: vscode.ExtensionContext): void {
+  const app = new Saturivo(context);
+  context.subscriptions.push(app, vscode.window.registerWebviewViewProvider("saturivo.control", app, {
+    webviewOptions: { retainContextWhenHidden: true },
+  }));
+  const actions: Record<string, () => Promise<void> | void> = {
+    openHome: () => app.openHome(),
+    configureTarget: () => app.configureTarget(),
+    runSmoke: () => app.runPreset("smoke"),
+    runStress: () => app.runPreset("stress"),
+    runArrival: () => app.runPreset("arrival"),
+    cancel: () => app.cancel(),
+    compare: () => app.compare(),
+    export: () => app.exportReport(),
+    goRace: () => app.runGoTask("race"),
+    goBench: () => app.runGoTask("benchmark"),
+  };
+  for (const [key, action] of Object.entries(actions)) {
+    context.subscriptions.push(vscode.commands.registerCommand("saturivo." + key, async () => {
+      try { await action(); }
+      catch (error) {
+        void vscode.window.showErrorMessage("Saturivo: " +
+          (error instanceof Error ? error.message : String(error)));
+      }
+    }));
+  }
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(change => {
+    if (change.affectsConfiguration("saturivo")) void app.openHome();
+  }));
+}
+
+export function deactivate(): void { /* All resources are owned by the extension context. */ }
