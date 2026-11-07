@@ -6,6 +6,8 @@ import { HistoryStore } from "./core/history";
 import { runK6 } from "./core/k6";
 import { markdownReport } from "./core/report";
 import { parseGoRaceOutput } from "./core/race";
+import { compareTrialGroups } from "./core/statistics";
+import { fingerprintScenario } from "./core/fingerprint";
 import type { RunResult, Scenario } from "./core/types";
 import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/validation";
 import { dashboard, type DashboardState } from "./ui/html";
@@ -185,7 +187,13 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     const baseline = items.slice(1).find(item => item.scenario.id === latest.scenario.id);
     if (!baseline) { void vscode.window.showInformationMessage("Saturivo: no matching baseline scenario."); return; }
     const result = compareRuns(baseline, latest);
-    const report = markdownReport(latest, result);
+    // When six compatible independent runs exist, compare the latest three
+    // with the previous three, without sharing measurements between groups.
+    const matching = items.filter(item =>
+      fingerprintScenario(item.scenario) === fingerprintScenario(latest.scenario));
+    const trials = matching.length >= 6 ?
+      compareTrialGroups(matching.slice(3, 6), matching.slice(0, 3)) : undefined;
+    const report = markdownReport(latest, result, trials);
     const document = await vscode.workspace.openTextDocument({ content: report, language: "markdown" });
     await vscode.window.showTextDocument(document, { preview: false });
     this.message = "Comparison: " + result.status;

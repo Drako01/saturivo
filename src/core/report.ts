@@ -1,5 +1,6 @@
 import type { Comparison, RunResult } from "./types";
 import { fingerprintScenario } from "./fingerprint";
+import type { StatisticalComparison } from "./statistics";
 
 function safe(value: string): string {
   return value.replace(/[|\\r\\n]/g, " ").replace(/[<>]/g, "");
@@ -8,7 +9,8 @@ function num(value: number, digits = 2): string {
   return Number.isFinite(value) ? value.toFixed(digits) : "n/a";
 }
 
-export function markdownReport(run: RunResult, comparison?: Comparison): string {
+export function markdownReport(run: RunResult, comparison?: Comparison,
+  trials?: StatisticalComparison): string {
   const lines = [
     "# Saturivo · Performance run",
     "",
@@ -42,6 +44,15 @@ export function markdownReport(run: RunResult, comparison?: Comparison): string 
     "- RPS delta: " + num(comparison.deltaRpsPercent) + "%",
     "- Error rate delta: " + num(comparison.deltaFailedPercentagePoints) + " percentage points",
     "- Caveats: " + (comparison.reasons.join("; ") || "One-run heuristic, not a statistical proof"));
+  if (trials) lines.push("", "## Repeated trials (independent runs)", "",
+    "- Method: " + trials.method,
+    "- Result: " + trials.status,
+    "- Baseline runs: " + trials.baselineRuns,
+    "- Candidate runs: " + trials.candidateRuns,
+    "- Median P95 delta: " + num(trials.deltaPercent) + "%",
+    "- Empirical 95% interval: [" + num(trials.ciLowerPercent) + "%, " +
+      num(trials.ciUpperPercent) + "%]",
+    "- Caveats: " + (trials.reasons.join("; ") || "Bootstrap interval, not a production guarantee"));
   if (run.warnings.length) lines.push("", "## Warnings", "", ...run.warnings.map(w => "- " + safe(w)));
   lines.push("", "> Measurements are local observations, not a guarantee of production capacity.", "");
   return lines.join("\n");
