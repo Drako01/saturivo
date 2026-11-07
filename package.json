@@ -214,13 +214,15 @@
     "verify": "npm run typecheck && npm run test && npm run smoke:manifest",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
     "vscode:prepublish": "npm run build",
-    "test:integration:k6": "node scripts/k6-smoke.cjs"
+    "test:integration:k6": "node scripts/k6-smoke.cjs",
+    "test:integration:vscode": "node scripts/run-vscode-host.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
     "@types/vscode": "^1.99.0",
     "@vscode/vsce": "^3.2.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "@vscode/test-electron": "^3.1.0"
   },
   "icon": "media/saturivo-icon.png"
 }
