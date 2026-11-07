@@ -2,6 +2,9 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Go timeline now records per-snapshot monotonic collection wall time and discloses during-load sampling duration without misrepresenting it as causal profiling overhead. Targeted fixture included (exact-commit CI pending).
+
+
 - Redact URL query/fragment values in visible Control Center endpoint labels while retaining the original execution target and scenario fingerprint.
 
 - Added optional bounded warm-up and cool-down windows for v2 load scenarios. k6 tags requests by phase, reports latency/errors/RPS and SLOs only for the measurement window, and retains all-phase request-budget enforcement; older workload fingerprints remain unchanged.

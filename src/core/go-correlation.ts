@@ -1,3 +1,4 @@
+import { performance } from "node:perf_hooks";
 import type { CapturedGoProfile } from "./go-profiler";
 import { readGoroutineSnapshot, type GoroutineSnapshot } from "./go-profile-analysis";
 import type { RunResult } from "./types";
@@ -8,11 +9,14 @@ export interface ProfilePoint {
   readonly observedAt: string;
   readonly snapshot: GoroutineSnapshot;
   readonly profile: CapturedGoProfile;
+  /** Monotonic elapsed time to collect and parse one snapshot; not induced CPU overhead. */
+  readonly collectionWallMs: number;
 }
 export interface GoCorrelation {
   readonly run: RunResult;
   readonly points: readonly [ProfilePoint, ProfilePoint, ProfilePoint];
   readonly observedDelta: number;
+  readonly duringCollectionWallMs: number;
   readonly warnings: readonly string[];
 }
 function requireActive(signal: AbortSignal): void {
@@ -28,11 +32,13 @@ export async function captureGoLoadTimeline(
   const point = async (phase: TimelinePhase): Promise<ProfilePoint> => {
     requireActive(signal);
     onProgress?.(phase);
+    const wallStart = performance.now();
     const profile = await capture(phase, signal);
     if (profile.kind !== "goroutine") throw new Error("Only goroutine stack snapshots are comparable");
     const snapshot = await readGoroutineSnapshot(profile.localPath);
     requireActive(signal);
-    return { phase, profile, observedAt: profile.capturedAt, snapshot };
+    const collectionWallMs = Math.max(0, performance.now() - wallStart);
+    return { phase, profile, observedAt: profile.capturedAt, snapshot, collectionWallMs };
   };
   const before = await point("before");
   // Load starts AFTER before snapshot; the during snapshot is sampled while
@@ -65,9 +71,11 @@ export async function captureGoLoadTimeline(
     run: result,
     points: [before, during, after],
     observedDelta: after.snapshot.observedStacks - before.snapshot.observedStacks,
+    duringCollectionWallMs: during.collectionWallMs,
     warnings: [
       "Snapshots are sampled at three points, not a continuous trace.",
       "Profiling adds overhead and can affect measured P95 and throughput.",
+      "Snapshot collection wall time is measured, but not the performance overhead induced in the target. A separate control experiment is required.",
       "Goroutine growth is not proof of a leak or a causal bottleneck.",
     ],
   };
@@ -76,16 +84,19 @@ export async function captureGoLoadTimeline(
 export function goCorrelationMarkdown(result: GoCorrelation): string {
   const safe = (value: string): string => value.replace(/[|\r\n]/g, " ").replace(/[<>]/g, "");
   const during = result.points[1];
-  const rows = result.points.map(p => "| " + p.phase + " | " + p.observedAt +
-    " | " + p.snapshot.observedStacks + " | " + p.profile.bytes + " |").join("\n");
+  const rows = result.points.map(p => "| " + p.phase + " | " + safe(p.observedAt) +
+    " | " + p.snapshot.observedStacks + " | " + p.profile.bytes +
+    " | " + p.collectionWallMs.toFixed(2) + " |").join("\n");
   return [
     "# Saturivo — Go load-correlated runtime observations", "",
     "Scenario: " + safe(result.run.scenario.name),
     "Workload fingerprint: " + (result.run.scenarioHash ?? "legacy"),
     "Requests: " + result.run.metrics.requests,
     "Observed P95: " + result.run.metrics.p95Ms.toFixed(2) + " ms", "",
-    "| Phase | Timestamp | Goroutine stacks | Profile bytes |",
-    "|---|---|---:|---:|", rows, "",
+    "| Phase | Timestamp | Goroutine stacks | Profile bytes | Collection wall (ms) |",
+    "|---|---|---:|---:|---:|", rows, "",
+    "During-load snapshot collection: " + result.duringCollectionWallMs.toFixed(2) +
+      " ms wall time (not a causal estimate of profiling overhead).", "",
     "Observed before→after change: " + (result.observedDelta >= 0 ? "+" : "") + result.observedDelta,
     "Observed during-load count: " + during.snapshot.observedStacks, "",
     "## Important limitations", ...result.warnings.map(w => "- " + w), "",

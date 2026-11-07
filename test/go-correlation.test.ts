@@ -33,6 +33,11 @@ test("three independent goroutine snapshots correlate with a completed load, not
     assert.deepEqual(sequence, ["before", "execute", "during", "after"]);
     assert.deepEqual(result.points.map(p=>p.snapshot.observedStacks), [2,6,3]);
     assert.equal(result.observedDelta, 1);
+    assert(result.points.every(point => Number.isFinite(point.collectionWallMs) &&
+      point.collectionWallMs >= 0));
+    assert.equal(result.duringCollectionWallMs, result.points[1].collectionWallMs);
+    assert.match(goCorrelationMarkdown(result), /Collection wall \(ms\)/);
+    assert.match(goCorrelationMarkdown(result), /not a causal estimate/);
     assert.match(goCorrelationMarkdown(result), /not establish causation/);
     assert(!goCorrelationMarkdown(result).includes(dir));
     const injected = { ...result, run: { ...result.run, scenario: {
@@ -69,5 +74,22 @@ test("failed in-flight Go profile aborts its owned load process", async () => {
       new AbortController().signal
     ), /Controlled snapshot failure/);
     assert.equal(aborted, true, "The in-flight load must be cancelled after profiling fails");
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("Go timeline records the wall time of a slow during-load sample without claiming causality", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-wall-profile-"));
+  try {
+    const result = await captureGoLoadTimeline(async phase => {
+      if (phase === "during") {
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      const file = join(dir, phase + ".txt");
+      await writeFile(file, "goroutine 1 [running]:\n");
+      return { kind: "goroutine" as const, localPath: file, bytes: 24,
+        capturedAt: "2026-11-07T09:00:00Z" };
+    }, async () => fixture, new AbortController().signal);
+    assert(result.duringCollectionWallMs >= 10);
+    assert.match(goCorrelationMarkdown(result), /separate control experiment/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });

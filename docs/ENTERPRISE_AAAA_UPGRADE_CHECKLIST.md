@@ -8,6 +8,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Medición del tiempo de recolección Go — fase 2 (2026-11-07)
+
+- [x] Tiempo monotónico por snapshot before/during/after, latencia de recolección durante la carga e inclusión en el reporte con evidencia cuantitativa. Tests para muestra lenta y preservación de advertencias no causales.
+- [ ] **No confundir con overhead inducido:** falta ensayo control separado con y sin profiling, correlación GC/allocations y navegación de fuente para cierre completo de fase 2.
+- [ ] CI exacto del nuevo SHA.
+
 ## Lecturas seguras por descriptor — historial y Go (2026-11-07)
 
 - [x] Apertura con descriptor estable, identidad y enlace único; límite de bytes durante lectura y rechazo de hardlinks/symlinks.
