@@ -9,7 +9,7 @@
 - Remaining WSL/SSH/Dev Containers, VS Code native dialogs, NVDA/VoiceOver/200% zoom, remote DNS/WSL threat tests, external provenance and maintainer sign-off are **BLOCKED**, not counted as release approval.
 
 
-- Added a six-window real Go control-versus-profiling overhead experiment with persisted JSON P95/RPS/variability evidence; exact new CI pending.
+- Added a six-window real Go control-versus-profiling overhead experiment with persisted JSON P95/RPS/variability evidence; verified #42422983667.
 - Added 64 seeded 3×3 synthetic noise controls and injected +60 ms latency sensitivity checks; real-network noise remains separate.
 - Included `THIRD_PARTY_NOTICES.md` in the distributable VSIX allowlist, distinct from development-only license inventory.
 - Aligned exact-SHA checklist, release tracker and threat-model claims to green CI #42420415145; added executable remote validation runbook with explicit BLOCKED states.
@@ -33,14 +33,14 @@
 
 - Comparisons now return INCONCLUSIVE when capped request budgets, dropped iterations or inconclusive run SLOs make throughput/latency evidence unsuitable for regression claims; shared unit-tested quality guard for two-run and 3×3 bootstrap comparisons.
 
-- Hardened VSIX ZIP central/local header audit against duplicate paths, symlink entries, encrypted archives, ZIP bombs, and unsupported metadata; added five adversarial tests to the multi-OS verification gate (exact commit CI pending).
+- Hardened VSIX ZIP central/local header audit against duplicate paths, symlink entries, encrypted archives, ZIP bombs, and unsupported metadata; added five adversarial tests to the multi-OS verification gate (verified #42422983667).
 
 - Fixed exported SARIF tool metadata to read the packaged extension version instead of advertising 0.1.0; added a manifest-parity regression test. Consolidated v0.2.0 acceptance criteria and the six-phase gate summary (CI of exact commit pending).
 
 - Integrated optional local Go expvar GC/allocation observations into the before/during/after load timeline, with strictly allowlisted counters, bilingual consent, noncausal reporting and real Go fixture verification; CI of exact commit pending.
 
 
-- Go timeline now records per-snapshot monotonic collection wall time and discloses during-load sampling duration without misrepresenting it as causal profiling overhead. Targeted fixture included (exact-commit CI pending).
+- Go timeline now records per-snapshot monotonic collection wall time and discloses during-load sampling duration without misrepresenting it as causal profiling overhead. Targeted fixture included (verified #42422983667).
 
 
 - Redact URL query/fragment values in visible Control Center endpoint labels while retaining the original execution target and scenario fingerprint.
@@ -49,7 +49,7 @@
 
 - Split browser functional QA from README asset regeneration: ordinary CI validates scenario editing and history investigation in real Chromium, while screenshot files can only be refreshed through an explicitly requested final-stage workflow.
 
-- Added an in-editor accessible run investigation view: exact observed latency/RPS/errors/status counts, SLO findings, warnings and workload fingerprint; persistent selected run and bilingual disclosure. Final README screenshots deferred until complete UX sign-off.
+- Added an in-editor accessible run investigation view: exact observed latency/RPS/errors/status counts, SLO findings, warnings and workload fingerprint; persistent selected run and bilingual disclosure. Four README screenshots subsequently generated at 6387739, with manual visual sign-off pending.
 
 - Set candidate version to `0.2.0` across manifest/lockfile, editor branding, k6 identification, upgrade tests and release records; removed `preview: true`. Added 23 relevant Marketplace/Open VSX keywords with an automated uniqueness/limit check. No Git tags or publication. Publication remains separately approval-gated.
 
