@@ -216,7 +216,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</div></div><div class="endpoint"><span class="eyebrow">' + t('target') +
     '</span><code>' + escapeHtml(state.target) + '</code><span class="endpoint-hint">' +
     t(state.allowRemoteTargets ? 'remoteAllowed' : 'loopbackDefault') +
-    '</span></div></div>' +
+    '</span></div></div>' + (hasEvidence ? '' : guidance) +
     '<div class="section-title"><div><span class="eyebrow">' + t('observability') +
     '</span><h2>' + t('last') + '</h2></div><span class="subtle">' +
     (state.latest ? escapeHtml(dateLabel(state.latest.startedAt, locale)) : t('noRunYet')) +
@@ -235,7 +235,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</strong></div><div class="line"><span>' + t('dropped') + '</span><strong>' +
     count(metric?.droppedIterations) + '</strong></div><div class="bottom-action">' +
     button('compare', 'compare', 'secondary', busy || state.history.length < 2) +
-    '</div></article></div>' + comparator + guidance + '</section>';
+    '</div></article></div>' + comparator + (hasEvidence ? guidance : '') + '</section>';
 
   const load = '<section role="tabpanel" id="view-load" data-view="load" aria-labelledby="tab-load" hidden>' +
     '<div class="section-title"><div><span class="eyebrow">' + t('workloads') +
