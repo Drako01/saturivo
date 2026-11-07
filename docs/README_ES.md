@@ -37,10 +37,11 @@ Saturivo permite medir cómo responde una API bajo una carga controlada, guardar
 | Medir una API local | Presets de carga y editor de escenarios HTTP v2 (GET/HEAD) con límites y consentimiento |
 | Entender la degradación | P50/P95/P99, solicitudes por segundo, fallos e iteraciones descartadas |
 | Comparar cambios | Huella SHA-256, selección de baseline e incertidumbre con pruebas repetidas |
+| Comprobar WebSocket | Prueba k6 de handshake y mensajes limitada a ws:// loopback, 5 segundos, 1 VU y hasta 100 sesiones; métricas de sesión, no latencia HTTP |
 | Analizar Go | Race detector, benchmarks, perfiles CPU, heap, goroutines, mutex/block, traza local y snapshots antes/durante/después |
 | Guardar evidencia | Exportación Markdown, JSON y SARIF para carreras observadas |
 
-**Experimental:** se incorporó un piloto manual de capacidad local con 3 etapas de carga acotada, SLO P95 obligatorio y parada ante fallos o resultados inconclusos. No certifica capacidad de producción. **Todavía pendiente:** capacidad con intervalos robustos, exclusión temporal de warm-up, correlación profunda de perfiles Go, adaptadores gRPC/WebSockets, profiling especializado de Node/Java/Python, entornos remotos e IA opt-in. Se incorporó al CI una matriz HTTP real de Go/Node/Python, que no equivale a profiling de esos lenguajes. Consultá el [roadmap](../ROADMAP.md).
+**Experimental:** se incorporó un piloto manual de capacidad local con 3 etapas de carga acotada, SLO P95 obligatorio y parada ante fallos o resultados inconclusos. No certifica capacidad de producción. **Todavía pendiente:** capacidad con intervalos robustos, exclusión temporal de warm-up, correlación profunda de perfiles Go, adaptadores completos gRPC/WebSockets más allá de la prueba WebSocket local, profiling especializado de Node/Java/Python, entornos remotos e IA opt-in. Se incorporó al CI una matriz HTTP real de Go/Node/Python, que no equivale a profiling de esos lenguajes. Consultá el [roadmap](../ROADMAP.md).
 
 ## Instalación y uso
 
@@ -61,7 +62,9 @@ En VS Code ejecutá **Extensions: Install from VSIX…** y seleccioná `saturivo
 2. Abrí el **Centro de Control** desde el ícono Saturivo. Esto **no genera tráfico automáticamente**.
 3. Elegí **Configurar destino** y completá la URL local.
 4. Ejecutá una prueba rápida, una carga por usuarios virtuales o una tasa de llegadas (*open loop*). Podés cancelar.
-5. Revisá P95/P99, RPS, errores e historial; repetí el mismo escenario para comparar y exportar resultados.
+5. Revisá P95/P99, RPS, errores e historial; repetí el mismo escenario, elegí un baseline explícito y exportá resultados.
+
+**Editor propio:** en Pruebas de carga podés definir GET/HEAD, VUs o tasa de llegadas, duración, presupuesto y P95 objetivo. La extensión revalida todo antes de ejecutar. **WebSocket:** existe una prueba separada de loopback que pide endpoint ws:// y consentimiento; sus métricas corresponden a sesiones WebSocket, no a requests HTTP.
 
 **Piloto de capacidad local:** configurá primero un SLO P95, elegí una URL HTTP con IP literal de loopback (por ejemplo `http://127.0.0.1:8080/health`) y ejecutá **Piloto de capacidad local**. Hace hasta 3 etapas acotadas de 10 segundos (10, 20 y 40 llegadas/s), con presupuesto finito, cancelación y corte por SLO o evidencia insuficiente. No representa el límite real de producción.
 
