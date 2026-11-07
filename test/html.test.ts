@@ -166,3 +166,26 @@ test("professional Control Center includes guided workflow and contextual visual
   assert.match(english, /Design your first test/);
   assert(!english.includes("undefined"));
 });
+
+test("scenario cards personalize the interactive studio without sending automatic load", () => {
+  const markup = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+    history: [], message: "" }, "en");
+  for (const preset of ["smoke", "stress", "arrival", "ramp"]) {
+    assert.match(markup, new RegExp('data-preset="' + preset + '"'));
+    assert.match(markup, new RegExp("preset-profile-" + preset));
+  }
+  assert.match(markup, /Customize in scenario studio/);
+  assert.match(markup, /action\.addEventListener\("click"/);
+  assert.match(markup, /if\(!preset\)return/);
+  assert.match(markup, /selectTab\("load",false\)/);
+  assert.match(markup, /preview-invalid/);
+  assert.match(markup, /submit\.disabled=invalid/);
+});
+test("busy state identifies indeterminate progress and blocks unsafe scenario controls", () => {
+  const markup = dashboard({ target: "http://127.0.0.1:8080/", busy: true,
+    history: [], message: "Test in progress" }, "es-AR");
+  assert.match(markup, /class="activity-track" role="progressbar"/);
+  assert.match(markup, /no hay porcentaje de avance disponible/);
+  assert.match(markup, /data-preset="ramp" disabled/);
+  assert.match(markup, /type="submit" disabled/);
+});
