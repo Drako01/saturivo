@@ -56,8 +56,16 @@ function selectScreen(html, tab) {
   html = html.replace(tabs, (_whole, start, tabName, _old, middle, _index, end) =>
     start + (tabName === tab ? "true" : "false") + middle +
     (tabName === tab ? "0" : "-1") + end);
-  // The document is a static snapshot; there is no VS Code host to post messages to.
-  html = html.replace(/<script nonce="[a-f0-9]+">[\s\S]*?<\/script>/i, "");
+  // Exercise the real production webview script while replacing only the
+  // VS Code bridge. All actions remain inert in the screenshot process.
+  // This renders the scenario inspector and accessibility tab state exactly
+  // as the extension would; metrics are still explicitly synthetic.
+  const match = /<script nonce="([a-f0-9]+)">/.exec(html);
+  if (!match) throw new Error("Dashboard renderer omitted the CSP script nonce");
+  const bridge = '<script nonce="' + match[1] + '">function acquireVsCodeApi(){return {' +
+    'getState(){return {activeTab:' + JSON.stringify(tab) + '}},' +
+    'setState(){},postMessage(){}}}</script>';
+  html = html.replace(match[0], bridge + match[0]);
   return html;
 }
 function main() {
