@@ -65,7 +65,8 @@ function selectScreen(html, tab) {
   if (!match) throw new Error("Dashboard renderer omitted the CSP script nonce");
   const bridge = '<script nonce="' + match[1] + '">function acquireVsCodeApi(){return {' +
     'getState(){return window.__saturivoState||{activeTab:' + JSON.stringify(tab) + '}},' +
-    'setState(value){window.__saturivoState=value},postMessage(){}}}</script>';
+    'setState(value){window.__saturivoState=value},' +
+    'postMessage(value){window.__saturivoSent=window.__saturivoSent||[];window.__saturivoSent.push(value)}}}</script>';
   html = html.replace(match[0], bridge + match[0]);
   return html;
 }
@@ -124,11 +125,14 @@ function main() {
           'const end=tabs[tabs.length-1].getAttribute("aria-selected")==="true"&&',
           'document.activeElement===tabs[tabs.length-1];',
           'const skip=document.querySelector("a.skip-link");',
+          'field("name").focus();',
+          'const focused=window.__saturivoState?.focusAnchor;',
+          'const focusSaved=focused?.kind==="field"&&focused.value==="name";',
           'const keyboard=arrow&&home&&end&&!!skip&&',
           'document.getElementById("main-workspace").tabIndex===-1&&',
           'tabs.every(tab=>document.getElementById(tab.getAttribute("aria-controls")).tabIndex===0);',
           'document.documentElement.setAttribute("data-ui-smoke",',
-          'valid&&invalid&&phaseInvalid&&phaseValid&&keyboard?"pass":"fail");',
+          'valid&&invalid&&phaseInvalid&&phaseValid&&keyboard&&focusSaved?"pass":"fail");',
           '})();',
         ].join("");
         const checked = html.replace("</body>",
@@ -160,6 +164,10 @@ function main() {
           'document.getElementById("run-detail-0").hidden&&selected&&!selected.hidden&&',
           'document.activeElement===selected.querySelector("h3")&&',
           'window.__saturivoState?.selectedRunId===controls[1].dataset.inspectRun;',
+          'const actions=["importJson","exportJson","clearHistory","compare"];',
+          'for(const name of actions){const btn=document.querySelector("button[data-action="+name+"]");',
+          'if(btn&&!btn.disabled)btn.click();else valid=false;}',
+          'valid=valid&&actions.every(name=>window.__saturivoSent?.some(item=>item.action===name));',
           'document.documentElement.setAttribute("data-history-smoke",valid?"pass":"fail");',
         ].join("");
         const checked = html.replace("</body>",
