@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { cpus, totalmem } from "node:os";
+import { createHash, randomUUID } from "node:crypto";
+import { cpus, totalmem, hostname } from "node:os";
 import { join } from "node:path";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import type { RunResult, Scenario } from "./types";
@@ -38,11 +38,22 @@ export function renderK6Script(
     'import http from "k6/http";',
     'import exec from "k6/execution";',
     'import { sleep } from "k6";',
+    'import { Counter } from "k6/metrics";',
+    'const statuses = {',
+    '  1: new Counter("saturivo_status_1xx"),',
+    '  2: new Counter("saturivo_status_2xx"),',
+    '  3: new Counter("saturivo_status_3xx"),',
+    '  4: new Counter("saturivo_status_4xx"),',
+    '  5: new Counter("saturivo_status_5xx"),',
+    '  other: new Counter("saturivo_status_unknown"),',
+    '};',
     "export const options = " + JSON.stringify(options) + ";",
     "export default function () {",
     "  if (exec.scenario.iterationInTest >= " + String(scenario.maxRequests ?? 10000) + ") { sleep(1); return; }",
-    "  http.request(" + JSON.stringify(scenario.method) + ", " + JSON.stringify(scenario.target) +
+    "  const response = http.request(" + JSON.stringify(scenario.method) + ", " + JSON.stringify(scenario.target) +
       ', null, { redirects: 0, timeout: "10s" });',
+    '  const group = Math.floor(Number(response.status || 0) / 100);',
+    '  if (group >= 1 && group <= 5) statuses[group].add(1); else statuses.other.add(1);',
     "}",
     "export function handleSummary(data) {",
     "  return { [" + JSON.stringify(output) + "]: JSON.stringify(data) };",
@@ -98,21 +109,34 @@ export async function runK6(
     if ((await stat(summary)).size > 4_000_000) throw new Error("Summary exceeds the size limit");
     const summaryText = await readFile(summary, "utf8");
     if (Buffer.byteLength(summaryText) > 4_000_000) throw new Error("Summary exceeds the size limit");
-    const metrics = readK6Summary(JSON.parse(summaryText) as unknown);
+    const metrics = readK6Summary(JSON.parse(summaryText) as unknown,
+      safeScenario.model === "constant-arrival-rate" ? safeScenario.arrivalRate : undefined);
     const warnings: string[] = [];
     if (safeScenario.model === "ramping-vus") warnings.push("Ramp metrics cover all stages; warm-up and cool-down are not excluded from reported percentiles.");
     if (processResult.truncated) warnings.push("k6 process output exceeded the capture budget; see summary metrics for evidence.");
     if (metrics.droppedIterations > 0) warnings.push("Dropped iterations: the configured arrival rate was not fully achieved.");
+    if (metrics.targetArrivalRate !== undefined && metrics.achievedArrivalRate !== undefined &&
+        metrics.achievedArrivalRate < metrics.targetArrivalRate * 0.95) {
+      warnings.push("Achieved request arrivals are over 5% below requested arrival rate.");
+    }
     if (metrics.requests < 100) warnings.push("Small sample size: avoid drawing strong conclusions.");
     const budgetReached = metrics.requests >= (safeScenario.maxRequests ?? 10000);
     if (budgetReached) warnings.push("Request budget reached: observed throughput is capped, not sustainable capacity.");
+    const cpu = cpus();
+    const cpuModel = cpu[0]?.model ?? "unknown";
+    const loadHostFingerprint = createHash("sha256").update("saturivo-host-v1:" + hostname()).digest("hex");
+    const environmentHash = createHash("sha256").update(JSON.stringify([
+      process.platform, process.arch, process.version, cpu.length, cpuModel,
+      totalmem(), k6Version, loadHostFingerprint,
+    ])).digest("hex");
     return {
       schemaVersion: 2, id, startedAt, endedAt: new Date().toISOString(),
       engine: "k6", scenario: safeScenario, scenarioHash: fingerprintScenario(safeScenario), metrics,
       sloAssessment: assessSlo(metrics, safeScenario.slo, budgetReached),
       environment: { platform: process.platform, arch: process.arch,
-        node: process.version, cpuCount: cpus().length,
-        cpuModel: cpus()[0]?.model ?? "unknown", totalMemoryBytes: totalmem(), k6Version },
+        node: process.version, cpuCount: cpu.length,
+        cpuModel, totalMemoryBytes: totalmem(), k6Version,
+        loadHostFingerprint, environmentHash },
       warnings,
     };
   } finally {
