@@ -125,7 +125,7 @@ function main() {
           'const end=tabs[tabs.length-1].getAttribute("aria-selected")==="true"&&',
           'document.activeElement===tabs[tabs.length-1];',
           'const skip=document.querySelector("a.skip-link");',
-          'field("name").focus();',
+          'loadTab.click();field("name").focus();',
           'const focused=window.__saturivoState?.focusAnchor;',
           'const focusSaved=focused?.kind==="field"&&focused.value==="name";',
           'const keyboard=arrow&&home&&end&&!!skip&&',
