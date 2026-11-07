@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { compareRuns } from "./core/comparison";
 import { runGo, type GoTask } from "./core/go";
+import { captureGoProfile, localPprofEndpoint, type GoProfileKind } from "./core/go-profiler";
 import { HistoryStore } from "./core/history";
 import { runK6 } from "./core/k6";
 import { markdownReport } from "./core/report";
@@ -44,7 +45,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
         runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
         compare: "saturivo.compare", export: "saturivo.export",
-        goRace: "saturivo.goRace", goBench: "saturivo.goBench", cancel: "saturivo.cancel",
+        goRace: "saturivo.goRace", goBench: "saturivo.goBench",
+        captureGoProfile: "saturivo.captureGoProfile", cancel: "saturivo.cancel",
       };
       if (typeof message.action !== "string") return;
       const command = commands[message.action];
@@ -225,6 +227,48 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     }
   }
 
+  async captureProfile(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const kinds: readonly GoProfileKind[] = ["goroutine", "cpu", "heap", "mutex", "block"];
+    const selection = await vscode.window.showQuickPick(kinds, {
+      title: this.t("profile"),
+      placeHolder: this.t("profileChoose"),
+    });
+    if (!selection) return;
+    const origin = this.config().get<string>("goProfilerOrigin", "http://127.0.0.1:6060/");
+    localPprofEndpoint(origin, selection);
+    const accepted = await vscode.window.showWarningMessage(
+      this.t("profileConsent") + " " + origin + " (" + selection + ").",
+      { modal: true }, this.t("profileAuthorize")
+    );
+    if (accepted !== this.t("profileAuthorize")) return;
+    this.busy = true;
+    this.controller = new AbortController();
+    this.message = this.t("profileRunning");
+    this.refresh();
+    try {
+      const evidence = await captureGoProfile(origin, selection, this.storageDir, this.controller.signal);
+      this.output.appendLine("Go pprof " + evidence.kind + ": " + evidence.localPath +
+        " (" + evidence.bytes + " bytes)");
+      this.message = this.t("profileSaved") + " (" + evidence.bytes + " bytes)";
+      if (selection === "goroutine") {
+        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(evidence.localPath));
+        await vscode.window.showTextDocument(document, { preview: false });
+      } else {
+        void vscode.window.showInformationMessage(this.t("profileSaved") +
+          " — " + evidence.localPath);
+      }
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      if (this.message !== "Cancelled") void vscode.window.showErrorMessage("Saturivo: " + this.message);
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
+    }
+  }
+
   dispose(): void { this.cancel(); this.output.dispose(); }
 }
 
@@ -244,6 +288,7 @@ export function activate(context: vscode.ExtensionContext): void {
     export: () => app.exportReport(),
     goRace: () => app.runGoTask("race"),
     goBench: () => app.runGoTask("benchmark"),
+    captureGoProfile: () => app.captureProfile(),
   };
   for (const [key, action] of Object.entries(actions)) {
     context.subscriptions.push(vscode.commands.registerCommand("saturivo." + key, async () => {

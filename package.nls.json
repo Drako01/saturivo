@@ -14,5 +14,7 @@
   "setting.remote": "Permit non-loopback URLs; each remote test also requires explicit confirmation.",
   "setting.k6Path": "Path to locally installed Grafana k6 executable.",
   "setting.duration": "Duration per test in seconds (5–120).",
-  "setting.vus": "Hard ceiling on concurrent virtual users (1–100)."
+  "setting.vus": "Hard ceiling on concurrent virtual users (1–100).",
+  "command.profile": "Capture Go Runtime Profile",
+  "setting.goProfilerOrigin": "Local Go net/http/pprof origin (literal 127.0.0.1 or [::1]). Profiles are never collected automatically."
 }

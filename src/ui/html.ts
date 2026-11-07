@@ -24,7 +24,8 @@ export function dashboard(state: DashboardState, locale: string): string {
     ["runSmoke", "smoke", state.busy], ["runStress", "stress", state.busy],
     ["runArrival", "arrival", state.busy], ["compare", "compare", state.busy],
     ["export", "export", !state.latest], ["goRace", "race", state.busy],
-    ["goBench", "benchmark", state.busy], ["cancel", "cancel", !state.busy],
+    ["goBench", "benchmark", state.busy], ["captureGoProfile", "profile", state.busy],
+    ["cancel", "cancel", !state.busy],
   ];
   const buttons = actions.map(([action, label, disabled]) =>
     '<button type="button" data-action="' + action + '"' + (disabled ? " disabled" : "") + ">" + t(String(label)) + "</button>").join("");

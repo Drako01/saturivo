@@ -11,6 +11,10 @@ const english: Dictionary = {
   safety: "Safety: loopback-only by default; no automatic traffic; VUs and duration capped.",
   help: "Requires a local k6 installation. Go commands require the Go toolchain.",
   none: "No runs saved yet", runningGo: "Running Go command",
+  profile: "Capture Go profile", profileChoose: "Choose a pprof profile",
+  profileConsent: "Collect sensitive Go runtime profiling evidence from",
+  profileAuthorize: "Capture profile", profileRunning: "Collecting Go profile",
+  profileSaved: "Profile saved locally",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -23,6 +27,10 @@ const spanish: Dictionary = {
   safety: "Seguridad: solo loopback por defecto; sin tráfico automático; VUs y duración limitados.",
   help: "Requiere k6 instalado localmente. Los comandos Go requieren su toolchain.",
   none: "Todavía no hay ejecuciones guardadas", runningGo: "Ejecutando Go",
+  profile: "Capturar perfil Go", profileChoose: "Elegí un perfil pprof",
+  profileConsent: "Recopilar evidencia sensible del runtime Go desde",
+  profileAuthorize: "Capturar perfil", profileRunning: "Capturando perfil Go",
+  profileSaved: "Perfil guardado localmente",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;

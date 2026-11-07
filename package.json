@@ -107,6 +107,11 @@
         "command": "saturivo.goBench",
         "title": "%command.bench%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.captureGoProfile",
+        "title": "%command.profile%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {
@@ -173,6 +178,11 @@
           "maximum": 100,
           "default": 100,
           "description": "%setting.vus%"
+        },
+        "saturivo.goProfilerOrigin": {
+          "type": "string",
+          "default": "http://127.0.0.1:6060/",
+          "description": "%setting.goProfilerOrigin%"
         }
       }
     }
