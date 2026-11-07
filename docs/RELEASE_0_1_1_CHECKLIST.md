@@ -11,17 +11,17 @@ PR #5 commit cbd3724 passed [CI 42404881890](https://github.com/Drako01/saturivo
 | Gate | Status | Acceptance still required |
 |---|---|---|
 | Compatibilidad v0.1.0, TypeScript estricto | PARTIAL | Tests de schema v1/2, historial y artefacto actualizado |
-| P1 editor de escenarios HTTP v2 | IMPLEMENTED / CI PENDING | Validator, target desde settings, form persistente, límites, consentimiento; falta ramp editor y prueba host completa |
-| P1 fingerprint y métricas de ambiente | PARTIAL | Git SHA/env fingerprint, arrivals reales, stages y exclusión warm-up/cooldown |
+| P1 editor de escenarios HTTP v2 | PARTIAL / CI PENDING | Closed/open/ramp con estudio de escenarios e inspector visual; faltan warm-up/cool-down y migración total |
+| P1 fingerprint y métricas de ambiente | PARTIAL | Git SHA y hash env/host, arrival deseada/observada y códigos HTTP; falta warm-up/cool-down |
 | P1 repetición 3×3 y piloto local | PARTIAL | Fixtures previas verdes; falta UX del piloto y evidencia de comportamiento bajo degradación/ruido |
 | P2 Go race/pprof/timeline/trace | IMPLEMENTED / CI PENDING | Trace/mutex/block y fixture controlada de crecimiento/contención; resta correlación avanzada, overhead/diagnóstico sustentado |
 | P3 HTTP Go + Node + Python | IMPLEMENTED / CI PENDING | Matriz real de 3 runtimes con mismo workload k6, resultados y cancelación |
-| P3 WebSocket/gRPC/runtime adapter | PARTIAL | Probe WebSocket loopback y fixture E2E incorporados; falta CI exacto, gRPC opcional y runtime adapters Node/Java/Python |
-| P4 Control Center en editor, UI ES/EN | PARTIAL | Capturas en README, editor propio, comparador con baseline elegido; completar keyboard/WCAG, charts y E2E |
-| P4 JSON/MD/SARIF, imports/retención | PARTIAL | Verificar roundtrip y manejo de datos maliciosos y borrado desde host real |
+| P3 WebSocket/gRPC/runtime adapter | PARTIAL | WebSocket local y adaptación read-only Node/Java/Python Linux; faltan gRPC/ghz y profiling por lenguaje |
+| P4 Control Center en editor, UI ES/EN | PARTIAL / CI PENDING | Workflow guiado, escenario visual, navegador de evidencia, prueba Chromium real y capturas sintéticas; falta WCAG/manual |
+| P4 JSON/MD/SARIF, imports/retención | PARTIAL | Importación hostil, anti-symlink y retención configurable; faltan roundtrip host y revisión redacción |
 | P5 threat model y SSRF | PARTIAL | [Threat model](THREAT_MODEL.md) creado, casos adversariales reales aún abiertos |
 | P5 lockfile, SBOM y licencias | IMPLEMENTED / CI PENDING | Evidencia CI exacta y revisión de avisos/licencias |
-| P5 VSIX/security/upgrade | NOT RUN | Auditoría, revisión de dependencias incluidas, checksum, provenance e instalación/upgrade real en OS soportados |
+| P5 VSIX/security/upgrade | PARTIAL / CI PENDING | Gate real de upgrade 0.1.0→0.1.1 Linux y cuotas/SSRF incorporados; faltan evidencia final y OS remotos |
 | Publish OIDC manual y con tag protegido | IMPLEMENTED / NOT EXERCISED | Validar ambientes, Trusted Publisher, credenciales/OIDC y recuperación sin reconstruir VSIX |
 | Publicación v0.1.1 | BLOCKED | Owner sign-off y aprobación expresa: no merge/release automático |
 
