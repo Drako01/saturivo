@@ -1,22 +1,33 @@
-# Saturivo — measurable acceptance criteria
+# Saturivo 0.2.0 — Acceptance criteria
 
-| ID | Criterion | Measurement | Current evidence |
-|---|---|---|---|
-| A1 | Extension activates on VS Code >=1.99 | Open Extension Host, icon loads Control Center with no errors | Pending host smoke |
-| A2 | No implicit load | Open workspace and view; verify zero HTTP calls to disposable target | Pending integration smoke |
-| A3 | Local default policy | Reject remote URLs, URL credentials, unsupported schemes and methods in unit tests | Unit tests written |
-| A4 | Bounded workload | Reject >100 VUs or >120 seconds even with malformed settings | Unit tests written |
-| A5 | k6 execution | Local k6 installed, 10-second smoke, >=1 request, finite P95/P99/RPS | Pending live smoke |
-| A6 | Open-loop mode | k6 script contains constant-arrival-rate executor; dropped iterations reported | Unit tests written; integration pending |
-| A7 | Durability | Save run, reload from disk, compare same scenario after extension reload | History test pending |
-| A8 | Regression guard | Mismatched scenario, environment or <100 samples => inconclusive | Unit tests written |
-| A9 | Race safety | Go -race command executes only after explicit consent and can be cancelled | Manual host smoke pending |
-| A10 | Bilingual UI | Every manifest string key has ES/EN counterpart; control panel translates keys | Unit/manifest test written |
-| A11 | Build | TypeScript strict typecheck on three OS with 0 errors | CI pending |
-| A12 | Artifact | `vsce package --no-dependencies` generates installable VSIX and extension host activates | CI & host smoke pending |
-| A13 | Security | CSP, limited Webview messages, no cloud telemetry, local-first target | Unit/security review pending |
-| A14 | Release | No automatic publication; manual sign-off and clean checks | No publish workflow |
-| A15 | Transparent brand icon | PNG 192×192, four exterior corners alpha=0, center opaque | Pixel-level gate added in Phase 0 branch; CI pending |
-| A16 | Workload fingerprint | Identical workloads yield identical 64-char SHA-256, workload changes yield different hash; legacy history supported | Deterministic unit cases added in Phase 0 branch; CI pending |
+The **authoritative, continuously updated six-phase checklist** is
+[ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md).
+The [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) is the contractual scope.
+The [0.2.0 release tracker](RELEASE_0_2_0_CHECKLIST.md) tracks final packaging,
+security sign-off and owner approval. Do not copy statuses between versions.
 
-Criteria are explicit but are **not** marked PASS until observed. Go profiling, profiler correlation, dynamic capacity discovery and advanced regression statistics remain roadmap items.
+This file defines stable release acceptance IDs without incorrectly treating
+an older CI run as evidence of the final candidate.
+
+| Gate | Measurable release requirement | State |
+|---|---|---|
+| A01 | Exact v0.2.0 VSIX activates in real VS Code and opens central editor | PARTIAL — Extension Host CI; exact artifact pending |
+| A02 | Opening Control Center sends 0 test requests | IMPLEMENTED — Extension Host fixture |
+| A03 | Remote/private URL, credentials and unsafe protocols refused without explicit consent | PARTIAL — adversarial proxy/DNS matrix pending |
+| A04 | VU/rate/duration/requests constrained across all v2 phases; cancellation stops process descendants | PARTIAL — WSL/Windows hostile cases pending |
+| A05 | Real k6 closed/open/ramp/phased fixture, valid P50/P95/P99 and observed arrival/status | IMPLEMENTED — exact release CI pending |
+| A06 | Scenario fingerprints and v1/v2 imports roundtrip without loss | PARTIAL — Extension Host migration E2E pending |
+| A07 | Independent 3×3 comparison never treats noise, missing environment or samples as proof | PARTIAL — repeated real-world noise pilot pending |
+| A08 | Go race/pprof/trace/source evidence and controlled GC observations without causal marketing claims | PARTIAL — overhead control, source E2E pending |
+| A09 | HTTP Go/Node/Python and opt-in WebSocket fixture evidence; unsupported capabilities explicit | PARTIAL — remote env E2E pending |
+| A10 | Keyboard, screen reader, ES/EN, light/dark, zoom 200% on complete editor workflow | PARTIAL — manual WCAG audit pending |
+| A11 | Redacted Markdown, explicit JSON export consent, SARIF verified findings, import/delete/retention | PARTIAL — roundtrip hosted QA pending |
+| A12 | TS strict + Linux/Windows/macOS unit/build + real Go/k6/Webview/Extension Host on **same final SHA** | NOT RUN for final SHA |
+| A13 | Threat model signed; SSRF, proxy, symlink, process and profile DoS matrices pass | PARTIAL — remaining adversarial matrix |
+| A14 | SBOM, notices/licenses, audit shipped code, checksum/provenance, install/upgrade from 0.1.0 | PARTIAL — final VSIX sign-off pending |
+| A15 | Marketplace branding/icons/4 screenshots reflect final UI, no Preview, correct 0.2.0 version | PARTIAL — final screenshots intentionally deferred |
+| A16 | Manual owner authorization independently for merge, Git tag and marketplace/Open VSX publication | BLOCKED by design |
+
+Evidence is recorded by **commit SHA** in the master checklist and release
+tracker. `IMPLEMENTED` is never equivalent to a release `PASS`. Complete
+uncached release verification runs only after the candidate is frozen.

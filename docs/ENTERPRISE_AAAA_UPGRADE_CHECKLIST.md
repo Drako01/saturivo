@@ -9,6 +9,22 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Estado de aceptación — fase 0 a 5 (PR #5, versión 0.2.0)
+
+**Semántica:** `[x]` = código, pruebas o documento implementado; `[ ]` = falta el gate íntegro. `PASS` sólo con CI/evidencia de su SHA. El PR sigue **Draft**. Capturas README se regeneran **exclusivamente al final**.
+
+| Fase | Entregado en PR #5 | Gate obligatorio abierto |
+|---|---|---|
+| 0 — Foundation | [x] lockfile, CI multi-OS, k6 real, Extension Host, SBOM/licencias | [ ] roundtrip instalado del VSIX exacto, revisión visual final |
+| 1 — Load Engineering | [x] v2 closed/open/ramp, fases warm-up/medición/cool-down aisladas, presupuesto, fingerprints, 3×3 y SLO | [ ] migración v1/v2 exhaustiva, ruido/variabilidad, piloto UI E2E |
+| 2 — Go Concurrency | [x] race con ubicaciones, pprof/trace, tres snapshots, coste de recolección, GC/allocations expvar opt-in y NO SOPORTADO | [ ] ensayo con/sin profiling para impacto inducido, GC/locks/latencia y diagnóstico sustentado |
+| 3 — Protocol & Runtime | [x] HTTP Go/Node/Python, WebSocket, procfs y multi-root | [ ] WSL, SSH, devcontainer y Compose E2E, matrices multi-OS; gRPC sólo si justificado |
+| 4 — UX & Evidence | [x] Control Center central, escenario visual, inspector, baseline, informes JSON/MD/SARIF, ES/EN y Chromium sin PNG | [ ] teclado/lector/contraste/zoom/temas, roundtrip UI host y cuatro screenshots finales |
+| 5 — Security & Release | [x] SSRF DNS/IPv6, file descriptor/hardlinks, límites/abort, OIDC guardado, SBOM, script upgrade | [ ] proxy/rebinding adversarial y procesos Windows, artefacto VSIX exacto, audit/provenance y sign-off |
+
+**Evidencia verificable:** [CI #42415007006](https://github.com/Drako01/saturivo/actions/runs/42415007006) y [CI #42415333285](https://github.com/Drako01/saturivo/actions/runs/42415333285), ambos PASS de sus SHA anteriores. El nuevo SHA conserva su propio gate CI pendiente; no extrapolar resultados históricos.
+
+
 ## Go GC/allocations opcional (Fase 2, 2026-11-07)
 
 - [x] Lectura local **opt-in**, acotada y sin proxy/redirect de `/debug/vars`, únicamente origen pprof con IP loopback literal y Workspace Trust. `memstats.NumGC`, `TotalAlloc`, `HeapAlloc`, `PauseTotalNs` son los únicos valores aceptados; nunca exportar todas las variables expvar.
