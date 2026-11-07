@@ -91,3 +91,22 @@ jobs:
         run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
       - name: Launch actual VS Code 1.99 Extension Host
         run: xvfb-run -a npm run test:integration:vscode
+
+  go-runtime-evidence:
+    name: Real Go race and pprof fixture (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.0'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run build
+      - name: Verify real Go race evidence and pprof
+        run: node scripts/go-evidence.cjs
