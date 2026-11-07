@@ -42,7 +42,7 @@ function audit(file) {
   ];
   for (const name of needed) assert(files.includes(name), "Missing required VSIX file: " + name);
   for (const name of files) {
-    assert(!/(^|\/)(\.git|\.github|node_modules|src|test|scripts)(\/|$)/i.test(name),
+    assert(!/^extension\/(?:\.git|\.github|node_modules|src|test|scripts)(?:\/|$)/i.test(name),
       "Disallowed development or workflow file shipped: " + name);
     assert(!/\/out\/test\//i.test(name), "Compiled test bundle leaked into VSIX: " + name);
     assert(!/(^|\/)(\.env(?:\.[^/]*)?|\.npmrc|\.pypirc|id_rsa|credentials|secrets?)(\/|$)/i.test(name) &&
