@@ -22,7 +22,7 @@
 
 ---
 
-> **Public source · Development preview 0.1.0 (unreleased).** This branch is an Enterprise AAAA development candidate, **not a certified or published release**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
+> **Public source · 0.1.1 development candidate (PR #5; unreleased).** Enterprise AAAA remains a target, **not a certified or published maturity level**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
 
 ## Control Center — 0.1.1 preview
 
@@ -57,16 +57,16 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 
 ## Capabilities
 
-| Area | Included in the current PR #4 candidate | Important boundary |
+| Area | Implemented in the PR #5 development branch | Important boundary |
 |---|---|---|
-| **Load testing** | k6 smoke, bounded constant-VU stress and constant-arrival-rate presets | HTTP(S) GET/HEAD only; local target by default |
+| **Load testing** | k6 presets, ramping VUs, and a bilingual editor for bounded v2 HTTP GET/HEAD workloads | HTTP(S) GET/HEAD only; local target by default |
 | **Metrics & SLOs** | RPS, failures, P50/P95/P99, dropped iterations; configurable P95 SLO | Single-run status is not a statistical confidence guarantee |
-| **Comparisons & capacity pilot** | Workload SHA-256, local history, baseline heuristics, 3-vs-3 P95 bootstrap, bounded literal-loopback arrival-rate pilot | Evidence is local and scenario-specific; **not a production capacity guarantee** |
-| **Go concurrency** | Race detector, benchmark commands, CPU/heap/goroutine/mutex/block pprof capture and local summaries | Tests only inspect executed paths; no automated root-cause proof |
+| **Comparisons & capacity pilot** | Workload SHA-256, explicit baseline choice, 3-vs-3 P95 bootstrap, bounded literal-loopback arrival-rate pilot | Evidence is local and scenario-specific; **not a production capacity guarantee** |
+| **Go concurrency** | Race detection, benchmarks, CPU/heap/goroutine/mutex/block profiles, Go runtime trace and before/during/after stack observations | Tests only inspect executed paths; no automated root-cause proof |
 | **Evidence** | Markdown/JSON export; SARIF for observed Go race findings | Profiling files and reports may contain sensitive project information |
-| **Developer experience** | Activity Bar Control Center, ES/EN interface, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
+| **Developer experience** | Full editor-tab Control Center launched from Activity Bar, ES/EN interface, scenario form persistence, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
 
-**Limited preview:** an opt-in **local capacity pilot** now runs up to three bounded arrival-rate steps against a literal loopback HTTP target with a required P95 SLO. It reports only the highest observed passing arrival rate, not production capacity. **Still planned:** full automated capacity discovery with confidence/repeated trials, dynamic scenario editor/ramp profiles, correlated pre/during/post traces, gRPC/WebSocket adapters, Node/Java/Python runtime profiling, comprehensive remote development support and optional opt-in AI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
+**Limited preview:** an opt-in **local capacity pilot** now runs up to three bounded arrival-rate steps against a literal loopback HTTP target with a required P95 SLO. It reports only the highest observed passing arrival rate, not production capacity. **Still planned:** full statistically robust capacity discovery, per-stage warm-up exclusion, richer Go profiling correlation and verified source navigation, gRPC/WebSocket adapters, specialized Node/Java/Python runtime profiling, remote-development adapters and optional opt-in AI. A real HTTP Go/Node/Python integration gate is being added to CI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
 
 ## Quick start
 
@@ -83,7 +83,7 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 ~~~bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-git switch feat/enterprise-aaaa-runtime-evidence
+git switch feat/enterprise-aaaa-v0.1.1
 npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
@@ -200,7 +200,7 @@ Design decisions and limitations are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Engineering quality
 
-The private PR #4 candidate was verified on commit `a819a894` in [GitHub Actions run #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010):
+An earlier PR #5 commit, `cbd3724`, passed [GitHub Actions run #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) (7/7 jobs):
 
 | Validation | Observed result |
 |---|---|
@@ -210,7 +210,7 @@ The private PR #4 candidate was verified on commit `a819a894` in [GitHub Actions
 | Real Go race and pprof fixture (Linux) | **PASS** |
 | Preview VSIX and CycloneDX SBOM artifact generation | **PASS** |
 
-These are **commit-specific CI results**, not release certification. Additional threat modeling, language/protocol adapters, broader VS Code host coverage and final release validation remain pending.
+These are **commit-specific historical CI results**, not validation of subsequent development commits or release certification. Additional threat modeling, language/protocol adapters, broader VS Code host coverage and final release validation remain pending.
 
 Development commands:
 
@@ -226,7 +226,7 @@ npm run test:integration:k6
 npm run test:integration:vscode
 ~~~
 
-No Marketplace or Open VSX package has been published. **The source repository is public**; publication of a VSIX is a separate, explicitly approved release decision.
+**The source repository is public.** The package manifest does not use a private-repository flag. Publication to Marketplace, Open VSX or GitHub Releases is a separate, explicitly approved release decision, gated by a protected version tag and environment approvals. This PR does not publish an extension.
 
 ## Project documents
 
