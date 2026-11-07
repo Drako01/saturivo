@@ -23,7 +23,7 @@ Saturivo permite medir cómo responde una API bajo una carga controlada, guardar
 | Analizar Go | Detector de carreras con vínculos al código, benchmarks y perfiles CPU, heap, goroutines, mutex y block |
 | Guardar evidencia | Exportación Markdown, JSON y SARIF para carreras observadas |
 
-**Todavía no implementado:** descubrimiento automático de capacidad, editor avanzado de rampas, correlación temporal integral de trazas, adaptadores gRPC/WebSockets, profiling especializado de Node/Java/Python e IA opcional. Consultá el [roadmap](../ROADMAP.md).
+**Experimental:** se incorporó un piloto manual de capacidad local con 3 etapas de carga acotada, SLO P95 obligatorio y parada ante fallos o resultados inconclusos. No certifica capacidad de producción. **Todavía no implementado:** descubrimiento completo y estadísticamente robusto de capacidad, editor avanzado de rampas, correlación temporal integral de trazas, adaptadores gRPC/WebSockets, profiling especializado de Node/Java/Python e IA opcional. Consultá el [roadmap](../ROADMAP.md).
 
 ## Instalación y uso
 
@@ -45,6 +45,8 @@ En VS Code ejecutá **Extensions: Install from VSIX…** y seleccioná `saturivo
 3. Elegí **Configurar destino** y completá la URL local.
 4. Ejecutá una prueba rápida, una carga por usuarios virtuales o una tasa de llegadas (*open loop*). Podés cancelar.
 5. Revisá P95/P99, RPS, errores e historial; repetí el mismo escenario para comparar y exportar resultados.
+
+**Piloto de capacidad local:** configurá primero un SLO P95, elegí una URL HTTP con IP literal de loopback (por ejemplo `http://127.0.0.1:8080/health`) y ejecutá **Piloto de capacidad local**. Hace hasta 3 etapas acotadas de 10 segundos (10, 20 y 40 llegadas/s), con presupuesto finito, cancelación y corte por SLO o evidencia insuficiente. No representa el límite real de producción.
 
 ## Configuración recomendada
 

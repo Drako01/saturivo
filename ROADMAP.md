@@ -19,7 +19,7 @@ Status legend: [x] implemented; [ ] pending. PR #1 was merged into main. Enterpr
 - [ ] User-defined scenarios, ramps, warm-up, cooldown and scenario versioning.
 - [ ] Full environment fingerprint with runtime, CPU model, Go toolchain, git SHA and host load; **workload SHA-256 only** implemented on Phase 0 branch (awaiting CI).
 - [ ] Repeated trials, bootstrap confidence intervals, statistical uncertainty and stable baselines.
-- [ ] Capacity discovery with abort-on-SLO-violation, bounded growth, confirmed saturation region.
+- [x] Piloto acotado de capacidad (up to 3 stages, literal loopback, P95 SLO, early abort); [ ] descubrimiento completo con saturación confirmada y ensayos repetidos.
 - [ ] Backpressure, rate limiting, response status distribution and coordinated-omission awareness.
 - [ ] Live progress, timeout/no-progress kill, expanded result provenance and cancellation test.
 

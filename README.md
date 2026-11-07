@@ -44,12 +44,12 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 |---|---|---|
 | **Load testing** | k6 smoke, bounded constant-VU stress and constant-arrival-rate presets | HTTP(S) GET/HEAD only; local target by default |
 | **Metrics & SLOs** | RPS, failures, P50/P95/P99, dropped iterations; configurable P95 SLO | Single-run status is not a statistical confidence guarantee |
-| **Comparisons** | Workload SHA-256, local history, baseline heuristics, 3-vs-3 P95 bootstrap analysis when enough runs exist | Incompatible environments, insufficient samples and noise can yield **INCONCLUSIVE** |
+| **Comparisons & capacity pilot** | Workload SHA-256, local history, baseline heuristics, 3-vs-3 P95 bootstrap, bounded literal-loopback arrival-rate pilot | Evidence is local and scenario-specific; **not a production capacity guarantee** |
 | **Go concurrency** | Race detector, benchmark commands, CPU/heap/goroutine/mutex/block pprof capture and local summaries | Tests only inspect executed paths; no automated root-cause proof |
 | **Evidence** | Markdown/JSON export; SARIF for observed Go race findings | Profiling files and reports may contain sensitive project information |
 | **Developer experience** | Activity Bar Control Center, ES/EN interface, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
 
-**Planned, not shipped:** automatic capacity discovery, dynamic scenario editor/ramp profiles, correlated pre/during/post traces, gRPC/WebSocket adapters, Node/Java/Python runtime profiling, comprehensive remote development support and optional opt-in AI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
+**Limited preview:** an opt-in **local capacity pilot** now runs up to three bounded arrival-rate steps against a literal loopback HTTP target with a required P95 SLO. It reports only the highest observed passing arrival rate, not production capacity. **Still planned:** full automated capacity discovery with confidence/repeated trials, dynamic scenario editor/ramp profiles, correlated pre/during/post traces, gRPC/WebSocket adapters, Node/Java/Python runtime profiling, comprehensive remote development support and optional opt-in AI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
 
 ## Quick start
 
@@ -81,6 +81,8 @@ Open VS Code → **Extensions: Install from VSIX…** → select `saturivo.vsix`
 3. Choose **Configure Target**. Set the explicit local endpoint.
 4. Run **Smoke** (1 virtual user), **Bounded Stress** (up to 20 VUs) or **Arrival Rate** (25 attempted iterations/sec, bounded by available VUs). Each operation is user-initiated and can be cancelled.
 5. Inspect **P95/P99, RPS, failures, dropped iterations and run history**. Repeat comparable scenarios, choose **Compare Runs** and export the evidence.
+
+**Experimental local capacity pilot:** first configure a **P95 SLO**, keep the target on a literal loopback HTTP address (for example `http://127.0.0.1:8080/health`), then explicitly choose **Local Capacity Pilot**. It attempts 10, 20 and 40 arrivals/s at most, with three 10-second stages, resource budgets and stop-on-SLO/inconclusive behavior. Review the evidence in the output channel and run history. This is **not a production capacity benchmark**.
 
 For more reproducible before/after analysis, keep hardware, runtime, target configuration and scenario identical across runs. A scenario SHA-256 identifies the workload; it is **not** a substitute for matching every environmental factor.
 

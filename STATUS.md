@@ -41,3 +41,12 @@ No marcar funciones como completas por figurar en el plan. Evidencia medible, im
 - [ ] `rulesets:status` autenticado después de aplicar las dos políticas.
 
 Ver [docs/RULESETS.md](docs/RULESETS.md).
+
+## Descubrimiento de capacidad local (piloto)
+
+- [x] Motor de exploración creciente con SLO P95, límites de VUs/tiempo/solicitudes y corte ante fallo o datos inconclusos.
+- [x] Acción manual ES/EN en Control Center, consentimiento y telemetría solo en output local.
+- [ ] Fixture real específico de varios escalones con latencia inyectada y validación de límites/abortos.
+- [ ] Descubrimiento estadísticamente defendible e instrumentos de profiling correlacionados.
+
+La medición es local y específica del escenario; **no es capacidad certificada de producción**. Validación CI del último commit pendiente.

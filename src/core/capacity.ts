@@ -38,7 +38,7 @@ export interface CapacitySearchResult {
 }
 export type CapacityExperiment = (scenario: Scenario, signal: AbortSignal) => Promise<RunResult>;
 
-function assertLiteralLoopback(raw: string): void {
+export function assertLiteralLoopback(raw: string): void {
   let url: URL;
   try { url = new URL(raw); } catch { throw new Error("Invalid capacity discovery target"); }
   const h = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();

@@ -59,3 +59,12 @@
 | Gate de CI y revisión | PENDIENTE DE RULESET | 3 checks Verify + aprobación PR + owner/last push/threads |
 
 No confundir presencia de JSON con políticas activas. [Manual de rulesets](RULESETS.md).
+
+## Piloto de capacidad local
+
+| Control | Estado | Evidencia exigida |
+|---|---|---|
+| Motor incremental con SLO y presupuesto | Implementado en PR #4 | Tests unitarios y CI del SHA exacto |
+| Botón del Centro de Control, traducción ES/EN y confirmación | Implementado en PR #4 | TypeScript + tests Webview + Extension Host |
+| Prueba real con tres escalones y latencia inyectada | **NOT RUN** | Fixture descartable y medidas observadas |
+| Validación de capacidad de producción | **NO APLICA** | Saturivo solo reporta observaciones locales, no garantías |

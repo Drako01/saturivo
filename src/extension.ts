@@ -10,7 +10,7 @@ import { markdownReport } from "./core/report";
 import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
 import { compareTrialGroups } from "./core/statistics";
 import { fingerprintScenario } from "./core/fingerprint";
-import { discoverLocalCapacity } from "./core/capacity";
+import { assertLiteralLoopback, discoverLocalCapacity } from "./core/capacity";
 import type { RunResult, Scenario } from "./core/types";
 import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/validation";
 import { dashboard, type DashboardState } from "./ui/html";
@@ -200,6 +200,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       maxRequests: requestsLimit,
     };
     const target = this.target();
+    assertLiteralLoopback(target);
     const plannedBudget = Math.min(20_000, requestsLimit * 3);
     const confirmed = await vscode.window.showWarningMessage(
       this.t("capacityConsent") + " " + target +
@@ -207,7 +208,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         " " + this.t("capacityRequests"),
       { modal: true }, this.t("capacityAuthorize")
     );
-    if (confirmed !== this.t("capacityAuthorize")) return;
+    if (confirmed !== this.t("capacityAuthorize") || this.busy) return;
     this.busy = true;
     this.controller = new AbortController();
     this.message = this.t("capacityRunning");

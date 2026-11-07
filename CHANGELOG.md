@@ -12,6 +12,11 @@
 - Updated README and ES documentation to reflect that source code is public while releases remain unpublished.
 - Fixed capacity-discovery test expectations for inconclusive and over-budget outcomes.
 
+### Local capacity engineering pilot
+
+- Added an explicit bilingual Control Center action for a three-stage bounded local arrival-rate experiment with required P95 SLO and stop-on-failure/inconclusive behavior.
+- Protected the pilot with literal-loopback restrictions, request budgets, cancellation and clear non-production-capacity disclaimers.
+
 ## [0.1.0] — Unreleased
 
 - Private initial implementation: bounded k6 workloads, local run history, simple baseline comparisons, Go test commands and ES/EN Control Center.
