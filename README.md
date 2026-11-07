@@ -41,6 +41,12 @@ The new Control Center opens in a **full editor tab**, not a narrow sidebar. The
 
 </details>
 
+### A workflow designed for developers
+
+The 0.1.1 Control Center is more than a set of commands: it guides setup, bounded execution, comparison and investigation. The **Scenario Studio** provides a live workload preview, readable safety budgets, interactive ramp editing, and preset cards that can be customized **without starting traffic**. Results include an accessible exact-value table and clear evidence limitations.
+
+The dashboard uses VS Code theme tokens, responsive layouts, keyboard navigation, and reduced-motion support. Preview and selection are local interactions; only an explicit run action can begin a workload.
+
 ## Why Saturivo?
 
 Load generators can tell you *that* latency increased. Saturivo helps keep the evidence needed to investigate *what changed*: the workload, latency distribution, failure rate, server-side Go behavior, and baseline.
