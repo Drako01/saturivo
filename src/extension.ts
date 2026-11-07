@@ -573,7 +573,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   async captureProfile(): Promise<void> {
     if (this.busy) return;
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
-    const kinds: readonly GoProfileKind[] = ["goroutine", "cpu", "heap", "mutex", "block"];
+    const kinds: readonly GoProfileKind[] = ["goroutine", "cpu", "heap", "mutex", "block", "trace"];
     const selection = await vscode.window.showQuickPick(kinds, {
       title: this.t("profile"),
       placeHolder: this.t("profileChoose"),
@@ -596,7 +596,14 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       this.output.appendLine("Go pprof " + evidence.kind + ": " + evidence.localPath +
         " (" + evidence.bytes + " bytes)");
       this.message = this.t("profileSaved") + " (" + evidence.bytes + " bytes)";
-      if (kind === "goroutine") {
+      if (kind === "trace") {
+        const document = await vscode.workspace.openTextDocument({
+          content: this.t("traceSaved") + "\n" + evidence.localPath + "\n\n" +
+            this.t("traceCaution"),
+          language: "plaintext",
+        });
+        await vscode.window.showTextDocument(document, { preview: false });
+      } else if (kind === "goroutine") {
         const snapshotText = await readFile(evidence.localPath, "utf8");
         const snapshot = analyzeGoroutineStacks(snapshotText);
         const summary = [
