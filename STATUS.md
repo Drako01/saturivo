@@ -23,6 +23,10 @@ El PR #5 incorpora además un rediseño UX orientado a la experiencia del desarr
 
 La matriz anterior corresponde al commit histórico `a819a894`; además, [CI #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) pasó 7/7 sobre el SHA `cbd3724` del PR #5. Todo cambio posterior exige CI de su propio SHA; no se hereda un PASS.
 
+## Avance en seguridad e integridad de 0.1.1
+
+El PR #5 incorporó verificaciones de integridad de evidencias v2, independencia de comparaciones y manejo de métricas incompletas; CI [#42412224059](https://github.com/Drako01/saturivo/actions/runs/42412224059) verificó 7/7 el commit `b54f902`. Se añadieron privacidad de exportaciones y cancelación defensiva durante correlación Go; **la versión completa aún no está aprobada** y cada bloque posterior requiere su propio SHA y CI.
+
 ## Bloqueantes principales
 
 - Matriz avanzada de seguridad, DNS/SSRF, lifecycle, límites de recursos y tratamiento de secretos.

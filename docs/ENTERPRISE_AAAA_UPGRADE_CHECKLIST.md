@@ -6,12 +6,24 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+
+## Engineering block — cancellation and hostile Go evidence (2026-11-07)
+
+**Implemented; CI PENDING for the exact commit.**
+
+- The POSIX process group now escalates to SIGKILL when an aborted/timed-out parent closes, preventing a SIGTERM-resistant descendant from escaping cleanup.
+- A Go load/profile correlation owns its load AbortController; an in-flight snapshot failure explicitly aborts the load and awaits its termination instead of allowing work to continue silently.
+- Goroutine snapshot reads reject symlinks and oversized files before allocating the content buffer; the Go correlation report also sanitizes untrusted scenario text.
+- Focused regressions: stubborn descendant marker, profiling failure abort, malicious snapshots and Markdown injection.
+- **Residual:** Windows process-tree cleanup still depends on `taskkill /T /F`; cross-OS hostile descendant and WSL/remote validation remain release blockers. A successful test must not be treated as proof of every process lifecycle behavior.
+- **Next:** verify new SHA and CI; continue remaining load-phase measurement, external protocol/runtime and UX/accessibility gates, without declaring Enterprise AAAA complete.
+
 ## Engineering block — export privacy and faithful reporting (2026-11-07)
 
 - Markdown reports now preserve ordinary letters and redact URL query values by default, with an explicit statement that the workload fingerprint refers to the original target.
 - Lossless JSON export remains available only after a modal privacy disclosure/consent, because redacting the URL without schema/provenance migration would silently change experiment identity.
 - JSON import additionally checks actual read size (not only pre-read stat). ES/EN strings cover disclosure and approval.
-- Tests target report redaction/preserved characters and bilingual disclosure. **CI: PENDING** until verified on its final SHA.
+- Tests target report redaction/preserved characters and bilingual disclosure. **CI: PASS** on `b131d7c2564362e25d973b5f817b8c600e117f2f`: [CI #42412478761](https://github.com/Drako01/saturivo/actions/runs/42412478761), 7/7 successful. Subsequent blocks still require exact-SHA verification.
 - Remaining risks: path-based tokens and intentionally exported raw JSON can still carry sensitive values; manual review and release adversarial QA remain mandatory.
 
 ## Engineering block — evidence integrity (2026-11-07)

@@ -6,7 +6,9 @@ This document is the **release subset** of [the single current AAAA checklist](E
 
 ## Handoff de release — 2026-11-07
 
-- Export Markdown con query de URL redactada; JSON sin pérdida bajo confirmación de privacidad. **CI/UX todavía pendientes de comprobar en el SHA final.**
+- Seguridad operacional: escalamiento de kill-tree POSIX, cancelación de cargas al fallar profiling y rechazo de snapshots hostiles. **Bloque implementado con CI pendiente del SHA exacto**.
+
+- Export Markdown con query de URL redactada; JSON sin pérdida bajo confirmación de privacidad. **CI PASS para el bloque:** commit `b131d7c`, [run #42412478761](https://github.com/Drako01/saturivo/actions/runs/42412478761), 7/7. UX manual sigue pendiente.
 
 - Integridad de evidencias/comparaciones reforzada en el bloque siguiente a `5fabbbb`; ver checklist maestro. **PASS en bloque de integridad:** `b54f902` con [CI #42412224059](https://github.com/Drako01/saturivo/actions/runs/42412224059) 7/7. El siguiente bloque vuelve a quedar pendiente de verificación SHA.
 

@@ -99,3 +99,34 @@ test("cancelling a subprocess also stops descendants before they can perform del
       "A descendant must not survive cancellation to perform delayed filesystem writes");
   } finally { controller.abort(); await rm(folder, { recursive: true, force: true }); }
 });
+
+test("POSIX cancellation escalates SIGTERM-resistant descendants before returning", {
+  skip: process.platform === "win32",
+}, async () => {
+  const folder = await mkdtemp(join(tmpdir(), "saturivo-resistant-tree-"));
+  const marker = join(folder, "resistant-descendant-survived");
+  const controller = new AbortController();
+  try {
+    const childCode = [
+      "const fs=require('node:fs');",
+      "process.on('SIGTERM',()=>{});",
+      "setTimeout(()=>fs.writeFileSync(process.argv[1],'survived'),1100);",
+      "setInterval(()=>{},1000);",
+    ].join("");
+    const parentCode = [
+      "const {spawn}=require('node:child_process');",
+      "spawn(process.execPath,['-e',", JSON.stringify(childCode),
+      ",process.argv[1]],{stdio:'ignore'});",
+      "setInterval(()=>{},1000);",
+    ].join("");
+    const running = runBoundedProcess({
+      binary: process.execPath, args: ["-e", parentCode, marker],
+      cwd: folder, timeoutMs: 5000, maxOutputBytes: 1024, signal: controller.signal,
+    });
+    await new Promise(resolve => setTimeout(resolve, 250));
+    controller.abort();
+    await assert.rejects(running, /Cancelled/);
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    await assert.rejects(readFile(marker, "utf8"), { code: "ENOENT" });
+  } finally { controller.abort(); await rm(folder, { recursive: true, force: true }); }
+});

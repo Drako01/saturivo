@@ -74,6 +74,11 @@ export async function runBoundedProcess(request: ProcessRequest): Promise<Proces
     const timeout = setTimeout(() => { timedOut = true; stop(); }, request.timeoutMs);
     child.on("error", (error: Error) => { spawnError = error; });
     child.once("close", (code) => {
+      // A cooperative parent may exit before a stubborn descendant. Escalate
+      // the POSIX process group before settling cancellation/timeout.
+      if ((aborted || timedOut || request.signal.aborted) && process.platform !== "win32") {
+        terminateTree(child, true);
+      }
       closed = true;
       clearTimeout(timeout);
       if (forceTimer.current) clearTimeout(forceTimer.current);

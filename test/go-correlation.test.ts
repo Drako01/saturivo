@@ -35,6 +35,9 @@ test("three independent goroutine snapshots correlate with a completed load, not
     assert.equal(result.observedDelta, 1);
     assert.match(goCorrelationMarkdown(result), /not establish causation/);
     assert(!goCorrelationMarkdown(result).includes(dir));
+    const injected = { ...result, run: { ...result.run, scenario: {
+      ...result.run.scenario, name: "safe\n## injected header" } } };
+    assert(!goCorrelationMarkdown(injected).includes("\n## injected header"));
   } finally {await rm(dir,{recursive:true,force:true});}
 });
 test("aborted timeline starts no profiling or load", async () => {
@@ -43,4 +46,28 @@ test("aborted timeline starts no profiling or load", async () => {
   await assert.rejects(captureGoLoadTimeline(async()=>{invoked=true;throw Error("bad");},
     async()=>{invoked=true;return fixture;},ctrl.signal),/Cancelled/);
   assert.equal(invoked,false);
+});
+
+test("failed in-flight Go profile aborts its owned load process", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-timeline-abort-"));
+  let aborted = false;
+  try {
+    await assert.rejects(captureGoLoadTimeline(
+      async phase => {
+        if (phase === "during") throw new Error("Controlled snapshot failure");
+        const localPath = join(dir, "before.txt");
+        await writeFile(localPath, "goroutine 1 [running]:\n");
+        return { kind: "goroutine" as const, localPath, bytes: 24,
+          capturedAt: "2026-11-07T09:00:00Z" };
+      },
+      signal => new Promise<RunResult>((_resolve, reject) => {
+        signal.addEventListener("abort", () => {
+          aborted = true;
+          reject(new Error("Cancelled"));
+        }, { once: true });
+      }),
+      new AbortController().signal
+    ), /Controlled snapshot failure/);
+    assert.equal(aborted, true, "The in-flight load must be cancelled after profiling fails");
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });

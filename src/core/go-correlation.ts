@@ -37,9 +37,16 @@ export async function captureGoLoadTimeline(
   const before = await point("before");
   // Load starts AFTER before snapshot; the during snapshot is sampled while
   // the load is pending. It is observation, not a proof of the causal source.
-  const load = executeLoad(signal);
-  // The load may fail before the during-snapshot finishes. Attach a rejection
-  // observer immediately, then await the original promise for correct errors.
+  // The correlation owns the active load. Profiling errors must not leave it
+  // running after the diagnostic operation has already failed.
+  const loadController = new AbortController();
+  const forwardAbort = (): void => loadController.abort();
+  signal.addEventListener("abort", forwardAbort, { once: true });
+  if (signal.aborted) forwardAbort();
+  let load: Promise<RunResult>;
+  try { load = executeLoad(loadController.signal); }
+  catch (error) { signal.removeEventListener("abort", forwardAbort); throw error; }
+  // Observe early rejection while the during-snapshot is being collected.
   void load.catch(() => undefined);
   let during: ProfilePoint;
   let result: RunResult;
@@ -47,9 +54,11 @@ export async function captureGoLoadTimeline(
     during = await point("during");
     result = await load;
   } catch (error) {
-    // A rejected load promise is observed even if profiling failed first.
+    loadController.abort();
     await load.catch(() => undefined);
     throw error;
+  } finally {
+    signal.removeEventListener("abort", forwardAbort);
   }
   const after = await point("after");
   return {
@@ -65,12 +74,13 @@ export async function captureGoLoadTimeline(
 }
 
 export function goCorrelationMarkdown(result: GoCorrelation): string {
+  const safe = (value: string): string => value.replace(/[|\r\n]/g, " ").replace(/[<>]/g, "");
   const during = result.points[1];
   const rows = result.points.map(p => "| " + p.phase + " | " + p.observedAt +
     " | " + p.snapshot.observedStacks + " | " + p.profile.bytes + " |").join("\n");
   return [
     "# Saturivo — Go load-correlated runtime observations", "",
-    "Scenario: " + result.run.scenario.name,
+    "Scenario: " + safe(result.run.scenario.name),
     "Workload fingerprint: " + (result.run.scenarioHash ?? "legacy"),
     "Requests: " + result.run.metrics.requests,
     "Observed P95: " + result.run.metrics.p95Ms.toFixed(2) + " ms", "",

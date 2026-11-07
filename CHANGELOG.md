@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.1.1 Enterprise AAAA implementation
 
+- Strengthened POSIX descendant termination, abort-on-profile-failure for correlated loads, guarded oversized/symlinked goroutine snapshots and sanitized diagnostic Markdown.
+
 - Hardened v2 evidence roundtrip, SLO/status consistency and independent 3×3 host comparisons; rejected incomplete k6 HTTP metrics rather than reporting false zeros.
 - Fixed Markdown reporter string escaping and redacted URL query parameters by default; full-fidelity JSON export now requires an explicit bilingual privacy confirmation.
 
