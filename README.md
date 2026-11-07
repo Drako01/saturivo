@@ -230,7 +230,7 @@ No Marketplace or Open VSX package has been published. **The source repository i
 
 Saturivo's source is now **public and MIT-licensed**. Contributions are welcome through [issues](https://github.com/Drako01/saturivo/issues/new/choose) and focused [pull requests](https://github.com/Drako01/saturivo/pulls). Before contributing, review the [contribution guide](CONTRIBUTING.md), [Code of Conduct](CODE_OF_CONDUCT.md), [security disclosure policy](SECURITY.md) and [governance rules](docs/GOVERNANCE.md).
 
-**Repository protection:** versioned rulesets define required reviews, three-platform CI and immutable release tags. **The rulesets must still be applied to GitHub's live settings by an authorized administrator**; files in `.github/rulesets/` do not enforce themselves. See [Ruleset status and installation](docs/RULESETS.md).
+**Repository protection:** both rulesets are **active in GitHub** — [Protect main](https://github.com/Drako01/saturivo/rules/26766004) requires PR review and Linux/Windows/macOS checks; [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) protects `v*` tags from alteration. Their definitions are versioned in `.github/rulesets/`; see [verified governance](docs/RULESETS.md).
 
 ---
 

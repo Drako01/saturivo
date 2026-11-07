@@ -2,7 +2,7 @@
 
 **Reference implementation:** active rulesets verified on 2026-11-07 from [Probato PR](https://github.com/Drako01/probato-pr), [Indizivo](https://github.com/Drako01/indizivo) and [Orquestivo](https://github.com/Drako01/orquestivo).
 
-**Current reality:** on 2026-11-07 the live Saturivo repository rulesets list was **empty**. The JSON definitions are versioned but **are not active merely because the files exist**. Applying these policies requires GitHub repository Administration: write permission. The installed ChatGPT GitHub connector supports ruleset reads, not creation/update, so these settings must be activated by an authorized repository administrator.
+**Verified live state (2026-11-07):** Both repository rulesets are now **ACTIVE**, installed by the owner. [Protect main](https://github.com/Drako01/saturivo/rules/26766004) (ID `26766004`) and [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) (ID `26766025`) were read back from GitHub and their conditions, required reviews/checks, and bypass actors match the versioned definitions and Orquestivo. Previously the list was empty; those earlier observations are superseded. The local authenticated `npm run rulesets:status` command is still **NOT RUN** from this session.
 
 ## Source of truth
 
@@ -35,9 +35,9 @@ npm run rulesets:check
 
 This command verifies the versioned definitions, expected GitHub Actions job contexts, bypass/approval rules and CODEOWNERS. It does **not** claim that the live rulesets are active.
 
-## Apply rulesets from an authorized GitHub session
+## Administration (only if the rulesets are missing or drifted)
 
-**Prerequisites:** repository owner/admin access and a token scoped to **Drako01/saturivo** with repository **Administration: Read and write**. Never copy or paste the token into this repository, issues, PRs, screenshots or chat.
+**Current status: already installed; do not import duplicate rulesets.** Only use `--apply` if rulesets are missing or show verified drift. Prerequisites for changes: repository owner/admin access and a token scoped to **Drako01/saturivo** with repository **Administration: Read and write**. Never copy or paste the token into this repository, issues, PRs, screenshots or chat.
 
 Using PowerShell 7 with authenticated GitHub CLI:
 
@@ -72,9 +72,9 @@ Alternative: create the rulesets through [Saturivo → Settings → Rules → Ru
 | Gate | Status |
 |---|---|
 | Reference rulesets inspected | **PASS** — 3 related repositories checked |
-| Saturivo live rulesets list | **NONE ACTIVE** as observed 2026-11-07 |
+| Saturivo live rulesets list | **2 ACTIVE** — Protect main `26766004`, Protect release tags `26766025` |
 | Versioned JSON & script | Implemented in PR #4; CI evidence pending on latest SHA |
-| Actual ruleset installation | **NOT APPLIED** — administrator action required |
+| Actual ruleset installation | **PASS** — live ruleset configurations read back and compared with Orquestivo |
 | Authenticated `rulesets:status` | **NOT RUN** |
 | Release workflow/tag bypass smoke | **NOT RUN** |
 

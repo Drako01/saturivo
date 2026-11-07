@@ -37,7 +37,7 @@ No marcar funciones como completas por figurar en el plan. Evidencia medible, im
 
 - [x] CODEOWNERS, CODE_OF_CONDUCT, CONTRIBUTING, SUPPORT, SECURITY y plantillas de Issues/PR preparados en PR #4 (comprobación CI del último SHA pendiente).
 - [x] Definiciones de rulesets versionadas a partir de las políticas activas de Probato PR / Indizivo / Orquestivo.
-- [ ] Reglas activas en GitHub: **NO**; lectura inicial de `GET /rulesets` devolvió `[]`. Requiere administrador y permiso Administration:write.
+- [x] Reglas activas en GitHub: **SÍ**, confirmadas por lectura de GitHub API el 2026-11-07: [Protect main](https://github.com/Drako01/saturivo/rules/26766004) y [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025). Configuraciones comparadas con Orquestivo.
 - [ ] `rulesets:status` autenticado después de aplicar las dos políticas.
 
 Ver [docs/RULESETS.md](docs/RULESETS.md).

@@ -53,12 +53,12 @@
 | Control | Estado actual | Prueba requerida |
 |---|---|---|
 | CODEOWNERS y normas de comunidad | Implementado; último CI pendiente | Archivo propietario + contribution/conduct/support + plantillas válidas |
-| Definiciones JSON Protect main + release tags | Versionadas, sin activar | `npm run rulesets:check` en CI |
-| Protección real de `main` en GitHub | **NOT APPLIED** | Administrador aplica y valida `npm run rulesets:status` |
-| Protección real de tags `v*` | **NOT APPLIED** | Administrador aplica y valida `npm run rulesets:status` |
-| Gate de CI y revisión | PENDIENTE DE RULESET | 3 checks Verify + aprobación PR + owner/last push/threads |
+| Definiciones JSON Protect main + release tags | **PASS — versionadas y activas** | `npm run rulesets:check` en CI + lectura GitHub API |
+| Protección real de `main` en GitHub | **PASS — ACTIVE** | Ruleset ID [26766004](https://github.com/Drako01/saturivo/rules/26766004), configuración comparada con Orquestivo |
+| Protección real de tags `v*` | **PASS — ACTIVE** | Ruleset ID [26766025](https://github.com/Drako01/saturivo/rules/26766025) |
+| Gate de CI y revisión | **PASS — configurado** | 3 checks Verify + aprobación PR + CODEOWNERS/last push/threads; comportamiento en merge real sujeto a GitHub |
 
-No confundir presencia de JSON con políticas activas. [Manual de rulesets](RULESETS.md).
+Políticas efectivamente activas según consulta GitHub del 2026-11-07; la ejecución local de `npm run rulesets:status` aún no se realizó. [Manual de rulesets](RULESETS.md).
 
 ## Piloto de capacidad local
 

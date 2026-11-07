@@ -104,4 +104,4 @@ Para conocer los pendientes reales, revisá el [checklist](ENTERPRISE_AAAA_UPGRA
 
 El repositorio de Saturivo es **público**. Aceptamos issues reproducibles, pruebas, documentación, accesibilidad y PRs siguiendo [CONTRIBUTING.md](../CONTRIBUTING.md) y el [Código de conducta](../CODE_OF_CONDUCT.md). Las vulnerabilidades se reportan en privado por [SECURITY.md](../SECURITY.md).
 
-Las definiciones de protección de `main` y tags `v*` están versionadas, pero **todavía necesitan activarse en la configuración administrativa de GitHub**. Consultá [RULESETS.md](RULESETS.md), el [modelo de gobernanza](GOVERNANCE.md) y [SUPPORT.md](../SUPPORT.md).
+Las protecciones **ya están activas** en GitHub: [Protect main](https://github.com/Drako01/saturivo/rules/26766004) y [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025). Se verificaron contra las configuraciones de Orquestivo. Consultá [RULESETS.md](RULESETS.md), el [modelo de gobernanza](GOVERNANCE.md) y [SUPPORT.md](../SUPPORT.md).
