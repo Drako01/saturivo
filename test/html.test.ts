@@ -203,3 +203,35 @@ test("non-preview Control Center displays the current 0.2.0 version", () => {
   assert.match(markup, /<span class="version">0\.2\.0<\/span>/);
   assert(!markup.includes('<span class="version">0.1.1</span>'));
 });
+
+test("history investigation opens measured run details without fabricated evidence", () => {
+  const run = {
+    schemaVersion: 2 as const, id: "11111111-1111-4111-8111-111111111111",
+    engine: "k6" as const, startedAt: "2026-11-07T10:00:00Z",
+    endedAt: "2026-11-07T10:00:10Z",
+    scenario: { id: "bounded", name: "<img src=x onerror=attack()>",
+      method: "GET" as const, model: "constant-vus" as const,
+      virtualUsers: 3, durationSeconds: 10, target: "http://127.0.0.1/?secret=DO_NOT_LEAK" },
+    metrics: { requests: 200, requestsPerSecond: 20, failedRate: 0.01,
+      avgMs: 20, p50Ms: 11, p95Ms: 31, p99Ms: 42, droppedIterations: 0,
+      statusDistribution: {"1xx":0,"2xx":198,"3xx":0,"4xx":1,"5xx":1,unknown:0} },
+    environment: { platform: "linux", arch: "x64", node: "v22", cpuCount: 4 },
+    warnings: ['<script>malicious warning</script>'],
+  };
+  const en = dashboard({target:"http://127.0.0.1/",busy:false,history:[run],latest:run,message:""}, "en");
+  assert.match(en, /data-inspect-run="11111111-1111-4111-8111-111111111111"/);
+  assert.match(en, /aria-controls="run-detail-0" aria-expanded="true"/);
+  assert.match(en, /id="run-detail-0" role="region"/);
+  assert.match(en, /MEASUREMENT INSPECTOR/);
+  assert.match(en, /<th scope="row" class="run-identity">/);
+  assert.match(en, /20\.00/);
+  assert.match(en, /Observed HTTP status classes/);
+  assert.match(en, /function inspectRun\(id,focus\)/);
+  assert.match(en, /selectedRunId/);
+  assert(!en.includes("DO_NOT_LEAK"));
+  assert(!en.includes("<script>malicious warning</script>"));
+  assert(!en.includes("<img src=x onerror=attack()>"));
+  const es = dashboard({target:"http://127.0.0.1/",busy:false,history:[run],latest:run,message:""}, "es-AR");
+  assert.match(es, /INSPECTOR DE MEDICIONES/);
+  assert.match(es, /Inspeccionar/);
+});

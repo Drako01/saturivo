@@ -6,6 +6,10 @@ This document is the **release subset** of [the single current AAAA checklist](E
 
 ## Handoff de release — 2026-11-07
 
+- **P4 mejora UX:** inspector de una ejecución en el propio Control Center, navegación accesible, métricas registradas y ES/EN. **Implementado; CI y revisión manual pendiente.** Las capturas finales siguen diferidas.
+
+
+
 - **Capturas README:** diferidas al último bloque por decisión del maintainer. Deshabilitado el auto-commit de capturas durante CI de cada PR; finalización por workflow_dispatch con `capture_screenshots=true` exclusivamente en la rama del PR #5. Validación visual y CI posterior al commit siguen abiertos.
 
 

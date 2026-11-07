@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Added an in-editor accessible run investigation view: exact observed latency/RPS/errors/status counts, SLO findings, warnings and workload fingerprint; persistent selected run and bilingual disclosure. Final README screenshots deferred until complete UX sign-off.
+
 - Set candidate version to `0.2.0` across manifest/lockfile, editor branding, k6 identification, upgrade tests and release records; removed `preview: true`. Added 23 relevant Marketplace/Open VSX keywords with an automated uniqueness/limit check. No Git tags or publication. Publication remains separately approval-gated.
 
 - Strengthened POSIX descendant termination, abort-on-profile-failure for correlated loads, guarded oversized/symlinked goroutine snapshots and sanitized diagnostic Markdown.

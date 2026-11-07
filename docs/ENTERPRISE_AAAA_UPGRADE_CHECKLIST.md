@@ -7,6 +7,16 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Bloque UX — investigación de ejecuciones en el editor (2026-11-07)
+
+**Implementado en el commit del bloque; verificación CI nueva: PENDING.** Conserva las cuatro capturas README sin modificarlas; se regenerarán al final.
+
+- La biblioteca de historial incorpora selección por ejecución, inspector en el **área central** (sin comandos externos), datos exactos P50/P95/P99, promedio, solicitudes, RPS, errores, iteraciones descartadas, clases HTTP observadas cuando existan, estado SLO, avisos y SHA-256 del escenario.
+- Navegación de inspección con botón ARIA `aria-controls`/`aria-expanded`, región accesible, foco en encabezado, selección persistida en `WebviewState`, soporte ES/EN y estilo adaptable.
+- Sin red/telemetría ni tráfico nuevo. Texto externo escapado; no se muestran query secrets del destino. La vista aclara que una ejecución no acredita capacidad ni regresión estadística.
+- Test focalizado de UI/render con evidencia real sintética, HTML malicioso, protección de secretos y localización. **Resta:** interacción real en Chromium/Extension Host, auditoría lector de pantalla y revisión UX de contraste/diseño.
+- **Siguiente:** CI exacto del commit y finalización incremental de requisitos de las fases restantes, preservando capturas para último gate.
+
 ## Capturas README — exclusivamente al finalizar el PR (2026-11-07)
 
 - **Decisión del maintainer:** no regenerar ni commitear las cuatro imágenes del README durante fases intermedias. Las capturas anteriores son históricas, aunque hayan sido producidas por el renderer real.
