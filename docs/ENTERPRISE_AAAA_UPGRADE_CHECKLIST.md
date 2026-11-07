@@ -7,6 +7,13 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Capturas README — exclusivamente al finalizar el PR (2026-11-07)
+
+- **Decisión del maintainer:** no regenerar ni commitear las cuatro imágenes del README durante fases intermedias. Las capturas anteriores son históricas, aunque hayan sido producidas por el renderer real.
+- CI ordinario de PR continúa validando TS, unitarias, integraciones y Extension Host, pero **ya no corre ni realiza auto-push de capturas**. La regeneración se habilita únicamente con despacho manual de `ci.yml` en la rama de PR #5, input booleano `capture_screenshots=true`.
+- **Gate final:** cuando las fases 0–5 y la UX estén cerradas, regenerar las cuatro pantallas, revisar visualmente claro/oscuro, ES/EN, tamaños/teclado, verificar datos sintéticos declarados, commitear las imágenes y ejecutar CI final del SHA resultante.
+- **Estado:** REPROGRAMADO PARA EL FINAL. Ninguna captura intermedia acredita la Definition of Done visual.
+
 ## Cambio de versión y posicionamiento — 0.2.0 sin Preview (2026-11-07)
 
 **Autorización actual:** el maintainer eligió 0.2.0 como versión destino y pidió quitar la etiqueta Marketplace Preview. El mismo PR #5 y la rama histórica `feat/enterprise-aaaa-v0.1.1` continúan; esta rama NO es el identificador de la versión publicada. No hay autorización para merge, tags Git ni publicación.

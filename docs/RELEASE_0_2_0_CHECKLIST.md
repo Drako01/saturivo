@@ -6,6 +6,10 @@ This document is the **release subset** of [the single current AAAA checklist](E
 
 ## Handoff de release — 2026-11-07
 
+- **Capturas README:** diferidas al último bloque por decisión del maintainer. Deshabilitado el auto-commit de capturas durante CI de cada PR; finalización por workflow_dispatch con `capture_screenshots=true` exclusivamente en la rama del PR #5. Validación visual y CI posterior al commit siguen abiertos.
+
+
+
 - **Versión objetivo actualizada por el maintainer:** 0.2.0, sin `preview`. Se conserva el PR #5 y el nombre histórico de la rama. No generar Git tags.
 - **Metadatos de búsqueda:** 23 `keywords` relevantes, sin prometer capacidades gRPC/BYO AI o profiling por runtimes no implementado. Marketplace acepta hasta 30 keywords. Validación automatizada en `scripts/verify-manifest.cjs`.
 - **Gate de compatibilidad:** upgrade VSIX real desde 0.1.0 → 0.2.0, sin pérdida de historial ni configuración; corroboración de versionado de UI, lockfile, artefactos y documentación.
