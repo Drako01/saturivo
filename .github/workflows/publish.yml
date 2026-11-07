@@ -1,5 +1,6 @@
-# Safe activation: on 0.1.1 branch the manifest is private and no publish runs.
-# Trigger after the OWNER merges a finalized release commit and creates protected tag vX.Y.Z.
+# Public source repository. This workflow never publishes the pull-request branch.
+# Release requires a finalized changelog, an exact protected tag at the release SHA
+# and explicit approval through the configured protected environments.
 name: publish
 on:
   push:
@@ -163,14 +164,18 @@ jobs:
             saturivo.release.json
           if-no-files-found: error
           retention-days: 90
-      - name: Generate CycloneDX SBOM as separate evidence
+      - name: Generate CycloneDX SBOM and exact license inventory
         run: |
           mkdir -p reports
           npm sbom --sbom-format cyclonedx > reports/saturivo-sbom.cdx.json
+          npm run licenses:report
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: saturivo-release-evidence
-          path: reports/saturivo-sbom.cdx.json
+          path: |
+            reports/saturivo-sbom.cdx.json
+            reports/saturivo-licenses.json
+            reports/saturivo-licenses.md
           if-no-files-found: error
           retention-days: 90
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
@@ -282,7 +287,7 @@ jobs:
             echo "GitHub Release $tag exists, no mutation."
             exit 0
           fi
-          gh release create "$tag" saturivo.vsix saturivo.vsix.sha256 saturivo.release.json reports/saturivo-sbom.cdx.json \
+          gh release create "$tag" saturivo.vsix saturivo.vsix.sha256 saturivo.release.json reports/saturivo-sbom.cdx.json reports/saturivo-licenses.json reports/saturivo-licenses.md \
             --title "Saturivo $RELEASE_VERSION" --generate-notes
           mkdir -p verify
           gh release download "$tag" --pattern saturivo.vsix --dir verify
