@@ -143,3 +143,26 @@ test("accessible trend data and comparison preview use only observed runs", () =
   assert.match(markup, /no es evidencia estadística/);
   assert(!markup.includes("NaN"));
 });
+
+test("professional Control Center includes guided workflow and contextual visual preview", () => {
+  const idle = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+    history: [], message: "" }, "es-AR");
+  assert.match(idle, /id="workflow-title"/);
+  assert.match(idle, /data-tab="load"/);
+  assert.match(idle, /De una prueba controlada a evidencia útil/);
+  assert.match(idle, /Tu historial de rendimiento comienza acá/);
+  assert.match(idle, /class="scenario-workspace"/);
+  assert.match(idle, /class="scenario-preview"/);
+  assert.match(idle, /id="preview-stage-chart"/);
+  assert.match(idle, /role="status" aria-live="polite"/);
+  assert.match(idle, /function updatePreview\(\)/);
+  assert.match(idle, /chart\.replaceChildren\(\)/);
+  assert.match(idle, /segment\.style\.flexGrow/);
+  assert.match(idle, /Sin tráfico automático/);
+  const english = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+    history: [], message: "" }, "en-US");
+  assert.match(english, /From a controlled test to actionable evidence/);
+  assert.match(english, /Know what will run/);
+  assert.match(english, /Design your first test/);
+  assert(!english.includes("undefined"));
+});
