@@ -96,11 +96,12 @@ jobs:
   extension-host:
     name: Real VS Code Extension Host (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0 # Access the immutable 0.1.0 baseline for a real upgrade check
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -117,6 +118,8 @@ jobs:
         run: xvfb-run -a npm run test:integration:vscode
         env:
           K6_NO_USAGE_REPORT: 'true'
+      - name: Upgrade installed VSIX from pinned 0.1.0 to candidate 0.1.1
+        run: node scripts/verify-vsix-upgrade.cjs
 
   go-runtime-evidence:
     name: Real Go race and pprof fixture (Linux)
