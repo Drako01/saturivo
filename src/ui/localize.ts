@@ -110,6 +110,12 @@ const english: Dictionary = {
   "correlateCaution": "Only use an authorized disposable service; profiling affects latency.",
   "correlateRunning": "Go timeline in progress",
   "correlateComplete": "Three snapshots recorded; open the report to inspect limitations.",
+  customScenarioTitle: "Custom scenario editor",
+  customScenarioDescription: "Configure a bounded workload. No traffic begins until you submit and authorize it.",
+  customName: "Scenario name", customMethod: "HTTP method",
+  customVus: "Concurrent virtual users", customArrival: "Arrivals per second (open loop)",
+  customP95: "Maximum P95 (ms; 0 disables)", customTargetNote: "Active authorized target:",
+  customRun: "Run custom scenario",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -221,6 +227,12 @@ const spanish: Dictionary = {
   "correlateCaution": "Usá servicios descartables autorizados; el profiling altera la latencia.",
   "correlateRunning": "Correlación Go en curso",
   "correlateComplete": "Tres snapshots registrados; consultá el informe y sus limitaciones.",
+  customScenarioTitle: "Editor de escenarios propios",
+  customScenarioDescription: "Configurá una carga acotada. No se envía tráfico sin ejecutar y autorizar la prueba.",
+  customName: "Nombre del escenario", customMethod: "Método HTTP",
+  customVus: "Usuarios virtuales concurrentes", customArrival: "Llegadas por segundo (ciclo abierto)",
+  customP95: "P95 máximo (ms; 0 desactiva)", customTargetNote: "Destino autorizado activo:",
+  customRun: "Ejecutar escenario propio",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;
