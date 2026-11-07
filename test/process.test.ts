@@ -130,3 +130,58 @@ test("POSIX cancellation escalates SIGTERM-resistant descendants before returnin
     await assert.rejects(readFile(marker, "utf8"), { code: "ENOENT" });
   } finally { controller.abort(); await rm(folder, { recursive: true, force: true }); }
 });
+
+test("Windows: cancellation kills a three-level hostile descendant tree", {
+  skip: process.platform !== "win32",
+}, async () => {
+  const folder = await mkdtemp(join(tmpdir(), "saturivo-windows-tree-"));
+  const ready = join(folder, "grandchild-ready");
+  const escaped = join(folder, "grandchild-survived");
+  const controller = new AbortController();
+  let running: ReturnType<typeof runBoundedProcess> | undefined;
+  try {
+    const grandchild = [
+      "const fs=require('node:fs');",
+      "fs.writeFileSync(process.argv[1],'ready');",
+      "setTimeout(()=>fs.writeFileSync(process.argv[2],'survived'),1600);",
+      "setInterval(()=>{},1000);",
+    ].join("");
+    const child = [
+      "const {spawn}=require('node:child_process');",
+      "spawn(process.execPath,['-e',", JSON.stringify(grandchild),
+      ",process.argv[1],process.argv[2]],{stdio:'ignore',shell:false});",
+      "setInterval(()=>{},1000);",
+    ].join("");
+    const parent = [
+      "const {spawn}=require('node:child_process');",
+      "spawn(process.execPath,['-e',", JSON.stringify(child),
+      ",process.argv[1],process.argv[2]],{stdio:'ignore',shell:false});",
+      "setInterval(()=>{},1000);",
+    ].join("");
+    running = runBoundedProcess({
+      binary: process.execPath, args: ["-e", parent, ready, escaped],
+      cwd: folder, timeoutMs: 10000, maxOutputBytes: 1024, signal: controller.signal,
+    });
+    void running.catch(() => undefined);
+    let started = false;
+    for (let i = 0; i < 60; i++) {
+      try {
+        started = (await readFile(ready, "utf8")) === "ready";
+        if (started) break;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert(started, "Grandchild must be alive before the parent is cancelled");
+    controller.abort();
+    await assert.rejects(running, /Cancelled/);
+    await new Promise(resolve => setTimeout(resolve, 1900));
+    await assert.rejects(readFile(escaped, "utf8"), { code: "ENOENT" },
+      "taskkill /T /F must prevent the nested grandchild from writing after cancellation");
+  } finally {
+    controller.abort();
+    await running?.catch(() => undefined);
+    await rm(folder, { recursive: true, force: true });
+  }
+});
