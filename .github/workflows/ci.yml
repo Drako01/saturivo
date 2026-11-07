@@ -73,6 +73,10 @@ jobs:
         run: npm run test:integration:k6
         env:
           K6_NO_USAGE_REPORT: 'true'
+      - name: Verify real 3+3 repeated trials, control and injected-latency regression
+        run: npm run test:integration:regression
+        env:
+          K6_NO_USAGE_REPORT: 'true'
 
   extension-host:
     name: Real VS Code Extension Host (Linux)

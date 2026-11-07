@@ -237,7 +237,8 @@
     "test:integration:k6": "node scripts/k6-smoke.cjs",
     "test:integration:vscode": "node scripts/run-vscode-host.cjs",
     "rulesets:check": "node scripts/rulesets.mjs --check",
-    "rulesets:status": "node scripts/rulesets.mjs --status"
+    "rulesets:status": "node scripts/rulesets.mjs --status",
+    "test:integration:regression": "node scripts/k6-regression.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
