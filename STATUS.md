@@ -1,8 +1,10 @@
 # Saturivo — Estado de implementación
 
-Actualizado: **2026-11-07**. Base: PR #4 fusionado. Evolución 0.1.1: [PR #5](https://github.com/Drako01/saturivo/pull/5), rama `feat/enterprise-aaaa-v0.1.1`. El repositorio GitHub **es público**; el campo `private: true` fue eliminado del manifest. La publicación de una extensión requiere tag protegido, aprobaciones de entornos y autorización separada del propietario.
+Actualizado: **2026-11-07**. Base: PR #4 fusionado. Evolución 0.2.0 (sin etiqueta Preview): [PR #5](https://github.com/Drako01/saturivo/pull/5), rama `feat/enterprise-aaaa-v0.1.1`. El repositorio GitHub **es público**; el campo `private: true` fue eliminado del manifest. La publicación de una extensión requiere tag protegido, aprobaciones de entornos y autorización separada del propietario.
 
 ## Estado ejecutivo
+
+**Versionado del PR #5:** objetivo `0.2.0`, extensión instalada sin etiqueta Marketplace Preview. El nombre legado de rama `feat/enterprise-aaaa-v0.1.1` se conserva para mantener PR, enlaces y CI. Este cambio de presentación **no cierra** los gates Enterprise AAAA ni autoriza publicar.
 
 El producto dispone de una base funcional con pruebas locales de carga k6, métricas P95/P99/RPS, objetivos P95 opcionales, historiado de ejecuciones, comparación heurística y comparación experimental 3-vs-3, además de comandos de Go race/bench, capturas locales pprof, diagnósticos de carreras y exportación Markdown/JSON/SARIF.
 
@@ -23,7 +25,7 @@ El PR #5 incorpora además un rediseño UX orientado a la experiencia del desarr
 
 La matriz anterior corresponde al commit histórico `a819a894`; además, [CI #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) pasó 7/7 sobre el SHA `cbd3724` del PR #5. Todo cambio posterior exige CI de su propio SHA; no se hereda un PASS.
 
-## Avance en seguridad e integridad de 0.1.1
+## Avance en seguridad e integridad del candidato 0.2.0
 
 El PR #5 incorporó verificaciones de integridad de evidencias v2, independencia de comparaciones y manejo de métricas incompletas; CI [#42412224059](https://github.com/Drako01/saturivo/actions/runs/42412224059) verificó 7/7 el commit `b54f902`. Se añadieron privacidad de exportaciones y cancelación defensiva durante correlación Go; **la versión completa aún no está aprobada** y cada bloque posterior requiere su propio SHA y CI.
 

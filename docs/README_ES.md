@@ -9,9 +9,9 @@
 
 [English README](../README.md) · [Arquitectura](../ARCHITECTURE.md) · [Estado real](../STATUS.md) · [Plan Enterprise AAAA](ENTERPRISE_AAAA_MASTER_PLAN.md)
 
-> **Código fuente público · Versión 0.1.1 en desarrollo (PR #5).** No equivale a una versión publicada ni a una certificación Enterprise AAAA.
+> **Código fuente público · Candidato 0.2.0 sin etiqueta Preview (PR #5, sin publicar).** Quitar Preview del manifiesto no implica autorización de merge/publicación ni certificación Enterprise AAAA.
 
-## Centro de Control — vista previa 0.1.1
+## Centro de Control — 0.2.0
 
 Saturivo ahora abre el Centro de Control en una **pestaña del editor**, con espacio para métricas, escenarios, historial y diagnóstico. Las capturas provienen del **renderizador real de la interfaz** con datos sintéticos y deterministas: **no representan mediciones reales**.
 

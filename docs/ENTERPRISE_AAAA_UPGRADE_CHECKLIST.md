@@ -2,14 +2,24 @@
 
 **Fecha:** 2026-11-07 · **PR activo:** [#5](https://github.com/Drako01/saturivo/pull/5) · **Rama:** `feat/enterprise-aaaa-v0.1.1` · **Estado observado:** Draft; no autorizado para merge o publicación.
 
-Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) define el alcance; [tracker de versión](RELEASE_0_1_1_CHECKLIST.md) registra los gates de release. PASS significa implementación, prueba y evidencia del **SHA indicado**. PARTIAL indica funciones implementadas sin todos los casos o plataformas. NOT RUN nunca equivale a aprobado.
+Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) define el alcance; [tracker de versión](RELEASE_0_2_0_CHECKLIST.md) registra los gates de release. PASS significa implementación, prueba y evidencia del **SHA indicado**. PARTIAL indica funciones implementadas sin todos los casos o plataformas. NOT RUN nunca equivale a aprobado.
 
 
 
+
+## Cambio de versión y posicionamiento — 0.2.0 sin Preview (2026-11-07)
+
+**Autorización actual:** el maintainer eligió 0.2.0 como versión destino y pidió quitar la etiqueta Marketplace Preview. El mismo PR #5 y la rama histórica `feat/enterprise-aaaa-v0.1.1` continúan; esta rama NO es el identificador de la versión publicada. No hay autorización para merge, tags Git ni publicación.
+
+- **Implementación prevista en este commit:** `package.json.version` y ambas raíces de `package-lock.json` a 0.2.0; eliminación de `preview: true`; UI y User-Agent k6 0.2.0; upgrade VSIX 0.1.0 → 0.2.0, documentación de release y tests/manifest de identidad.
+- **Discoverability:** 23 keywords específicos del producto (k6, concurrencia Go, pruebas de carga HTTP/WebSocket, profiling, pprof, regresión y observabilidad), sin claims no soportados ni tags Git. Verificación automatizada de unicidad, capacidades clave y límite de 30.
+- **Evidencia histórica:** correcciones de cancelación Go y procesos en commit `e8eee7c` verificadas en [CI #42412836592](https://github.com/Drako01/saturivo/actions/runs/42412836592) (7/7). Ese CI corresponde a 0.1.1 y **no acredita** versión 0.2.0.
+- **Estado para 0.2.0:** IMPLEMENTADO / CI PENDING hasta corridas del SHA exacto y validación de VSIX instalado, incluyendo que Marketplace no exhiba etiqueta Preview. El cambio de versión **no** acredita por sí solo Enterprise AAAA.
+- **Siguiente paso:** verificar la matriz final por SHA, cubrir gaps de fases 0–5 y actualizar evidencias. Los gates de aprobación de lanzamiento siguen BLOCKED.
 
 ## Engineering block — cancellation and hostile Go evidence (2026-11-07)
 
-**Implemented; CI PENDING for the exact commit.**
+**Verificado para SHA `e8eee7c008e31446fed7bc1e13c6817d28a62a98`: [CI #42412836592](https://github.com/Drako01/saturivo/actions/runs/42412836592) PASS (7/7); 0.2.0 requiere nuevo CI.**
 
 - The POSIX process group now escalates to SIGKILL when an aborted/timed-out parent closes, preventing a SIGTERM-resistant descendant from escaping cleanup.
 - A Go load/profile correlation owns its load AbortController; an in-flight snapshot failure explicitly aborts the load and awaits its termination instead of allowing work to continue silently.
@@ -54,7 +64,7 @@ Este bloque prevalece sobre estados anteriores cuando los commits son más recie
 3. **P2:** `go test -race`, pprof CPU/heap/goroutine/mutex/block, runtime trace, capturas before/during/after, fixtures de crecimiento/contención, cuota de perfiles (30 archivos/64 MiB). **Pendiente:** GC/allocations correlacionados con latencia, overhead medido, source navigation y pruebas de diagnósticos con fixtures controladas.
 4. **P3:** mismos HTTP+k6 reales contra Go, Node y Python; WebSocket RFC6455 en loopback con autorización; adapter opt-in Node/Java/Python basado en procfs Linux, respuesta `NOT_SUPPORTED` cuando no aplica; selección multi-root. **Pendiente:** WSL/SSH/devcontainer/Docker Compose verificados, runtime profiler artifacts y contratos en SO adicionales; gRPC opcional únicamente si aporta valor real.
 5. **P4:** JSON/MD/SARIF, historial local con retención configurable, validaciones anti-symlink/JSON malicioso, guardado/limpieza y métricas no causales. **Pendiente:** roundtrip import/export con v1/v2, redacción de secretos y experiencia integral de teclado/screen reader/ES+EN. BYO AI sigue opcional y no implementado.
-6. **P5:** threat model, DNS remoto verificado y pinneado (bloquea metadata/private IP), límites de load/process, test de cierre de descendientes, licencias y SBOM, run/cancel en Extension Host, script de upgrade de VSIX 0.1.0→0.1.1. **Pendiente:** proxies/redirects/rebinding adversariales completos, auditar VSIX exacto y provenance, upgrade multi-OS, security sign-off y autorización release.
+6. **P5:** threat model, DNS remoto verificado y pinneado (bloquea metadata/private IP), límites de load/process, test de cierre de descendientes, licencias y SBOM, run/cancel en Extension Host, script de upgrade de VSIX 0.1.0→0.2.0. **Pendiente:** proxies/redirects/rebinding adversariales completos, auditar VSIX exacto y provenance, upgrade multi-OS, security sign-off y autorización release.
 
 ### Definition of Done verificable (todavía abierta)
 
@@ -69,7 +79,7 @@ Este bloque prevalece sobre estados anteriores cuando los commits son más recie
 
 ### Premisas para la próxima sesión
 
-Continuar exclusivamente en el PR #5; releer HEAD, CI, Master Plan y este checklist **antes de modificar**. Trabajar por bloques con commits pequeños, tests focalizados por impacto (KISS/DRY/YAGNI/SOLID, TypeScript estricto), actualizar este checklist tras cada bloque y `docs/RELEASE_0_1_1_CHECKLIST.md` en hitos de release. No repetir suites costosas ya verdes salvo nueva superficie afectada o gate final. No declarar `PASS` por simple existencia de código ni hacer publicaciones por cuenta propia.
+Continuar exclusivamente en el PR #5; releer HEAD, CI, Master Plan y este checklist **antes de modificar**. Trabajar por bloques con commits pequeños, tests focalizados por impacto (KISS/DRY/YAGNI/SOLID, TypeScript estricto), actualizar este checklist tras cada bloque y `docs/RELEASE_0_2_0_CHECKLIST.md` en hitos de release. No repetir suites costosas ya verdes salvo nueva superficie afectada o gate final. No declarar `PASS` por simple existencia de código ni hacer publicaciones por cuenta propia.
 
 ## Evidencia consolidada
 
@@ -103,7 +113,7 @@ Continuar exclusivamente en el PR #5; releer HEAD, CI, Master Plan y este checkl
 | P5 seguridad del runtime | PARTIAL | Límites procesos, DNS público pinneado y cuota Go 30 archivos/64 MiB; faltan proxies y cleanup hostil multiplataforma |
 | P5 SBOM/audit/licencias/provenance | PARTIAL | SBOM y hash ya incluidos; inventario lockfile incorporado; falta auditar binario exacto y firmar matriz |
 | P5 publish OIDC protegido | PARTIAL | Pipeline con mismo VSIX y SHA para ambos registries; falta probar approvals/OIDC y entrega real autorizada |
-| P5 install/upgrade/release exacto | PARTIAL / CI PENDING | Prueba real 0.1.0→0.1.1 agregada al CI Linux; falta validar SHA final, Windows/macOS y aprobación expresa |
+| P5 install/upgrade/release exacto | PARTIAL / CI PENDING | Prueba real 0.1.0→0.2.0 agregada al CI Linux; falta validar SHA final, Windows/macOS y aprobación expresa |
 
 ## Cambios realizados en PR #5 desde el último traspaso
 

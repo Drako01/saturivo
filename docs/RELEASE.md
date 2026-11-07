@@ -1,4 +1,4 @@
-# Saturivo 0.1.1 — Protected release process
+# Saturivo 0.2.0 — Protected release process
 
 **State: staged for review in PR #5. No publication has been triggered.** This document is a release checklist, not an assertion that OIDC credentials or GitHub Environments were validated.
 
@@ -11,8 +11,8 @@
 
 ## Publishing a finalized version
 
-1. Complete `docs/RELEASE_0_1_1_CHECKLIST.md` and approve the release candidate. A release commit must have `private` removed, an exact `0.1.1` version and dated `## [0.1.1] — YYYY-MM-DD` in `CHANGELOG.md`. During development `private: true` blocks the pipeline.
-2. Merge the reviewed release PR. Read the exact commit SHA in `main` and create the protected `v0.1.1` tag at that SHA using an authorized maintainer account. This tag push triggers the publishing workflow.
+1. Complete `docs/RELEASE_0_2_0_CHECKLIST.md` and approve the release candidate. The source repository is public: do not add `private: true`. The final commit must have version `0.2.0`, no `preview` manifest field and a **maintainer-approved, dated** `## [0.2.0] — YYYY-MM-DD` section in `CHANGELOG.md`. That finalization is **not authorized at this stage**.
+2. Merge the reviewed release PR. Read the exact commit SHA in `main` and create the protected `v0.2.0` tag at that SHA using an authorized maintainer account. This tag push triggers the publishing workflow.
 3. The workflow validates version, source and protected tag **before** publishing. It runs multi-OS verification; builds one exact audited VSIX with SHA-256, a commit-bound release manifest, SBOM and provenance attestation.
 4. Two publishing jobs download and check the **same immutable artifact**, then use OIDC + the already configured Trusted Publishers to publish to each registry. The release job rechecks the artifact and creates GitHub Release.
 5. Never force-update or recycle a release tag. Do not mark a partially successful publish as complete.
@@ -25,4 +25,4 @@ From Actions → publish → Run workflow, select `main`, type `PUBLISH_SATURIVO
 
 - If you push the release commit before creating its protected tag, the push job safely **skips** publication; the tag event then starts it. This is deliberate and avoids a GitHub Release failing after marketplace publication.
 - The workflow is not tested end-to-end until an approved real release. Never claim the protected environments, OIDC exchanges or registry listing as PASS without their real logs.
-- The initial 0.1.0 was published manually; 0.1.1 is the first intended automatic release.
+- Version 0.1.0 remains the installed-upgrade baseline. Version 0.2.0 is the next intended release candidate; no protected tag, merge or registry publication is authorized by this PR.

@@ -9,6 +9,7 @@ const {
 } = require("@vscode/test-electron");
 
 const BASE = "a3eaa3768b6b43e811a0b7b6bf1b71e574a644a0";
+const CANDIDATE_VERSION = require("../package.json").version;
 
 function command(executable, args, cwd, timeout = 120000) {
   const outcome = spawnSync(executable, args, {
@@ -36,8 +37,8 @@ function install(executable, directory, vsix) {
 
 async function main() {
   const repo = path.resolve(__dirname, "..");
-  const preview = path.join(repo, "saturivo.vsix");
-  assert(fs.existsSync(preview), "0.1.1 preview VSIX must already exist");
+  const candidate = path.join(repo, "saturivo.vsix");
+  assert(fs.existsSync(candidate), "Candidate VSIX for " + CANDIDATE_VERSION + " must already exist");
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "saturivo-upgrade-"));
   const baseline = path.join(directory, "old-revision");
   const extensions = path.join(directory, "extensions");
@@ -59,13 +60,13 @@ async function main() {
     install(executable, extensions, oldVsix);
     assert(installedExtensions(executable, extensions).includes("armotusitio.saturivo@0.1.0"),
       "Baseline 0.1.0 must be installed before upgrade");
-    install(executable, extensions, preview);
+    install(executable, extensions, candidate);
     const after = installedExtensions(executable, extensions);
-    assert(after.includes("armotusitio.saturivo@0.1.1"),
-      "Preview 0.1.1 must replace the previous installed version");
+    assert(after.includes("armotusitio.saturivo@" + CANDIDATE_VERSION),
+      "Candidate " + CANDIDATE_VERSION + " must replace the previous installed version");
     assert(!after.includes("armotusitio.saturivo@0.1.0"),
       "Old extension version must not remain selected after upgrade");
-    console.log("VSIX install/upgrade 0.1.0 -> 0.1.1: PASS (actual VS Code CLI)");
+    console.log("VSIX install/upgrade 0.1.0 -> " + CANDIDATE_VERSION + ": PASS (actual VS Code CLI)");
   } finally {
     if (worktreeCreated) {
       try { command("git", ["worktree", "remove", "--force", baseline], repo); }

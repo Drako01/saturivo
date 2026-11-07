@@ -6,6 +6,21 @@ const en = JSON.parse(fs.readFileSync("package.nls.json", "utf8"));
 const es = JSON.parse(fs.readFileSync("package.nls.es.json", "utf8"));
 assert.equal(pkg.publisher, "armotusitio");
 assert.equal(pkg.name, "saturivo");
+assert.equal(pkg.version, "0.2.0", "Candidate manifest must target 0.2.0");
+assert.equal(Object.prototype.hasOwnProperty.call(pkg, "preview"), false,
+  "Production-version manifest must not carry a preview label");
+assert(Array.isArray(pkg.keywords) && pkg.keywords.length >= 8 && pkg.keywords.length <= 30,
+  "Marketplace keywords must be specific and respect the 30-tag maximum");
+assert.equal(new Set(pkg.keywords).size, pkg.keywords.length, "Marketplace keywords must be unique");
+for (const keyword of ["load testing", "k6", "concurrency", "race detector", "pprof",
+  "websocket testing", "regression testing"]) {
+  assert(pkg.keywords.includes(keyword), "Missing supported discovery keyword: " + keyword);
+}
+
+const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+assert.equal(lock.version, pkg.version, "Root lockfile version must match the manifest");
+assert.equal(lock.packages[""].version, pkg.version,
+  "Lockfile root package must match the manifest");
 assert.equal(pkg.main, "./out/src/extension.js");
 assert.equal(pkg.capabilities.untrustedWorkspaces.supported, false);
 assert.equal(pkg.capabilities.virtualWorkspaces.supported, false);

@@ -1,6 +1,6 @@
 # Saturivo Security Policy / Política de seguridad
 
-Saturivo orchestrates load-generation and profiling tools. An incorrect target or uncontrolled subprocess can affect services and leak diagnostic information. **Preview code is not security-certified.** The repository is public; vulnerability reports must not be made through public GitHub issues.
+Saturivo orchestrates load-generation and profiling tools. An incorrect target or uncontrolled subprocess can affect services and leak diagnostic information. **A non-preview extension is not security-certified.** The repository is public; vulnerability reports must not be made through public GitHub issues.
 
 ## Responsible disclosure
 

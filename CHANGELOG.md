@@ -1,6 +1,8 @@
 # Changelog
 
-## [Unreleased] — 0.1.1 Enterprise AAAA implementation
+## [Unreleased] — 0.2.0 Enterprise AAAA implementation
+
+- Set candidate version to `0.2.0` across manifest/lockfile, editor branding, k6 identification, upgrade tests and release records; removed `preview: true`. Added 23 relevant Marketplace/Open VSX keywords with an automated uniqueness/limit check. No Git tags or publication. Publication remains separately approval-gated.
 
 - Strengthened POSIX descendant termination, abort-on-profile-failure for correlated loads, guarded oversized/symlinked goroutine snapshots and sanitized diagnostic Markdown.
 
@@ -22,7 +24,7 @@
 - Added reproducible npm license inventory, split by production/dev dependencies, and included the evidence in CI and protected release artifacts.
 - Removed the manifest's private flag: the repository and source package are public, while publication remains approval-gated.
 - Added a security threat model and reconciled the Master Plan checklist with the actual PR #5 state.
-- Hardened distribution pipeline, workload reproducibility, Go tracing and runtime diagnostics are tracked in the 0.1.1 checklist.
+- Hardened distribution pipeline, workload reproducibility, Go tracing and runtime diagnostics are tracked in the 0.2.0 checklist.
 - **Not yet released:** all subsequent feature completion must be verified on the exact release commit.
 
 

@@ -1,4 +1,4 @@
-# Saturivo 0.1.1 — Security threat model (living document)
+# Saturivo 0.2.0 — Security threat model (living document)
 
 **Scope:** public VS Code extension source, local Control Center, child-process execution, local-only profiling, evidence files and the protected publication pipeline. This is an engineering review, **not** external security certification.
 

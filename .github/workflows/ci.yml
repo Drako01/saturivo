@@ -48,19 +48,19 @@ jobs:
             reports/saturivo-licenses.json
             reports/saturivo-licenses.md
           if-no-files-found: error
-      - name: Package preview VSIX
+      - name: Package candidate VSIX
         if: runner.os == 'Linux'
         run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
-      - name: Audit and checksum preview VSIX
+      - name: Audit and checksum candidate VSIX
         if: runner.os == 'Linux'
         run: |
           npm run audit:vsix
           npm run checksum:vsix
-      - name: Upload preview VSIX
+      - name: Upload candidate VSIX
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: saturivo-preview-vsix
+          name: saturivo-candidate-vsix
           path: |
             saturivo.vsix
             saturivo.vsix.sha256
@@ -118,7 +118,7 @@ jobs:
         run: xvfb-run -a npm run test:integration:vscode
         env:
           K6_NO_USAGE_REPORT: 'true'
-      - name: Upgrade installed VSIX from pinned 0.1.0 to candidate 0.1.1
+      - name: Upgrade installed VSIX from pinned 0.1.0 to candidate 0.2.0
         run: node scripts/verify-vsix-upgrade.cjs
 
   go-runtime-evidence:
@@ -153,7 +153,7 @@ jobs:
 
   screenshots:
     name: Capture actual Control Center views for README
-    # Restricted to the maintainer's 0.1.1 feature branch. Never writes to main or forks.
+    # Restricted to the PR #5 branch (legacy branch name; target release is 0.2.0). Never writes to main or forks.
     if: github.event_name == 'pull_request' && github.head_ref == 'feat/enterprise-aaaa-v0.1.1' && github.event.pull_request.head.repo.full_name == 'Drako01/saturivo'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -189,7 +189,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "docs(readme): capture 0.1.1 control center from production renderer"
+          git commit -m "docs(readme): capture 0.2.0 control center from production renderer"
           git push origin "HEAD:refs/heads/feat/enterprise-aaaa-v0.1.1"
           # GitHub-token pushes do not trigger workflows. Dispatch explicitly at the new commit.
           GH_TOKEN="${{ github.token }}" gh workflow run ci.yml --ref feat/enterprise-aaaa-v0.1.1

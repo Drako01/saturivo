@@ -22,9 +22,9 @@
 
 ---
 
-> **Public source · 0.1.1 development candidate (PR #5; unreleased).** Enterprise AAAA remains a target, **not a certified or published maturity level**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
+> **Public source · 0.2.0 non-preview release candidate (PR #5; unreleased).** The extension is now packaged without the VS Code Marketplace Preview badge, but **this is not a release approval or Enterprise AAAA certification**. See [implementation status](STATUS.md) and [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Local measurements do not certify production capacity.
 
-## Control Center — 0.1.1 preview
+## Control Center — 0.2.0
 
 The new Control Center opens in a **full editor tab**, not a narrow sidebar. The screenshots below are captured from the **real dashboard renderer** with a fixed **synthetic test dataset**; the displayed metrics are illustrative, not real performance measurements.
 
@@ -43,7 +43,7 @@ The new Control Center opens in a **full editor tab**, not a narrow sidebar. The
 
 ### A workflow designed for developers
 
-The 0.1.1 Control Center is more than a set of commands: it guides setup, bounded execution, comparison and investigation. The **Scenario Studio** provides a live workload preview, readable safety budgets, interactive ramp editing, and preset cards that can be customized **without starting traffic**. Results include an accessible exact-value table and clear evidence limitations.
+The 0.2.0 Control Center is more than a set of commands: it guides setup, bounded execution, comparison and investigation. The **Scenario Studio** provides a live workload preview, readable safety budgets, interactive ramp editing, and preset cards that can be customized **without starting traffic**. Results include an accessible exact-value table and clear evidence limitations.
 
 The dashboard uses VS Code theme tokens, responsive layouts, keyboard navigation, and reduced-motion support. Preview and selection are local interactions; only an explicit run action can begin a workload.
 
@@ -85,7 +85,7 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 - **Node.js 22+** and npm for building this extension from source.
 - Git access to the public Saturivo source repository.
 
-### Build and install the preview
+### Build and install the 0.2.0 candidate from source
 
 ~~~bash
 git clone https://github.com/Drako01/saturivo.git
@@ -217,9 +217,9 @@ An earlier PR #5 commit, `cbd3724`, passed [GitHub Actions run #42404881890](htt
 | Disposable loopback service under real k6 load | **PASS** |
 | Packaged VSIX installation and real VS Code 1.99 Extension Host (Linux) | **PASS** |
 | Real Go race and pprof fixture (Linux) | **PASS** |
-| Preview VSIX and CycloneDX SBOM artifact generation | **PASS** |
+| VSIX candidate and CycloneDX SBOM artifact generation (historical SHA) | **PASS** |
 
-These are **commit-specific historical CI results**, not validation of subsequent development commits or release certification. Additional threat modeling, language/protocol adapters, broader VS Code host coverage and final release validation remain pending.
+These are **commit-specific historical CI results**, not validation of subsequent development commits or release certification. The 0.2.0 version bump and removal of the Preview badge must pass a new exact-SHA CI run. Additional threat modeling, language/protocol adapters, broader VS Code host coverage and final release validation remain pending.
 
 Development commands:
 

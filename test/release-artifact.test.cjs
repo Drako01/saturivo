@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { writeManifest, verifyManifest } = require("../scripts/release-manifest.cjs");
+const candidateVersion = require("../package.json").version;
 test("the exact VSIX is bound to an immutable SHA, version and manifest", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "saturivo-release-"));
   try {
@@ -12,12 +13,12 @@ test("the exact VSIX is bound to an immutable SHA, version and manifest", () => 
     const record = path.join(dir, "manifest.json");
     const source = "a".repeat(40);
     fs.writeFileSync(file, "synthetic VSIX fixture");
-    const created = writeManifest(file, source, "0.1.1", record);
+    const created = writeManifest(file, source, candidateVersion, record);
     assert.match(created.sha256, /^[0-9a-f]{64}$/);
-    verifyManifest(file, source, "0.1.1", record);
-    assert.throws(() => verifyManifest(file, "b".repeat(40), "0.1.1", record));
+    verifyManifest(file, source, candidateVersion, record);
+    assert.throws(() => verifyManifest(file, "b".repeat(40), candidateVersion, record));
     assert.throws(() => verifyManifest(file, source, "0.1.0", record));
     fs.appendFileSync(file, "tampered");
-    assert.throws(() => verifyManifest(file, source, "0.1.1", record), /changed/);
+    assert.throws(() => verifyManifest(file, source, candidateVersion, record), /changed/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

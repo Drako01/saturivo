@@ -29,7 +29,7 @@ export function renderK6Script(
     summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
     discardResponseBodies: true,
     noConnectionReuse: false,
-    userAgent: "Saturivo/0.1.1",
+    userAgent: "Saturivo/0.2.0",
     // Explicit local host pinning prevents malicious host-file / DNS changes.
     hosts: ["localhost", "localhost."].includes(new URL(scenario.target).hostname.toLowerCase())
       ? { localhost: "127.0.0.1", "localhost.": "127.0.0.1" } : verifiedHosts,
