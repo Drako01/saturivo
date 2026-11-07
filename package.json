@@ -17,7 +17,6 @@
     "url": "https://github.com/Drako01/saturivo/issues"
   },
   "homepage": "https://armotusitio.com.ar",
-  "private": true,
   "preview": true,
   "engines": {
     "vscode": "^1.99.0"
