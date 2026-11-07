@@ -134,10 +134,11 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: \${{ github.head_ref }}
+          ref: ${{ github.head_ref }}
           persist-credentials: true # only this trusted documentation screenshot job
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -163,5 +164,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "docs(readme): capture 0.1.1 control center from production renderer [skip ci]"
+          git commit -m "docs(readme): capture 0.1.1 control center from production renderer"
           git push origin "HEAD:refs/heads/feat/enterprise-aaaa-v0.1.1"
+          # GitHub-token pushes do not trigger workflows. Dispatch explicitly at the new commit.
+          GH_TOKEN="${{ github.token }}" gh workflow run ci.yml --ref feat/enterprise-aaaa-v0.1.1
