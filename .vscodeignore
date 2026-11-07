@@ -13,3 +13,4 @@ tsconfig.json
 out/test/**
 reports/**
 *.sha256
+saturivo-sbom.cdx.json

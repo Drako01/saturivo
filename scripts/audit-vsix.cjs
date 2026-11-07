@@ -36,15 +36,17 @@ function filenamesFromZip(file) {
 function audit(file) {
   const files = filenamesFromZip(file);
   const needed = [
-    "extension/package.json", "extension/README.md", "extension/LICENSE",
+    "extension/package.json", "extension/readme.md", "extension/LICENSE.txt",
     "extension/out/src/extension.js", "extension/media/saturivo-icon.png",
     "extension/media/activity.svg",
   ];
-  for (const name of needed) assert(files.includes(name), "Missing required VSIX file: " + name);
+  const normalized = new Set(files.map(file => file.toLowerCase()));
+  for (const name of needed) assert(normalized.has(name.toLowerCase()), "Missing required VSIX file: " + name);
   for (const name of files) {
     assert(!/^extension\/(?:\.git|\.github|node_modules|src|test|scripts)(?:\/|$)/i.test(name),
       "Disallowed development or workflow file shipped: " + name);
     assert(!/\/out\/test\//i.test(name), "Compiled test bundle leaked into VSIX: " + name);
+    assert(!/\.cdx\.json$/i.test(name), "SBOM must be a separate evidence artifact, not bundled: " + name);
     assert(!/(^|\/)(\.env(?:\.[^/]*)?|\.npmrc|\.pypirc|id_rsa|credentials|secrets?)(\/|$)/i.test(name) &&
       !/\.(?:pem|pfx|p12|key|secret)$/i.test(name), "Sensitive filename in VSIX: " + name);
   }
