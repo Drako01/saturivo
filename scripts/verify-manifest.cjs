@@ -17,6 +17,7 @@ assert(fs.existsSync("media/activity.svg"));
 assert.equal(pkg.icon, "media/saturivo-icon.png");
 const icon = fs.readFileSync(pkg.icon);
 assert(icon.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), "Marketplace icon must be PNG");
+require("./verify-icon-alpha.cjs").verifyCornersTransparent(icon);
 const readme = fs.readFileSync("README.md", "utf8");
 assert(readme.includes("media/saturivo-icon.png"), "README image must match package PNG");
 assert(!/<img\s[^>]*src=["\x27][^"\x27]*\.svg/i.test(readme), "vsce forbids SVG images in README");
