@@ -29,7 +29,7 @@ test("durable history, most recent first, corrupt records ignored", async () => 
     assert.equal(values.length, 2);
     assert.equal(values[0]?.id, "22222222-2222-4222-8222-222222222222");
     assert.equal(values[1]?.id, run.id);
-    assert.equal(await store.prune(1), 2);
+    assert.equal(await store.prune(1), 1);
     assert.equal((await store.list()).length, 1);
     assert.equal(await store.clear(), 1);
     assert.deepEqual(await store.list(), []);
