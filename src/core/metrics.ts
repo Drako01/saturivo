@@ -33,7 +33,7 @@ export function readK6Summary(raw: unknown, targetArrivalRate?: number): Metrics
     ...(targetArrivalRate !== undefined ? {
       targetArrivalRate, achievedArrivalRate: finite(requests.rate),
     } : {}),
-    ...(metrics.saturivo_status_2xx !== undefined ? {
+    ...(Object.keys(metrics).some(key => key.startsWith("saturivo_status_")) ? {
       statusDistribution: {
         "1xx": finite(metric(metrics, "saturivo_status_1xx").count),
         "2xx": finite(metric(metrics, "saturivo_status_2xx").count),
