@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
-import { mkdtemp, rm, writeFile, mkdir, readdir } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, mkdir, readdir, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HistoryStore, isStoredRun } from "../src/core/history";
@@ -55,4 +55,56 @@ test("legacy reports read; malicious, oversized and invalid metrics rejected", a
     assert(isStoredRun({ ...sample, schemaVersion: 2 }));
     assert.equal((await readdir(directory)).length, 3);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("import rejects credential URLs, hostile SLOs, inconsistent stage definitions and malformed evidence", () => {
+  assert.equal(isStoredRun(sample), true, "historical v1 report must remain importable");
+  for (const value of [
+    { ...sample, scenario: { ...sample.scenario, target: "file:///etc/passwd" } },
+    { ...sample, scenario: { ...sample.scenario, target: "http://user:pass@localhost/" } },
+    { ...sample, scenario: { ...sample.scenario, maxRequests: -1 } },
+    { ...sample, scenario: { ...sample.scenario, stages: [{ targetVus: 100, durationSeconds: 10 }] } },
+    { ...sample, scenario: { ...sample.scenario, slo: { maxP95Ms: "nan" } } },
+    { ...sample, sloAssessment: { status: "pass", violations: "fake" } },
+    { ...sample, environment: { ...sample.environment, cpuModel: "<".repeat(10000) } },
+    { ...sample, endedAt: "2020-01-01T00:00:00Z" },
+    { ...sample, metrics: { ...sample.metrics, failedRate: 2 } },
+  ]) assert.equal(isStoredRun(value), false);
+});
+
+test("retention is configurable, validated and applied after import", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-retention-"));
+  try {
+    const store = new HistoryStore(dir, 2);
+    assert.throws(() => store.setRetention(1001), /retention/);
+    for (let i = 1; i <= 3; i++) {
+      await store.save({
+        ...sample, id: String(i).padStart(8, "0") + "-1111-4111-8111-111111111111",
+        startedAt: "2026-11-07T10:00:" + String(i).padStart(2, "0") + "Z",
+      });
+    }
+    const items = await store.list();
+    assert.equal(items.length, 2);
+    assert.deepEqual(items.map(x => x.startedAt), [
+      "2026-11-07T10:00:03Z", "2026-11-07T10:00:02Z",
+    ]);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("history never reads files through attacker-created symlinks", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-link-"));
+  const outside = await mkdtemp(join(tmpdir(), "saturivo-other-"));
+  try {
+    const external = join(outside, "confidential.json");
+    await writeFile(external, JSON.stringify(sample));
+    await mkdir(join(dir, "runs"), { recursive: true });
+    const maliciousName = "20261107110000-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.json";
+    await symlink(external, join(dir, "runs", maliciousName));
+    const store = new HistoryStore(dir);
+    assert.deepEqual(await store.list(), []);
+    assert.equal(await store.clear(), 0, "Unowned symlink must never be followed or deleted");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
 });
