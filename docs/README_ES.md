@@ -28,6 +28,12 @@ Saturivo ahora abre el Centro de Control en una **pestaña del editor**, con esp
 
 </details>
 
+### Una experiencia diseñada para desarrolladores
+
+El Centro de Control propone un recorrido claro: **configurar → medir → analizar**. El **Scenario Studio** incluye una previsualización dinámica de las etapas, presupuestos de carga visibles, validación antes de ejecutar y presets que se pueden personalizar **sin enviar tráfico**. Los resultados agregan tablas accesibles, comparaciones contextualizadas y estados vacíos con acciones útiles.
+
+La interfaz respeta los temas de VS Code, el teclado, los diseños adaptables y la preferencia de movimiento reducido. Seleccionar o editar un escenario nunca inicia una prueba automáticamente.
+
 ## ¿Para qué sirve?
 
 Saturivo permite medir cómo responde una API bajo una carga controlada, guardar las condiciones de la prueba, comparar ejecuciones compatibles y observar señales de concurrencia en aplicaciones Go. Usa herramientas consolidadas, como **Grafana k6**, **go test -race** y **go tool pprof**, en lugar de inventar otro motor de carga.
