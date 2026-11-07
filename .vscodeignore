@@ -10,3 +10,6 @@ docs/**
 tsconfig.json
 .gitignore
 .vscodeignore
+out/test/**
+reports/**
+*.sha256
