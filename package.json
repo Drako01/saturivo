@@ -246,6 +246,13 @@
           "maximum": 100000,
           "default": 10000,
           "description": "%setting.maxRequests%"
+        },
+        "saturivo.historyRetention": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 100,
+          "description": "%setting.historyRetention%"
         }
       }
     }
