@@ -89,6 +89,7 @@ function main() {
         const nonce = /<script nonce="([a-f0-9]+)">/.exec(html)?.[1];
         if (!nonce) throw new Error("Interactive webview script is missing its CSP nonce");
         const probe = [
+          '(function(){',
           'const form=document.getElementById("custom-scenario");',
           'const field=name=>form.elements.namedItem(name);',
           'field("model").value="ramping-vus";field("durationSeconds").value="20";',
@@ -128,6 +129,7 @@ function main() {
           'tabs.every(tab=>document.getElementById(tab.getAttribute("aria-controls")).tabIndex===0);',
           'document.documentElement.setAttribute("data-ui-smoke",',
           'valid&&invalid&&phaseInvalid&&phaseValid&&keyboard?"pass":"fail");',
+          '})();',
         ].join("");
         const checked = html.replace("</body>",
           '<script nonce="' + nonce + '">' + probe + '</script></body>');
@@ -139,7 +141,8 @@ function main() {
         ], { encoding: "utf8", timeout: 40000 });
         if (outcome.status !== 0 || !outcome.stdout.includes('data-ui-smoke="pass"')) {
           throw new Error("Interactive scenario studio browser check failed: " +
-            String(outcome.stderr).slice(-900));
+            String(outcome.stdout).match(/data-ui-smoke="[^"]*"/)?.[0] +
+            " " + String(outcome.stderr).slice(-500));
         }
         console.log("Interactive studio DOM (valid/invalid stages): PASS");
       }
