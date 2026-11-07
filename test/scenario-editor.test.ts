@@ -38,7 +38,7 @@ test("editor payload cannot override policy or target, inject models or unsafe i
   assert.throws(() => parseScenarioEditorInput({ ...input, maxRequests: "2001" },
     target, policy), /request budget/i);
   assert.throws(() => parseScenarioEditorInput({ ...input, model: "ramping-vus" },
-    target, policy), /Unsupported editor load model/);
+    target, policy), /Ramping requires/);
   assert.throws(() => parseScenarioEditorInput({ ...input, method: "POST" },
     target, policy), /GET and HEAD/);
   assert.throws(() => parseScenarioEditorInput({ ...input, durationSeconds: "121" },
@@ -54,4 +54,21 @@ test("legacy v1 remains valid; v2 changes the explicit workload identity", () =>
   const latest = parseScenarioEditorInput(input, target, policy);
   const { workloadVersion: _version, ...legacy } = latest;
   assert.notEqual(fingerprintScenario(legacy), fingerprintScenario(latest));
+});
+
+test("custom ramp stages are parsed and bounded by the global VU ceiling", () => {
+  const ramp = parseScenarioEditorInput({ ...input, model: "ramping-vus",
+    stages: "5:2,5:4", durationSeconds: "10" }, target, policy);
+  assert.equal(ramp.workloadVersion, 2);
+  assert.equal(ramp.model, "ramping-vus");
+  assert.deepEqual(ramp.stages, [
+    { durationSeconds: 5, targetVus: 2 }, { durationSeconds: 5, targetVus: 4 },
+  ]);
+  assert.throws(() => parseScenarioEditorInput({ ...input, model: "ramping-vus",
+    stages: "1:1,1:1", durationSeconds: "10" }, target, policy), /sum to scenario/);
+  for (const stages of [
+    "5:6,5:0", "5:-1,5:0", "5:2,5:5;POST", "5:2",
+    "5:2,0:0", "5:2,5:0,5:0,5:0,5:0,5:0,5:0,5:0,5:0",
+  ]) assert.throws(() => parseScenarioEditorInput(
+    { ...input, model: "ramping-vus", stages }, target, policy));
 });
