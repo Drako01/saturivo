@@ -19,7 +19,7 @@
 | R07 · Artifact | VSIX SHA-256/manifest HEAD, SBOM/licencias, notices y shipped inventory PASS | Artifact final, revisión legal y attestation externa |
 | R08 · Install/upgrade | Upgrade VSIX 0.1.0→0.2.0 CLI y storage v1/v2 en Windows/macOS/Linux PASS | UI real import/export/reload y remotos BLOCKED |
 | R09 · Documentación visual | Cuatro capturas renderer con datos sintéticos commit 6387739, run #42423371472 PASS | Revisión humana y CI poscapturas PASS en `e777dda`; nuevo SHA documental pendiente |
-| R10 · Release governance | Política de release protegida sin despliegue PR | Aprobación owner independiente merge, tag y publicadores |
+| R10 · Release governance | Pipeline de publicación activado **solo por tag `v*` protegido o dispatch confirmado**, no por merge a `main`; PR sin despliegue | Merge autorizado condicionalmente; tag y publicación requieren autorización independiente y sign-off |
 
 ## Procedimiento final (NO ejecutado)
 

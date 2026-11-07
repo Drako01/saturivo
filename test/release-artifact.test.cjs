@@ -22,3 +22,13 @@ test("the exact VSIX is bound to an immutable SHA, version and manifest", () => 
     assert.throws(() => verifyManifest(file, source, candidateVersion, record), /changed/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test("publication is not triggered by a plain merge into main", () => {
+  const workflow = fs.readFileSync(path.join(__dirname, "..", ".github", "workflows", "publish.yml"), "utf8");
+  assert.match(workflow, /^\s{4}tags: \['v\*'\]$/m);
+  assert.doesNotMatch(workflow, /^\s{4}branches: \[main\]$/m);
+  assert.match(workflow, /^  workflow_dispatch:$/m);
+  assert.match(workflow, /confirmation:\s*\$\{\{ inputs\.confirmation \}\}/);
+  assert.match(workflow, /environment: marketplace/);
+  assert.match(workflow, /environment: open-vsx/);
+});

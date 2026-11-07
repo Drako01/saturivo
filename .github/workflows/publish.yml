@@ -4,7 +4,8 @@
 name: publish
 on:
   push:
-    branches: [main]
+    # Never run publish preflight on a plain merge to main. An owner-created
+    # protected tag (or confirmed manual dispatch) is the only release trigger.
     tags: ['v*']
   workflow_dispatch:
     inputs:
