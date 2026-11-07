@@ -278,7 +278,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</p><div class="action-row">' + button('runSmoke', 'quickStart', 'primary', busy) +
     button('configureTarget', 'configure', 'secondary', busy) +
     '</div></div><div class="endpoint"><span class="eyebrow">' + t('target') +
-    '</span><code>' + escapeHtml(displayTarget(state.target)) + '</code><span class="endpoint-hint">' +
+    '</span><code>' + escapeHtml(redactTargetForDisplay(state.target)) + '</code><span class="endpoint-hint">' +
     t(state.allowRemoteTargets ? 'remoteAllowed' : 'loopbackDefault') +
     '</span><span class="host-hint" role="note">' +
     (state.remoteName ?
