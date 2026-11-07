@@ -6,7 +6,7 @@ import { analyzeGoroutineStacks, summarizeGoPprof } from "./core/go-profile-anal
 import { captureGoLoadTimeline, goCorrelationMarkdown } from "./core/go-correlation";
 import { readGoGcMetrics } from "./core/go-gc";
 import { readFile, rm } from "node:fs/promises";
-import { HistoryStore, isStoredRun } from "./core/history";
+import { HistoryStore, isStoredRun, migrateImportedRun } from "./core/history";
 import { runK6 } from "./core/k6";
 import { parseScenarioEditorInput } from "./core/scenario-editor";
 import { runWebSocketProbe as executeWebSocketProbe, validateWebSocketTarget, webSocketReport } from "./core/websocket";
@@ -519,7 +519,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       candidate = JSON.parse(Buffer.from(bytes).toString("utf8"));
     } catch { throw new Error(this.t("importInvalid")); }
     if (!isStoredRun(candidate)) throw new Error(this.t("importInvalid"));
-    await this.store.save(candidate);
+    await this.store.save(migrateImportedRun(candidate));
     await this.loadHistory();
     this.message = this.t("importSuccess");
     this.refresh();

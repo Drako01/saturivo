@@ -9,6 +9,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Migración de evidencias JSON v1 → v2 (Fases 1 y 4, 2026-11-07)
+
+- [x] `migrateImportedRun` valida y convierte únicamente durante importación explícita; añade huella de workload verificable, recalcula SLO cuando existe y conserva métricas, identidad, fecha, entorno y advertencias originales.
+- [x] Se rechaza evidencia legacy con fingerprint contradictorio o distribución de estados inconsistente. Importación idempotente y roundtrip disk → reimport; historial v1 existente no se reescribe automáticamente.
+- [ ] Verificación en VS Code instalado con diálogo de importación/exportación real v1/v2 y CI del commit exacto. No asumir que todas las variantes históricas de terceros son compatibles.
+
 ## Accesibilidad de navegación y foco — P4 (2026-11-07)
 
 - [x] `Skip navigation` ES/EN disponible al enfocar con teclado. Paneles ARIA de pestañas reciben foco (`tabindex=0`); Escape devuelve foco al botón que abrió el inspector.

@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import { mkdtemp, rm, writeFile, mkdir, readdir, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HistoryStore, isStoredRun } from "../src/core/history";
+import { HistoryStore, isStoredRun, migrateImportedRun } from "../src/core/history";
 import { fingerprintScenario } from "../src/core/fingerprint";
 import type { RunResult } from "../src/core/types";
 
@@ -149,4 +149,44 @@ test("phased imported history cannot forge total request budgets or an invalid S
   assert.equal(isStoredRun({ ...run, metrics: { ...run.metrics, totalRequests: undefined } }), false);
   assert.equal(isStoredRun({ ...run, sloAssessment: { status: "pass", violations: [] } }), false);
   assert.equal(isStoredRun({ ...run, scenario: { ...scenario, warmupSeconds: 8 } }), false);
+});
+
+test("explicit v1-to-v2 JSON migration preserves observations, then roundtrips safely", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "saturivo-migrate-v1-"));
+  try {
+    const report = migrateImportedRun(JSON.parse(JSON.stringify(sample)) as unknown);
+    assert.equal(report.schemaVersion, 2);
+    assert.equal(report.scenarioHash, fingerprintScenario(sample.scenario));
+    assert.deepEqual(report.metrics, sample.metrics);
+    assert.deepEqual(report.environment, sample.environment);
+    assert.equal(report.id, sample.id);
+    assert.equal(report.startedAt, sample.startedAt);
+    assert.equal(report.endedAt, sample.endedAt);
+    assert.equal(migrateImportedRun(report), report, "Repeated migration must be idempotent");
+    const store = new HistoryStore(folder);
+    await store.save(report);
+    const [reloaded] = await store.list();
+    assert.deepEqual(reloaded, report, "Explicit v1 import → v2 disk → v2 reimport");
+    await store.save(sample);
+    const historical = (await store.list())[0];
+    assert.equal(historical?.schemaVersion, 1,
+      "Existing v1 history must remain readable without implicit migration");
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
+
+test("migration refuses malformed or contradictory legacy fingerprints and counts", () => {
+  assert.throws(() => migrateImportedRun({ ...sample, metrics: { ...sample.metrics,
+    p95Ms: "fake" } }), /Invalid imported/);
+  assert.throws(() => migrateImportedRun({ ...sample,
+    scenarioHash: "a".repeat(64) }), /fingerprint mismatch/);
+  assert.throws(() => migrateImportedRun({ ...sample, schemaVersion: 1,
+    metrics: { ...sample.metrics, statusDistribution: {
+      "1xx": 0, "2xx": 70, "3xx": 0, "4xx": 0, "5xx": 0, unknown: 0,
+    } } }), /cannot be safely migrated/);
+  const withSlo = { ...sample, scenario: { ...sample.scenario,
+    slo: { maxP95Ms: 10 } },
+    sloAssessment: { status: "fail" as const, violations: ["old untrusted claim"] } };
+  const migrated = migrateImportedRun(withSlo);
+  assert.deepEqual(migrated.sloAssessment, { status: "pass", violations: [] });
+  assert.equal(isStoredRun(migrated), true);
 });

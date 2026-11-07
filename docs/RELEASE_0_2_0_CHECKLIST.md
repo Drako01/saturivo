@@ -4,6 +4,11 @@
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
+## Migración de evidencias v1 → v2
+
+- [x] Conversión explícita desde diálogo de importación, preservación de métricas e identidad, fingerprint v2 y validación SLO contra datos no confiables; pruebas roundtrip, idempotencia y rechazo de inconsistencias.
+- [ ] E2E del diálogo real de VS Code, instalación/upgrade con historial previo y CI exacto.
+
 ## UX accesible — gates de QA
 
 - [x] Navegación asistida ES/EN y foco accesible en paneles, Chromium keyboard smoke ampliado sin capturas.

@@ -122,6 +122,33 @@ export function isStoredRun(value: unknown): value is RunResult {
   return true;
 }
 
+
+/**
+ * Explicit import-time migration only: existing on-disk v1 records remain
+ * byte-for-byte unchanged until the operator chooses to import them.
+ * Legacy fields are preserved, while workload identity and optional SLO
+ * assessments are re-established from the validated source evidence.
+ */
+export function migrateImportedRun(value: unknown): RunResult {
+  if (!isStoredRun(value)) throw new Error("Invalid imported run evidence");
+  if (value.schemaVersion === 2) return value;
+  const fingerprint = fingerprintScenario(value.scenario);
+  if (value.scenarioHash && value.scenarioHash !== fingerprint) {
+    throw new Error("Legacy workload fingerprint mismatch");
+  }
+  const budget = value.scenario.maxRequests ?? 10000;
+  const requestBudgetReached = (value.metrics.totalRequests ?? value.metrics.requests) >= budget;
+  const migrated: RunResult = {
+    ...value, schemaVersion: 2, scenarioHash: fingerprint,
+    ...(value.sloAssessment
+      ? { sloAssessment: assessSlo(value.metrics, value.scenario.slo, requestBudgetReached) }
+      : {}),
+  };
+  // Do not silently convert v1 data that fails the stricter v2 evidence contract.
+  if (!isStoredRun(migrated)) throw new Error("Legacy run cannot be safely migrated");
+  return migrated;
+}
+
 export class HistoryStore {
   private readonly directory: string;
   private retention: number;
