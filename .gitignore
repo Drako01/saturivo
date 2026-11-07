@@ -1,0 +1,8 @@
+node_modules/
+out/
+*.vsix
+*.vsix.sha256
+coverage/
+.DS_Store
+*.log
+.saturivo/
