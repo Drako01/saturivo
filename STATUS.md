@@ -38,3 +38,5 @@ Do not mark a feature or phase complete from a planned checklist alone. A featur
 ## Enterprise AAAA
 
 Phased roadmap and acceptance criteria: [Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). This is planned, not implemented. No release or publication has occurred.
+
+- Enterprise AAAA Phase 0: reproducible `package-lock.json` and `npm ci` CI install added in PR #4; verification on latest commit pending.

@@ -42,7 +42,7 @@ Saturivo is a VS Code extension for **evidence-first local performance engineeri
 ```bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-npm install
+npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
 ```

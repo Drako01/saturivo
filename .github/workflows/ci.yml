@@ -27,9 +27,19 @@ jobs:
         with:
           node-version: 22
       - name: Install
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify TypeScript, tests and manifest
         run: npm run verify
+      - name: Generate reproducible dependency SBOM
+        if: runner.os == 'Linux'
+        run: npm sbom --sbom-format cyclonedx > saturivo-sbom.cdx.json
+      - name: Archive dependency SBOM
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: saturivo-sbom
+          path: saturivo-sbom.cdx.json
+          if-no-files-found: error
       - name: Package preview VSIX
         if: runner.os == 'Linux'
         run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
@@ -53,7 +63,7 @@ jobs:
         with:
           node-version: 22
       - name: Install TypeScript dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Compile once for the integration fixture
         run: npm run build
       - uses: grafana/setup-k6-action@v1
@@ -63,19 +73,3 @@ jobs:
         run: npm run test:integration:k6
         env:
           K6_NO_USAGE_REPORT: 'true'
-
-  bootstrap-lockfile:
-    name: Bootstrap reproducible npm lockfile (one-time)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Export lockfile bytes for commit (temporary CI step)
-        run: |
-          node -e "const fs=require('fs');const s=fs.readFileSync('package-lock.json').toString('base64');for(let i=0;i<s.length;i+=4000){console.log('SATURIVO_LOCK_PART:'+i+':'+s.slice(i,i+4000))}"
