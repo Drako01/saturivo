@@ -15,7 +15,7 @@ an older CI run as evidence of the final candidate.
 | A02 | Opening Control Center sends 0 test requests | IMPLEMENTED — Extension Host fixture |
 | A03 | Remote/private URL, credentials and unsafe protocols refused without explicit consent | PARTIAL — adversarial proxy/DNS matrix pending |
 | A04 | VU/rate/duration/requests constrained across all v2 phases; cancellation stops process descendants | PARTIAL — WSL/Windows hostile cases pending |
-| A05 | Real k6 closed/open/ramp/phased fixture, valid P50/P95/P99 and observed arrival/status | IMPLEMENTED — exact release CI pending |
+| A05 | Real k6 closed/open/ramp/phased fixture, valid P50/P95/P99 and observed arrival/status | TESTED — real k6 integration PASS #42422983667 on 0d73879; SHA final post-imágenes pendiente |
 | A06 | v1/v2 run migration/roundtrip without altered metrics | PARTIAL — storage upgrade + migration PASS Linux/Windows/macOS #42422983667; native dialog E2E pending |
 | A07 | Independent 3×3 comparison does not mistake noise or missing evidence for proof | PARTIAL — seeded 64× synthetic controls PASS #42422983667; real multi-host noise pending |
 | A08 | Go race/pprof/trace/GC, source evidence and noncausal conclusions | PARTIAL — real profiling control experiment PASS #42422983667; IDE navigation E2E pending |
