@@ -7,6 +7,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+
+## Seguridad IPv6 — prefijos de transición y normalización (2026-11-07)
+
+- [x] Código y pruebas focalizadas para IPv6 canónico/no canónico, IPv4-mapped, 6to4, Teredo, documentación y 6bone; DNS mixto falla cerrado.
+- [ ] Validación CI del SHA y pruebas adversariales en red/proxy/redirect/WSL para cierre de fase 5.
+
 ## QA UX sin regenerar capturas (2026-11-07)
 
 - `scripts/capture-readme.cjs --verify-only` ejecuta interacciones reales en Chromium sin escribir archivos PNG ni modificar el README: escenario válido/inválido y selección accesible del inspector, foco, `aria-expanded` y persistencia de `WebviewState`.

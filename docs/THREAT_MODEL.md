@@ -52,3 +52,9 @@
 Record the exact commit, job URL, runtime versions, scenario fingerprint, approved endpoint classification, abort/cleanup result, artifact checksum, failure-case results and the reviewer/release sign-off. Maintain links in [the live checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md).
 
 **Status:** model documented; threat-model sign-off and unresolved fixtures remain open. This document does not declare Enterprise AAAA complete.
+
+## SSRF hardening — IPv6 transitional prefixes (2026-11-07)
+
+- Normalize IPv6 before classification so leading-zero documentation addresses cannot bypass checks.
+- Fail closed on 6to4 (2002::/16), Teredo/ORCHID special use (2001::/23), documentation (2001:db8::/32) and deprecated 6bone (3ffe::/16). Mixed public/private DNS remains rejected rather than silently selecting a public answer.
+- Coverage: deterministic unit tests with literal IPv6 URLs and injected DNS answers. **Pending:** exact-commit CI and manual proxy/redirect/rebinding matrix; this does not claim comprehensive SSRF elimination.

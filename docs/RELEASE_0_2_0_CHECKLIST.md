@@ -4,6 +4,10 @@
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
+## Seguridad IPv6 (implementación en rama; CI exacto pendiente)
+
+- Bloqueo de prefijos IPv6 de transición (6to4/Teredo/ORCHID), rangos de documentación con ceros no canónicos y 6bone; unit tests de DNS y URL literal. Resta matriz adversarial completa antes del sign-off.
+
 ## Handoff de release — 2026-11-07
 
 - La validación funcional UI tiene job independiente `ui-browser` (Chrome headless, `--verify-only`, no imágenes): selección/historial y editor de escenarios. Capturas finales siguen manuales. **CI exacto pendiente.**

@@ -18,6 +18,8 @@ test("special-use IPv4 and IPv6 addresses are never accepted as remote destinati
     "192.0.2.2", "198.18.0.1", "198.51.100.1", "203.0.113.5",
     "224.0.0.1", "255.255.255.255", "::1", "::ffff:7f00:1",
     "::ffff:c0a8:101", "fc00::1", "fe80::1", "2001:db8::1",
+    "2001:0db8::1", "2001::1", "2001:10::1", "2001:20::1",
+    "2002:7f00:1::", "2002:c0a8:101::", "3ffe::1",
   ];
   for (const address of denied) assert.equal(isPublicIp(address), false, address);
   for (const address of ["8.8.8.8", "1.1.1.1", "2001:4860:4860::8888"]) {
@@ -61,4 +63,18 @@ test("abort before DNS resolution launches no resolver", async () => {
     invoked = true; return ["8.8.8.8"];
   }), /Cancelled/);
   assert.equal(invoked, false);
+});
+
+test("6to4, Teredo and zero-padded reserved IPv6 cannot bypass DNS pinning", async () => {
+  const signal = new AbortController().signal;
+  for (const address of ["2002:7f00:1::", "2001:0db8::7", "2001::1", "3ffe::1"]) {
+    await assert.rejects(pinnedTargetHosts(scenario.target, signal, async () => [address]),
+      /Remote DNS/, address);
+  }
+  for (const address of ["2002:7f00:1::", "2001:0db8::7", "2001:20::1"]) {
+    assert.throws(() => assertAllowedTarget("http://[" + address + "]/", policy),
+      /Private or special-use/, address);
+  }
+  assert.deepEqual(await pinnedTargetHosts(scenario.target, signal, async () =>
+    ["2001:4860:4860::8888"]), { "api.example.test": "2001:4860:4860::8888" });
 });

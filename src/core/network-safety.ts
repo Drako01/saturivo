@@ -23,9 +23,12 @@ export function isPublicIp(raw: string): boolean {
   const address = raw.replace(/^\[|\]$/g, "").toLowerCase();
   if (isIP(address) === 4) return ipv4Public(address);
   if (isIP(address) !== 6) return false;
+  // WHATWG URL canonicalization closes zero-padded IPv6 prefix bypasses.
+  // DNS library output and user-supplied literals are not guaranteed canonical.
+  const canonical = new URL("http://[" + address + "]/").hostname.slice(1, -1);
   // IPv4-mapped addresses in canonical or dotted form must not bypass IPv4 rules.
-  if (address.startsWith("::ffff:")) {
-    const suffix = address.slice(7);
+  if (canonical.startsWith("::ffff:")) {
+    const suffix = canonical.slice(7);
     if (isIP(suffix) === 4) return ipv4Public(suffix);
     const parts = suffix.split(":");
     if (parts.length === 2 && parts.every(part => /^[0-9a-f]{1,4}$/.test(part))) {
@@ -35,9 +38,15 @@ export function isPublicIp(raw: string): boolean {
     return false;
   }
   // IPv6 globally routable unicast is 2000::/3. Exclude documentation prefixes.
-  const first = Number.parseInt(address.split(":")[0] ?? "", 16);
+  const [firstHex, secondHex] = canonical.split(":");
+  const first = Number.parseInt(firstHex ?? "", 16);
+  const second = Number.parseInt(secondHex || "0", 16);
   if (!Number.isFinite(first) || first < 0x2000 || first > 0x3fff) return false;
-  if (address.startsWith("2001:db8:") || address === "2001:db8::") return false;
+  // 2001::/23 contains Teredo, ORCHID and special-purpose transition ranges;
+  // 2002::/16 (6to4) can tunnel to private IPv4 addresses.
+  // 2001:db8::/32 is documentation space; 3ffe::/16 is deprecated 6bone.
+  if (first === 0x2001 && (second <= 0x01ff || second === 0x0db8)) return false;
+  if (first === 0x2002 || first === 0x3ffe) return false;
   return true;
 }
 
