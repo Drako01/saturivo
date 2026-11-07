@@ -9,7 +9,7 @@
 
 [English README](../README.md) · [Arquitectura](../ARCHITECTURE.md) · [Estado real](../STATUS.md) · [Plan Enterprise AAAA](ENTERPRISE_AAAA_MASTER_PLAN.md)
 
-> **Código fuente público · Vista previa de desarrollo 0.1.0.** Las capacidades documentadas en el PR #4 son un candidato de desarrollo, no una versión publicada ni una certificación Enterprise AAAA.
+> **Código fuente público · Versión 0.1.1 en desarrollo (PR #5).** No equivale a una versión publicada ni a una certificación Enterprise AAAA.
 
 ## Centro de Control — vista previa 0.1.1
 
@@ -34,22 +34,22 @@ Saturivo permite medir cómo responde una API bajo una carga controlada, guardar
 
 | Necesidad | Función |
 |---|---|
-| Medir una API local | Prueba rápida, estrés acotado o tasa constante de llegadas |
+| Medir una API local | Presets de carga y editor de escenarios HTTP v2 (GET/HEAD) con límites y consentimiento |
 | Entender la degradación | P50/P95/P99, solicitudes por segundo, fallos e iteraciones descartadas |
-| Comparar cambios | Huella SHA-256 del escenario, historial y estimación de incertidumbre con pruebas repetidas |
-| Analizar Go | Detector de carreras con vínculos al código, benchmarks y perfiles CPU, heap, goroutines, mutex y block |
+| Comparar cambios | Huella SHA-256, selección de baseline e incertidumbre con pruebas repetidas |
+| Analizar Go | Race detector, benchmarks, perfiles CPU, heap, goroutines, mutex/block, traza local y snapshots antes/durante/después |
 | Guardar evidencia | Exportación Markdown, JSON y SARIF para carreras observadas |
 
-**Experimental:** se incorporó un piloto manual de capacidad local con 3 etapas de carga acotada, SLO P95 obligatorio y parada ante fallos o resultados inconclusos. No certifica capacidad de producción. **Todavía no implementado:** descubrimiento completo y estadísticamente robusto de capacidad, editor avanzado de rampas, correlación temporal integral de trazas, adaptadores gRPC/WebSockets, profiling especializado de Node/Java/Python e IA opcional. Consultá el [roadmap](../ROADMAP.md).
+**Experimental:** se incorporó un piloto manual de capacidad local con 3 etapas de carga acotada, SLO P95 obligatorio y parada ante fallos o resultados inconclusos. No certifica capacidad de producción. **Todavía pendiente:** capacidad con intervalos robustos, exclusión temporal de warm-up, correlación profunda de perfiles Go, adaptadores gRPC/WebSockets, profiling especializado de Node/Java/Python, entornos remotos e IA opt-in. Se incorporó al CI una matriz HTTP real de Go/Node/Python, que no equivale a profiling de esos lenguajes. Consultá el [roadmap](../ROADMAP.md).
 
 ## Instalación y uso
 
-**Requisitos:** VS Code 1.99+, Grafana k6 en `PATH`; Go instalado para análisis de concurrencia. Node.js 22+ y npm para compilar desde el repositorio privado.
+**Requisitos:** VS Code 1.99+, Grafana k6 en `PATH`; Go instalado para análisis de concurrencia. Node.js 22+ y npm para compilar desde el repositorio público.
 
 ~~~bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-git switch feat/enterprise-aaaa-runtime-evidence
+git switch feat/enterprise-aaaa-v0.1.1
 npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
@@ -92,7 +92,7 @@ Cuando existen al menos tres ejecuciones compatibles por grupo, Saturivo permite
 
 **Benchmarks:** ejecuta `go test -run ^$ -bench . -benchmem ./...` después de confirmar. Los tests pueden ejecutar código del proyecto; usá entornos controlados.
 
-**Profiling:** habilitá `net/http/pprof` solamente en un listener HTTP local de desarrollo (por ejemplo, `127.0.0.1:6060`), configurá el origen en Saturivo y capturá el perfil que necesites: CPU, heap, goroutines, mutex o block. Los artefactos quedan locales. El estado de las goroutines es una fotografía del momento, no una prueba definitiva de fugas.
+**Profiling:** habilitá `net/http/pprof` solamente en un listener HTTP local de desarrollo (por ejemplo, `127.0.0.1:6060`), configurá el origen en Saturivo y capturá CPU, heap, goroutines, mutex, block o una traza Go de duración acotada. Los artefactos quedan locales. El estado de las goroutines es una fotografía del momento, no una prueba definitiva de fugas.
 
 ## Seguridad y privacidad
 
@@ -109,7 +109,7 @@ Cuando existen al menos tres ejecuciones compatibles por grupo, Saturivo permite
 
 ## Calidad y estado
 
-El commit `a819a894` del PR #4 pasó las seis verificaciones del [CI #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010): checks en Linux/Windows/macOS, integración real con k6, instalación VSIX en Extension Host, fixture Go race/pprof y artefactos de SBOM. Esto acredita ese commit, **no** el cumplimiento completo de Enterprise AAAA.
+El commit anterior `cbd3724` del PR #5 pasó las siete verificaciones del [CI #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890): checks en Linux/Windows/macOS, integración real con k6, instalación VSIX en Extension Host, fixture Go race/pprof y artefactos de SBOM. Esto acredita solo ese commit, **no** los cambios posteriores ni el cumplimiento completo de Enterprise AAAA.
 
 Para conocer los pendientes reales, revisá el [checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md), los [criterios de aceptación](ACCEPTANCE_CRITERIA.md) y el [plan maestro](ENTERPRISE_AAAA_MASTER_PLAN.md).
 
