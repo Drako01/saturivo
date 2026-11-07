@@ -8,6 +8,8 @@ El producto dispone de una base funcional con pruebas locales de carga k6, métr
 
 Se agregaron en PR #5 un Centro de Control en pestaña central con capturas, editor HTTP v2, selección de baseline, traza Go local, matriz k6 HTTP Go/Node/Python, inventario de licencias y un modelo de amenazas. **El nivel Enterprise AAAA no está alcanzado**: siguen pendientes capacidades y validaciones de las fases 1–5. [Checklist con evidencia](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md) y [plan maestro](docs/ENTERPRISE_AAAA_MASTER_PLAN.md).
 
+El PR #5 incorpora además un rediseño UX orientado a la experiencia del desarrollador: flujo guiado, Scenario Studio con vista previa dinámica, presets personalizables sin carga automática, tabla accesible de mediciones y validación Chromium. Se suman retención de historial, cuota para perfiles Go y verificación DNS para endpoints remotos. Estos cambios requieren evidencia del SHA final y revisión visual/a11y manual; **el PR permanece Draft**.
+
 ## Evidencia observada
 
 | Check | Resultado | Evidencia |
@@ -26,7 +28,7 @@ La matriz anterior corresponde al commit histórico `a819a894`; además, [CI #42
 - Matriz avanzada de seguridad, DNS/SSRF, lifecycle, límites de recursos y tratamiento de secretos.
 - Completar correlación de perfiles Go (trace/mutex/block/GC), warm-up, fixtures adversariales y fingerprints de entorno.
 - Adaptadores runtime/protocolo y compatibilidad multi-root/remote donde corresponda.
-- Accesibilidad y UX final, capturas verificadas, pruebas VSIX de upgrade y release gate sobre artefacto exacto.
+- Auditoría UX de contraste, teclado, zoom, lectores, modo claro/oscuro y capturas finales; gate de upgrade VSIX sobre artefacto exacto.
 - Auditoría de dependencias del paquete exacto, revisión de licencias, install/upgrade multiplataforma y aprobación del owner.
 
 ## Regla de ingeniería
