@@ -13,10 +13,10 @@ type Preset = "smoke" | "stress" | "arrival";
 
 class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
-  private controller?: AbortController;
+  private controller: AbortController | undefined;
   private busy = false;
   private message = "";
-  private latest?: RunResult;
+  private latest: RunResult | undefined;
   private history: RunResult[] = [];
   private readonly store: HistoryStore;
   private readonly output = vscode.window.createOutputChannel("Saturivo");
