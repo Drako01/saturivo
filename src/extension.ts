@@ -5,6 +5,7 @@ import { captureGoProfile, localPprofEndpoint, type GoProfileKind } from "./core
 import { HistoryStore } from "./core/history";
 import { runK6 } from "./core/k6";
 import { markdownReport } from "./core/report";
+import { parseGoRaceOutput } from "./core/race";
 import type { RunResult, Scenario } from "./core/types";
 import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/validation";
 import { dashboard, type DashboardState } from "./ui/html";
@@ -21,6 +22,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private history: RunResult[] = [];
   private readonly store: HistoryStore;
   private readonly output = vscode.window.createOutputChannel("Saturivo");
+  private readonly raceDiagnostics = vscode.languages.createDiagnosticCollection("saturivo");
   private readonly storageDir: string;
 
   constructor(private readonly context: vscode.ExtensionContext) {
@@ -229,6 +231,25 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     try {
       const result = await runGo(task, folder, this.controller.signal);
       this.output.appendLine("Go " + task + " exited: " + result.exitCode);
+      if (task === "race") {
+        this.raceDiagnostics.clear();
+        const findings = parseGoRaceOutput(result.output, folder);
+        const grouped = new Map<string, vscode.Diagnostic[]>();
+        for (const finding of findings) {
+          const location = new vscode.Range(finding.line - 1, 0, finding.line - 1, 0);
+          const diagnostic = new vscode.Diagnostic(location, finding.description,
+            vscode.DiagnosticSeverity.Warning);
+          diagnostic.source = "Saturivo · go test -race";
+          diagnostic.code = "GO_RACE_EVIDENCE";
+          const previous = grouped.get(finding.file) ?? [];
+          previous.push(diagnostic);
+          grouped.set(finding.file, previous);
+        }
+        for (const [file, diagnostics] of grouped) {
+          this.raceDiagnostics.set(vscode.Uri.file(file), diagnostics);
+        }
+        if (findings.length) this.output.appendLine("Go race findings with source locations: " + findings.length);
+      }
       this.output.appendLine(result.output);
       this.message = "Go " + task + ": exit code " + result.exitCode;
       const doc = await vscode.workspace.openTextDocument({
@@ -289,7 +310,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     }
   }
 
-  dispose(): void { this.cancel(); this.output.dispose(); }
+  dispose(): void { this.cancel(); this.output.dispose(); this.raceDiagnostics.dispose(); }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
