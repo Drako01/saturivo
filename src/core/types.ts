@@ -38,7 +38,7 @@ export interface Metrics {
 }
 
 export interface RunResult {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 1 | 2;
   readonly id: string;
   readonly startedAt: string;
   readonly endedAt: string;

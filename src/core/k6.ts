@@ -48,6 +48,7 @@ export async function runK6(
 ): Promise<RunResult> {
   const safeScenario = validateScenario(scenario, policy);
   if (signal.aborted) throw new Error("Cancelled");
+  await mkdir(workspaceStorage, { recursive: true });
   const version = await runBoundedProcess({
     binary, args: ["version"], cwd: workspaceStorage,
     timeoutMs: 5000, maxOutputBytes: 2048, signal,
@@ -91,7 +92,7 @@ export async function runK6(
     const budgetReached = metrics.requests >= (safeScenario.maxRequests ?? 10000);
     if (budgetReached) warnings.push("Request budget reached: observed throughput is capped, not sustainable capacity.");
     return {
-      schemaVersion: 1, id, startedAt, endedAt: new Date().toISOString(),
+      schemaVersion: 2, id, startedAt, endedAt: new Date().toISOString(),
       engine: "k6", scenario: safeScenario, scenarioHash: fingerprintScenario(safeScenario), metrics,
       sloAssessment: assessSlo(metrics, safeScenario.slo, budgetReached),
       environment: { platform: process.platform, arch: process.arch,
