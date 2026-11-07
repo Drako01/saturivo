@@ -195,7 +195,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       validateInput: input => {
         const parsed = Number(input);
         return Number.isFinite(parsed) && (parsed === 0 || parsed >= 1 && parsed <= 120_000) ?
-          undefined : "P95 SLO must be 0 (disabled) or 1–120000 ms";
+          undefined : this.t("sloInvalid");
       },
     });
     if (value === undefined) return;
@@ -332,7 +332,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   private async executeScenario(input: Scenario): Promise<void> {
-    if (this.busy) { void vscode.window.showWarningMessage("Saturivo: another task is already running."); return; }
+    if (this.busy) { void vscode.window.showWarningMessage("Saturivo: " + this.t("taskAlreadyRunning")); return; }
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
       maxRequests: this.config().get<number>("maxRequests", 10000) };
@@ -341,13 +341,13 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     if ((vscode.workspace.workspaceFolders?.length ?? 0) > 1 && !sourceRoot) return;
     if (isRemoteTarget(scenario.target)) {
       const agreed = await vscode.window.showWarningMessage(
-        "Saturivo will send load to " + redactTargetForDisplay(scenario.target) +
-        ". Confirm that you own or are authorized to test this service." +
-        (vscode.env.remoteName ? " Requests originate in the remote workspace host (" +
+        this.t("remoteLoadPrefix") + " " + redactTargetForDisplay(scenario.target) +
+        ". " + this.t("remoteLoadOwnership") +
+        (vscode.env.remoteName ? " " + this.t("remoteLoadHost") + " (" +
         vscode.env.remoteName.slice(0, 80) + ")." : ""),
-        { modal: true }, "Run authorized test"
+        { modal: true }, this.t("remoteLoadAuthorize")
       );
-      if (agreed !== "Run authorized test") return;
+      if (agreed !== this.t("remoteLoadAuthorize")) return;
     }
     this.busy = true;
     this.message = this.t("running") + ": " + scenario.name;
@@ -369,7 +369,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       this.output.appendLine(this.message);
       if (this.message !== "Cancelled") {
         void vscode.window.showErrorMessage("Saturivo: " + this.message +
-          ". Check that k6 is installed and reachable.");
+          ". " + this.t("k6UnavailableHelp"));
       }
     } finally {
       this.busy = false;
@@ -477,24 +477,24 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     const report = markdownReport(latest, result, trials);
     const document = await vscode.workspace.openTextDocument({ content: report, language: "markdown" });
     await vscode.window.showTextDocument(document, { preview: false });
-    this.message = "Comparison: " + result.status;
+    this.message = this.t("compareStatus") + ": " + result.status;
     this.refresh();
   }
 
   async exportReport(): Promise<void> {
-    if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: run a test first."); return; }
+    if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: " + this.t("runFirst")); return; }
     const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
     const uri = await vscode.window.showSaveDialog({
       defaultUri: vscode.Uri.joinPath(folder, "saturivo-report.md"),
-      filters: { Markdown: ["md"] }, saveLabel: "Export report",
+      filters: { Markdown: ["md"] }, saveLabel: this.t("reportSaveLabel"),
     });
     if (!uri) return;
     await vscode.workspace.fs.writeFile(uri, Buffer.from(markdownReport(this.latest), "utf8"));
-    void vscode.window.showInformationMessage("Saturivo: report exported.");
+    void vscode.window.showInformationMessage("Saturivo: " + this.t("reportExported"));
   }
 
   async exportJson(): Promise<void> {
-    if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: run a test first."); return; }
+    if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: " + this.t("runFirst")); return; }
     // JSON exports remain lossless for reimport; explicit consent protects target URLs and host metadata.
     const confirm = this.t("exportJsonConfirm");
     const approval = await vscode.window.showWarningMessage(
@@ -504,7 +504,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
     const uri = await vscode.window.showSaveDialog({
       defaultUri: vscode.Uri.joinPath(folder, "saturivo-run.json"),
-      filters: { JSON: ["json"] }, saveLabel: "Export JSON evidence",
+      filters: { JSON: ["json"] }, saveLabel: this.t("jsonSaveLabel"),
     });
     if (!uri) return;
     await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(this.latest, null, 2), "utf8"));
@@ -547,14 +547,14 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
 
   async exportRaceSarif(): Promise<void> {
     if (!this.raceFindings.length) {
-      void vscode.window.showInformationMessage("Saturivo: run Go race detection and obtain findings first.");
+      void vscode.window.showInformationMessage("Saturivo: " + this.t("raceRunFirst"));
       return;
     }
     const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
     const uri = await vscode.window.showSaveDialog({
       defaultUri: vscode.Uri.joinPath(folder, "saturivo-race.sarif"),
       filters: { SARIF: ["sarif"], JSON: ["json"] },
-      saveLabel: "Export verified Go race findings",
+      saveLabel: this.t("sarifSaveLabel"),
     });
     if (!uri) return;
     const { raceFindingsToSarif } = await import("./core/sarif");
@@ -631,13 +631,13 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       folder = selected?.value;
       if (!folder) return;
     }
-    if (!folder) throw new Error("Open a folder containing a Go project first.");
+    if (!folder) throw new Error(this.t("goProjectRequired"));
     const response = await vscode.window.showWarningMessage(
-      "Saturivo will execute Go " + task + " tests in " + folder +
-        ". Tests may run project code or access configured services.",
-      { modal: true }, "Execute"
+      this.t("goTaskConsentPrefix") + " " + task + " " +
+        this.t("goTaskConsentSuffix") + " (" + folder + ")",
+      { modal: true }, this.t("goTaskAuthorize")
     );
-    if (response !== "Execute") return;
+    if (response !== this.t("goTaskAuthorize")) return;
     if (task === "race") {
       this.raceDiagnostics.clear();
       this.raceFindings = [];
