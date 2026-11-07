@@ -17,26 +17,26 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 | B01 lockfile/npm ci/SBOM | PASS en baseline | Verificar inventario de licencias nuevo y audit de release por SHA |
 | B02 k6 constant-VUs y arrivals contra loopback | PASS en baseline | Mantener fixtures y confirmar nuevo SHA |
 | B03 VSIX instalado en Extension Host | PARTIAL | Test completo en host real: abrir editor, ejecutar y cancelar |
-| B04 historia y reportes | PARTIAL | Migración v1→v2, roundtrip, artefactos corruptos e integración UI |
-| B05 rechazos, presupuesto y cleanup | PARTIAL | SSRF/DNS/proxies, cancelación con descendientes, cuotas y OS |
+| B04 historia y reportes | PARTIAL | Validación de importación v1/v2, anti-symlink y retención configurable; falta roundtrip integral dentro del host |
+| B05 rechazos, presupuesto y cleanup | PARTIAL | DNS remoto pinneado y matriz de IP privada/metadata, cancelación descendientes y cuota de perfiles; faltan proxies/OS hostiles |
 | B06 branding/capturas | PARTIAL | 4 capturas sintéticas reales en README; regenerar tras editor v2 y revisión visual final |
 | B07 CI Linux/Windows/macOS + k6 + Go | PASS en baseline | CI final del SHA del PR y matriz no redundante |
-| P1 escenario v2 editable | PARTIAL | Editor GET/HEAD para modelos closed/open; faltan edición avanzada de rampas, warm-up/cool-down explícitos y migraciones exhaustivas |
-| P1 fingerprint y métricas comparables | PARTIAL | Scenario SHA y metadata CPU/Node/k6; faltan Git/entorno completo, target/achieved arrival y estado de carga |
+| P1 escenario v2 editable | PARTIAL | Scenario Studio GET/HEAD closed/open y 2–8 ramp stages, vista previa y validación; faltan warm-up/cool-down excluidos y migraciones exhaustivas |
+| P1 fingerprint y métricas comparables | PARTIAL | Git SHA opcional, hash pseudónimo host/entorno, CPU/Node/k6, llegada solicitada/real y distribución HTTP; faltan comparabilidad remota y warm-up |
 | P1 3×3/regresión/capacidad | PARTIAL | Fixture real de repetición existente; faltan piloto UI E2E, límites por escenario y cuantificación robusta de variabilidad |
 | P2 carreras Go y pprof | PARTIAL | Race/source links y perfiles CPU/heap/goroutine/mutex/block/trace; fixture nueva de contención y crecimiento, CI del SHA pendiente |
 | P2 before/during/after | PARTIAL | 3 capturas goroutine y advertencia de overhead; faltan correlación mutex/block/GC/traces con evidencia de fixtures controladas |
 | P3 HTTP multilenguaje | PARTIAL | Fixture real Go + Node + Python añadida al CI; sin PASS hasta corrida final |
-| P3 WebSocket y adapters | PARTIAL | Probe WebSocket loopback con fixture k6 real en CI; falta resultado del SHA final, adaptación general gRPC y contrato de runtimes Node/Java/Python |
+| P3 WebSocket y adapters | PARTIAL | WebSocket loopback E2E y lectura RSS/hilos de Node/Java/Python en Linux con consentimiento; faltan profiling especializado, ghz/gRPC y remoto |
 | P3 WSL/SSH/devcontainer/multi-root | NOT RUN | Selección explícita de host/workspace y ejecución probada, sin descargas ocultas |
-| P4 Control Center principal y UI ES/EN | PARTIAL | Editor central, 4 tabs, escenario form, baseline selector, métricas y capturas; falta revisión WCAG/teclado/E2E |
-| P4 historial/exportación/retención | PARTIAL | JSON/MD/SARIF, importación y borrado; falta QA de reimport, reglas de retención y redacción |
+| P4 Control Center principal y UI ES/EN | PARTIAL | Workflow guiado, Scenario Studio dinámico, presets personalizables, comparador, tabla accesible y Chromium smoke; falta revisión WCAG manual/zoom/lectores |
+| P4 historial/exportación/retención | PARTIAL | JSON/MD/SARIF, validación hostil de importación, borrado y retención 1–1000; faltan roundtrip host y auditoría de redacción |
 | P4 IA externa opt-in | NOT RUN | BYO AI con consentimiento, redacción y clasificación de hipótesis; no prometer capacidad existente |
 | P5 threat model | PARTIAL | [Modelo de amenazas](THREAT_MODEL.md) documentado; requiere casos adversariales y revisión final |
-| P5 seguridad del runtime | PARTIAL | Límites de subproceso y perfiles; pendientes DNS remotos, proxies y cleanup multiplataforma |
+| P5 seguridad del runtime | PARTIAL | Límites procesos, DNS público pinneado y cuota Go 30 archivos/64 MiB; faltan proxies y cleanup hostil multiplataforma |
 | P5 SBOM/audit/licencias/provenance | PARTIAL | SBOM y hash ya incluidos; inventario lockfile incorporado; falta auditar binario exacto y firmar matriz |
 | P5 publish OIDC protegido | PARTIAL | Pipeline con mismo VSIX y SHA para ambos registries; falta probar approvals/OIDC y entrega real autorizada |
-| P5 install/upgrade/release exacto | NOT RUN | VSIX final, upgrade 0.1.0→0.1.1, Windows/macOS, aprobación expresa |
+| P5 install/upgrade/release exacto | PARTIAL / CI PENDING | Prueba real 0.1.0→0.1.1 agregada al CI Linux; falta validar SHA final, Windows/macOS y aprobación expresa |
 
 ## Cambios realizados en PR #5 desde el último traspaso
 
@@ -51,6 +51,15 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 - Inventario de licencias de dependencias de producción/desarrollo y evidencia de release.
 - Manifest público sin private:true, preservando barreras de tag protegido/entornos/manual release.
 - [Threat model](THREAT_MODEL.md) con riesgos residuales documentados.
+
+## UX/UI profesional — Definition of Done
+
+- [ ] El Control Center abre en una pestaña central y guía configurar → ejecutar → analizar.
+- [ ] El usuario puede personalizar un preset sin generar tráfico y observar el perfil de carga y el límite de solicitudes.
+- [ ] Los escenarios inválidos quedan bloqueados visualmente y vuelven a validarse en el Extension Host.
+- [ ] Chromium comprueba interacciones de rampas válidas/inválidas; capturas README corresponden al renderizador real y muestran datos sintéticos declarados.
+- [ ] Revisión manual de contraste, zoom 200%, teclado/lector de pantalla, tema claro/oscuro y movimiento reducido.
+- [ ] Running/cancel/empty/error states no inventan porcentajes o causalidad; los cambios de navegación conservan el foco.
 
 ## Reglas de aceptación y priorización
 
