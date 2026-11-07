@@ -12,6 +12,7 @@ export async function run(): Promise<void> {
     "saturivo.openHome", "saturivo.runSmoke", "saturivo.cancel",
     "saturivo.goRace", "saturivo.captureGoProfile", "saturivo.configureSlo",
     "saturivo.capacityPilot", "saturivo.correlateGo", "saturivo.runRamp", "saturivo.importJson", "saturivo.clearProfiles",
+    "saturivo.websocketProbe",
   ]) assert(commands.includes(command), "Expected command registered: " + command);
 
   let requests = 0;
@@ -26,6 +27,23 @@ export async function run(): Promise<void> {
     await vscode.commands.executeCommand("saturivo.openHome");
     await new Promise(resolve => setTimeout(resolve, 500));
     assert.equal(requests, 0, "Opening the Control Center must not generate traffic");
+    const dashboardTab = vscode.window.tabGroups.all.flatMap(group => group.tabs)
+      .some(tab => tab.input instanceof vscode.TabInputWebview &&
+        tab.input.viewType === "saturivo.dashboard");
+    assert(dashboardTab, "Control Center must open a Webview in the main editor area");
+    // This integration host has a real k6 binary and a disposable loopback server.
+    // The workload must start only after explicit command invocation, and cancel.
+    const running = vscode.commands.executeCommand("saturivo.runSmoke");
+    const deadline = Date.now() + 20000;
+    while (requests === 0 && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert(requests > 0, "Explicitly invoked k6 run must reach the loopback fixture");
+    await vscode.commands.executeCommand("saturivo.cancel");
+    await running;
+    const ended = requests;
+    await new Promise(resolve => setTimeout(resolve, 600));
+    assert.equal(requests, ended, "Cancel must terminate outbound workload traffic");
   } finally {
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
