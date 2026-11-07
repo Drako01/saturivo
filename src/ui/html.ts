@@ -23,7 +23,10 @@ export function dashboard(state: DashboardState, locale: string): string {
     ["configureTarget", "configure", false], ["configureSlo", "configureSlo", state.busy],
     ["runSmoke", "smoke", state.busy], ["runStress", "stress", state.busy],
     ["runArrival", "arrival", state.busy], ["compare", "compare", state.busy],
-    ["export", "export", !state.latest], ["goRace", "race", state.busy],
+    ["export", "export", !state.latest],
+    ["exportJson", "exportJson", !state.latest],
+    ["exportSarif", "exportSarif", state.busy],
+    ["clearHistory", "clearHistory", state.busy || !state.history.length], ["goRace", "race", state.busy],
     ["goBench", "benchmark", state.busy], ["captureGoProfile", "profile", state.busy],
     ["cancel", "cancel", !state.busy],
   ];

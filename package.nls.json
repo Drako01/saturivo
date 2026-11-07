@@ -19,5 +19,8 @@
   "setting.goProfilerOrigin": "Local Go net/http/pprof origin (literal 127.0.0.1 or [::1]). Profiles are never collected automatically.",
   "command.slo": "Configure P95 Service Level Objective",
   "setting.sloP95": "Optional maximum P95 latency in milliseconds; 0 disables SLO evaluation.",
-  "setting.maxRequests": "Hard request budget per local test. Does not certify capacity (100–100000)."
+  "setting.maxRequests": "Hard request budget per local test. Does not certify capacity (100–100000).",
+  "command.json": "Export Run as JSON",
+  "command.sarif": "Export Verified Go Race Evidence as SARIF",
+  "command.clearHistory": "Delete Local Run History"
 }

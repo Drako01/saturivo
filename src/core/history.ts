@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { RunResult } from "./types";
@@ -22,13 +22,35 @@ export class HistoryStore {
     const temporary = join(this.directory, randomUUID() + ".tmp");
     await writeFile(temporary, JSON.stringify(run, null, 2), { encoding: "utf8", mode: 0o600 });
     await rename(temporary, target);
+    await this.prune(100);
+  }
+
+  private async ownedFiles(): Promise<string[]> {
+    await mkdir(this.directory, { recursive: true });
+    return (await readdir(this.directory))
+      .filter(name => /^[0-9]+-[0-9a-f-]+\.json$/.test(name))
+      .sort().reverse();
+  }
+
+  async prune(keep: number): Promise<number> {
+    if (!Number.isInteger(keep) || keep < 1 || keep > 1000) throw new Error("Invalid history retention");
+    const files = await this.ownedFiles();
+    let deleted = 0;
+    for (const name of files.slice(keep)) {
+      await unlink(join(this.directory, name));
+      deleted++;
+    }
+    return deleted;
+  }
+
+  async clear(): Promise<number> {
+    const files = await this.ownedFiles();
+    for (const name of files) await unlink(join(this.directory, name));
+    return files.length;
   }
 
   async list(limit = 30): Promise<RunResult[]> {
-    await mkdir(this.directory, { recursive: true });
-    const filenames = (await readdir(this.directory))
-      .filter(name => /^[0-9]+-[0-9a-f-]+\.json$/.test(name))
-      .sort().reverse().slice(0, 100);
+    const filenames = (await this.ownedFiles()).slice(0, 100);
     const runs: RunResult[] = [];
     for (const name of filenames) {
       try {

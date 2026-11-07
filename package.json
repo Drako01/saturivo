@@ -117,6 +117,21 @@
         "command": "saturivo.configureSlo",
         "title": "%command.slo%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.exportJson",
+        "title": "%command.json%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.exportSarif",
+        "title": "%command.sarif%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.clearHistory",
+        "title": "%command.clearHistory%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {

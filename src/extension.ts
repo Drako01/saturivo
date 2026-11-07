@@ -7,7 +7,7 @@ import { readFile } from "node:fs/promises";
 import { HistoryStore } from "./core/history";
 import { runK6 } from "./core/k6";
 import { markdownReport } from "./core/report";
-import { parseGoRaceOutput } from "./core/race";
+import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
 import { compareTrialGroups } from "./core/statistics";
 import { fingerprintScenario } from "./core/fingerprint";
 import type { RunResult, Scenario } from "./core/types";
@@ -24,6 +24,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private message = "";
   private latest: RunResult | undefined;
   private history: RunResult[] = [];
+  private raceFindings: GoRaceFinding[] = [];
   private readonly store: HistoryStore;
   private readonly output = vscode.window.createOutputChannel("Saturivo");
   private readonly raceDiagnostics = vscode.languages.createDiagnosticCollection("saturivo");
@@ -51,6 +52,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
         runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
         compare: "saturivo.compare", export: "saturivo.export",
+        exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
+        clearHistory: "saturivo.clearHistory",
         configureSlo: "saturivo.configureSlo",
         goRace: "saturivo.goRace", goBench: "saturivo.goBench",
         captureGoProfile: "saturivo.captureGoProfile", cancel: "saturivo.cancel",
@@ -215,6 +218,47 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     void vscode.window.showInformationMessage("Saturivo: report exported.");
   }
 
+  async exportJson(): Promise<void> {
+    if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: run a test first."); return; }
+    const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.joinPath(folder, "saturivo-run.json"),
+      filters: { JSON: ["json"] }, saveLabel: "Export JSON evidence",
+    });
+    if (!uri) return;
+    await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(this.latest, null, 2), "utf8"));
+  }
+
+  async exportRaceSarif(): Promise<void> {
+    if (!this.raceFindings.length) {
+      void vscode.window.showInformationMessage("Saturivo: run Go race detection and obtain findings first.");
+      return;
+    }
+    const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.joinPath(folder, "saturivo-race.sarif"),
+      filters: { SARIF: ["sarif"], JSON: ["json"] },
+      saveLabel: "Export verified Go race findings",
+    });
+    if (!uri) return;
+    const { raceFindingsToSarif } = await import("./core/sarif");
+    await vscode.workspace.fs.writeFile(uri, Buffer.from(
+      JSON.stringify(raceFindingsToSarif(this.raceFindings), null, 2), "utf8"));
+  }
+
+  async clearHistory(): Promise<void> {
+    if (this.busy) return;
+    const choice = await vscode.window.showWarningMessage(
+      this.t("historyClearWarning"), { modal: true }, this.t("historyClearConfirm")
+    );
+    if (choice !== this.t("historyClearConfirm")) return;
+    const deleted = await this.store.clear();
+    this.history = [];
+    this.latest = undefined;
+    this.message = this.t("historyCleared") + " (" + deleted + ")";
+    this.refresh();
+  }
+
   private folder(): string | undefined {
     const active = vscode.window.activeTextEditor?.document.uri;
     if (active) {
@@ -245,6 +289,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       if (task === "race") {
         this.raceDiagnostics.clear();
         const findings = parseGoRaceOutput(result.output, folder);
+        this.raceFindings = findings;
         const grouped = new Map<string, vscode.Diagnostic[]>();
         for (const finding of findings) {
           const location = new vscode.Range(finding.line - 1, 0, finding.line - 1, 0);
@@ -363,6 +408,9 @@ export function activate(context: vscode.ExtensionContext): void {
     cancel: () => app.cancel(),
     compare: () => app.compare(),
     export: () => app.exportReport(),
+    exportJson: () => app.exportJson(),
+    exportSarif: () => app.exportRaceSarif(),
+    clearHistory: () => app.clearHistory(),
     goRace: () => app.runGoTask("race"),
     goBench: () => app.runGoTask("benchmark"),
     captureGoProfile: () => app.captureProfile(),

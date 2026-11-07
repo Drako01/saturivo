@@ -15,6 +15,9 @@ const english: Dictionary = {
   profileConsent: "Collect sensitive Go runtime profiling evidence from",
   profileAuthorize: "Capture profile", profileRunning: "Collecting Go profile",
   profileSaved: "Profile saved locally",
+  exportJson: "Export JSON evidence", exportSarif: "Export Go race SARIF",
+  clearHistory: "Clear history", historyClearWarning: "Delete all stored Saturivo runs from this workspace?",
+  historyClearConfirm: "Delete runs", historyCleared: "Local run history deleted",
   slo: "SLO", configureSlo: "Configure P95 SLO", sloPrompt: "Maximum acceptable P95 latency in ms (0 disables SLO)",
 };
 const spanish: Dictionary = {
@@ -32,6 +35,9 @@ const spanish: Dictionary = {
   profileConsent: "Recopilar evidencia sensible del runtime Go desde",
   profileAuthorize: "Capturar perfil", profileRunning: "Capturando perfil Go",
   profileSaved: "Perfil guardado localmente",
+  exportJson: "Exportar evidencia JSON", exportSarif: "Exportar SARIF de carreras Go",
+  clearHistory: "Borrar historial", historyClearWarning: "¿Borrar todas las ejecuciones guardadas de Saturivo en este workspace?",
+  historyClearConfirm: "Borrar ejecuciones", historyCleared: "Historial local eliminado",
   slo: "SLO", configureSlo: "Configurar SLO P95", sloPrompt: "Latencia P95 máxima aceptable en ms (0 desactiva el SLO)",
 };
 export function translate(locale: string, key: string): string {
