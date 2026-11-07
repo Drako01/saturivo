@@ -19,7 +19,8 @@ import { translate } from "./ui/localize";
 type Preset = "smoke" | "stress" | "arrival" | "ramp";
 
 class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
-  private view?: vscode.WebviewView;
+  private panel?: vscode.WebviewPanel;
+  private launcher?: vscode.WebviewView;
   private controller: AbortController | undefined;
   private busy = false;
   private message = "";
@@ -43,30 +44,39 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private maxVus(): number { return this.config().get<number>("maxVirtualUsers", 100); }
   private allowRemote(): boolean { return this.config().get<boolean>("allowRemoteTargets", false); }
 
+  /**
+   * The Activity Bar remains a stable launcher. The actual dashboard lives in an
+   * editor webview tab, not in a cramped secondary sidebar.
+   */
   async resolveWebviewView(view: vscode.WebviewView): Promise<void> {
-    this.view = view;
-    view.webview.options = { enableScripts: true };
-    view.webview.onDidReceiveMessage((raw: unknown) => {
-      if (!raw || typeof raw !== "object") return;
-      const message = raw as { action?: unknown };
-      const commands: Record<string, string> = {
-        configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
-        runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
-        runRamp: "saturivo.runRamp",
-        capacityPilot: "saturivo.capacityPilot",
-        compare: "saturivo.compare", export: "saturivo.export",
-        exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
-        importJson: "saturivo.importJson", clearProfiles: "saturivo.clearProfiles",
-        clearHistory: "saturivo.clearHistory",
-        configureSlo: "saturivo.configureSlo",
-        goRace: "saturivo.goRace", goBench: "saturivo.goBench",
-        captureGoProfile: "saturivo.captureGoProfile", cancel: "saturivo.cancel",
-      };
-      if (typeof message.action !== "string") return;
-      const command = commands[message.action];
-      if (command) void vscode.commands.executeCommand(command);
+    this.launcher = view;
+    view.webview.options = { enableScripts: false };
+    view.webview.html = "<!doctype html><html><head><meta charset='UTF-8'>" +
+      "<meta http-equiv='Content-Security-Policy' content=\"default-src 'none'\">" +
+      "</head><body><p>" + this.t("editorLauncher") + "</p></body></html>";
+    view.onDidChangeVisibility(() => {
+      if (view.visible) void this.openHome();
     }, undefined, this.context.subscriptions);
-    this.refresh();
+    if (view.visible) void this.openHome();
+  }
+
+  private onDashboardMessage(raw: unknown): void {
+    if (!raw || typeof raw !== "object") return;
+    const message = raw as { action?: unknown };
+    const commands: Readonly<Record<string, string>> = {
+      configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
+      runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
+      runRamp: "saturivo.runRamp", capacityPilot: "saturivo.capacityPilot",
+      compare: "saturivo.compare", export: "saturivo.export",
+      exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
+      importJson: "saturivo.importJson", clearProfiles: "saturivo.clearProfiles",
+      clearHistory: "saturivo.clearHistory", configureSlo: "saturivo.configureSlo",
+      goRace: "saturivo.goRace", goBench: "saturivo.goBench",
+      captureGoProfile: "saturivo.captureGoProfile", cancel: "saturivo.cancel",
+    };
+    if (typeof message.action !== "string") return;
+    const command = commands[message.action];
+    if (command) void vscode.commands.executeCommand(command);
   }
 
   private refresh(): void {
@@ -74,8 +84,39 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     const state: DashboardState = {
       target: this.target(), busy: this.busy, history: this.history,
       message: this.message, ...(this.latest ? { latest: this.latest } : {}),
+      allowRemoteTargets: this.allowRemote(),
+      durationSeconds: this.config().get<number>("durationSeconds", 10),
+      maxVirtualUsers: this.maxVus(),
+      maxRequests: this.config().get<number>("maxRequests", 10000),
+      sloMaxP95Ms: this.config().get<number>("sloMaxP95Ms", 0),
     };
-    if (this.view) this.view.webview.html = dashboard(state, vscode.env.language);
+    if (this.panel) this.panel.webview.html = dashboard(state, vscode.env.language);
+  }
+
+  configurationChanged(): void { this.refresh(); }
+
+  async openHome(): Promise<void> {
+    if (this.panel) {
+      this.panel.reveal(vscode.ViewColumn.Active);
+    } else {
+      const panel = vscode.window.createWebviewPanel(
+        "saturivo.dashboard", this.t("title"), vscode.ViewColumn.Active,
+        { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+      );
+      this.panel = panel;
+      panel.webview.onDidReceiveMessage(raw => this.onDashboardMessage(raw),
+        undefined, this.context.subscriptions);
+      panel.onDidDispose(() => {
+        if (this.panel === panel) this.panel = undefined;
+      }, undefined, this.context.subscriptions);
+      this.refresh();
+    }
+    // VS Code initially opens the Activity Bar's view. Close only that
+    // transient launcher; never close the user's Explorer or Search sidebar
+    // when the dashboard is opened through the command palette.
+    if (this.launcher?.visible) {
+      await vscode.commands.executeCommand("workbench.action.closeSidebar");
+    }
   }
 
   private async loadHistory(): Promise<void> {
@@ -511,7 +552,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     }
   }
 
-  dispose(): void { this.cancel(); this.output.dispose(); this.raceDiagnostics.dispose(); }
+  dispose(): void { this.cancel(); this.panel?.dispose(); this.output.dispose(); this.raceDiagnostics.dispose(); }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -550,7 +591,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }));
   }
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(change => {
-    if (change.affectsConfiguration("saturivo")) void app.openHome();
+    if (change.affectsConfiguration("saturivo")) app.configurationChanged();
   }));
 }
 
