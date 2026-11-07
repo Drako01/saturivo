@@ -2,6 +2,13 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Verified 7/7 exact-commit [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) on `0d73879`: Windows/macOS/Linux installed 0.1.0→0.2.0 VSIX CLI upgrades with persisted v1/v2 history, real Go/k6/Compose/WebSocket/Chromium and shipped JavaScript inventory.
+- Fixed Windows VS Code CLI upgrade by invoking native Code.exe in Electron Node CLI mode without executing untrusted `.cmd` files through a shell.
+- Localized remaining Host authorization, Go project execution, import/export and failure labels ES/EN; preserved webview focus on async re-render, added responsive forced-color styles and Chromium keyboard/command bridge checks.
+- Refreshed all four README screenshots from the actual production renderer with synthetic fixtures, commit `6387739` ([capture run #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472)); removed one-shot screenshot workflow after completion.
+- Remaining WSL/SSH/Dev Containers, VS Code native dialogs, NVDA/VoiceOver/200% zoom, remote DNS/WSL threat tests, external provenance and maintainer sign-off are **BLOCKED**, not counted as release approval.
+
+
 - Added a six-window real Go control-versus-profiling overhead experiment with persisted JSON P95/RPS/variability evidence; exact new CI pending.
 - Added 64 seeded 3×3 synthetic noise controls and injected +60 ms latency sensitivity checks; real-network noise remains separate.
 - Included `THIRD_PARTY_NOTICES.md` in the distributable VSIX allowlist, distinct from development-only license inventory.
