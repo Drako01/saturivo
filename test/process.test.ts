@@ -43,3 +43,15 @@ test("pre-aborted signal starts no process", async () => {
     cwd: tmpdir(), timeoutMs: 5000, maxOutputBytes: 1024, signal: ctrl.signal,
   }), /Cancelled/);
 });
+
+test("UTF-8 output budget is enforced in bytes, not JavaScript characters", async () => {
+  const result = await runBoundedProcess({
+    binary: process.execPath,
+    args: ["-e", "process.stdout.write('🔥'.repeat(5000))"],
+    cwd: tmpdir(), timeoutMs: 5000, maxOutputBytes: 1024,
+    signal: new AbortController().signal,
+  });
+  assert.equal(result.exitCode, 0);
+  assert.equal(result.truncated, true);
+  assert(Buffer.byteLength(result.stdout, "utf8") <= 1024);
+});

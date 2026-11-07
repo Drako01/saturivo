@@ -52,13 +52,13 @@ export async function runBoundedProcess(request: ProcessRequest): Promise<Proces
     let spawnError: Error | undefined;
     let closed = false;
     const append = (chunk: Buffer, which: "stdout" | "stderr"): void => {
-      const slice = chunk.toString("utf8");
       const remaining = request.maxOutputBytes - used;
       if (remaining <= 0) { truncated = true; return; }
-      const data = slice.slice(0, remaining);
-      if (data.length < slice.length) truncated = true;
-      used += Buffer.byteLength(data, "utf8");
-      if (which === "stdout") out += data; else err += data;
+      const data = chunk.subarray(0, remaining);
+      if (data.byteLength < chunk.byteLength) truncated = true;
+      used += data.byteLength;
+      const decoded = data.toString("utf8");
+      if (which === "stdout") out += decoded; else err += decoded;
     };
     child.stdout.on("data", (c: Buffer) => append(c, "stdout"));
     child.stderr.on("data", (c: Buffer) => append(c, "stderr"));

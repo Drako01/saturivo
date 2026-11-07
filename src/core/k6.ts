@@ -87,6 +87,7 @@ export async function runK6(
     if (Buffer.byteLength(summaryText) > 4_000_000) throw new Error("Summary exceeds the size limit");
     const metrics = readK6Summary(JSON.parse(summaryText) as unknown);
     const warnings: string[] = [];
+    if (processResult.truncated) warnings.push("k6 process output exceeded the capture budget; see summary metrics for evidence.");
     if (metrics.droppedIterations > 0) warnings.push("Dropped iterations: the configured arrival rate was not fully achieved.");
     if (metrics.requests < 100) warnings.push("Small sample size: avoid drawing strong conclusions.");
     const budgetReached = metrics.requests >= (safeScenario.maxRequests ?? 10000);
