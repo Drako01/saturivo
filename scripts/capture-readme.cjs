@@ -83,6 +83,38 @@ function main() {
       const document = path.join(temp, tab + ".html");
       const png = path.join(output, "control-center-" + tab + ".png");
       fs.writeFileSync(document, selectScreen(dashboard(state, "en"), tab));
+      if (tab === "load") {
+        const html = fs.readFileSync(document, "utf8");
+        const nonce = /<script nonce="([a-f0-9]+)">/.exec(html)?.[1];
+        if (!nonce) throw new Error("Interactive webview script is missing its CSP nonce");
+        const probe = [
+          'const form=document.getElementById("custom-scenario");',
+          'const field=name=>form.elements.namedItem(name);',
+          'field("model").value="ramping-vus";field("durationSeconds").value="20";',
+          'field("virtualUsers").value="10";field("stages").value="5:2,10:10,5:0";',
+          'form.dispatchEvent(new Event("change",{bubbles:true}));',
+          'const valid=document.querySelectorAll("#preview-stage-chart .stage-segment").length===3&&',
+          '!form.querySelector("button[type=submit]").disabled;',
+          'field("stages").value="5:999,5:0";',
+          'form.dispatchEvent(new Event("change",{bubbles:true}));',
+          'const invalid=form.querySelector("button[type=submit]").disabled&&',
+          'document.getElementById("preview-warning").classList.contains("preview-invalid");',
+          'document.documentElement.setAttribute("data-ui-smoke",valid&&invalid?"pass":"fail");',
+        ].join("");
+        const checked = html.replace("</body>",
+          '<script nonce="' + nonce + '">' + probe + '</script></body>');
+        const probePath = path.join(temp, "interactive-probe.html");
+        fs.writeFileSync(probePath, checked);
+        const outcome = spawnSync(chrome, [
+          "--headless=new", "--no-sandbox", "--disable-gpu",
+          "--disable-dev-shm-usage", "--dump-dom", "file://" + probePath,
+        ], { encoding: "utf8", timeout: 40000 });
+        if (outcome.status !== 0 || !outcome.stdout.includes('data-ui-smoke="pass"')) {
+          throw new Error("Interactive scenario studio browser check failed: " +
+            String(outcome.stderr).slice(-900));
+        }
+        console.log("Interactive studio DOM (valid/invalid stages): PASS");
+      }
       const args = [
         "--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars",
         "--disable-dev-shm-usage", "--force-device-scale-factor=1",
