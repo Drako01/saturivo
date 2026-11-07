@@ -7,6 +7,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## QA UX sin regenerar capturas (2026-11-07)
+
+- `scripts/capture-readme.cjs --verify-only` ejecuta interacciones reales en Chromium sin escribir archivos PNG ni modificar el README: escenario válido/inválido y selección accesible del inspector, foco, `aria-expanded` y persistencia de `WebviewState`.
+- Job CI separado `ui-browser` con permisos solo lectura. La generación/captura de imágenes permanece bajo el input manual `capture_screenshots=true`, reservado para el final.
+- **Estado:** IMPLEMENTADO, CI/PASS pendiente del SHA de este bloque; no se reemplaza la auditoría humana de visuales, lectores de pantalla ni tema claro/oscuro.
+
 ## Bloque UX — investigación de ejecuciones en el editor (2026-11-07)
 
 **Implementado en el commit del bloque; verificación CI nueva: PENDING.** Conserva las cuatro capturas README sin modificarlas; se regenerarán al final.

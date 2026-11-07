@@ -12,6 +12,7 @@ const { dashboard } = require("../out/src/ui/html.js");
 
 const root = path.resolve(__dirname, "..");
 const output = path.join(root, "media", "screenshots");
+const verifyOnly = process.argv.includes("--verify-only");
 const base = Date.parse("2026-11-07T10:00:00Z");
 const values = [80, 68, 73, 54, 62, 48, 52, 45, 40, 43, 35, 38];
 
@@ -46,7 +47,7 @@ function findBrowser() {
     const check = spawnSync(file, ["--version"], { encoding: "utf8", timeout: 10000 });
     if (check.status === 0) return file;
   }
-  throw new Error("Headless Chromium or Google Chrome required to capture README screenshots.");
+  throw new Error("Headless Chromium or Google Chrome required for UI verification or screenshots.");
 }
 function selectScreen(html, tab) {
   const section = /(<section role="tabpanel" id="view-([a-z-]+)"[^>]*?)( hidden)?(>)/g;
@@ -63,8 +64,8 @@ function selectScreen(html, tab) {
   const match = /<script nonce="([a-f0-9]+)">/.exec(html);
   if (!match) throw new Error("Dashboard renderer omitted the CSP script nonce");
   const bridge = '<script nonce="' + match[1] + '">function acquireVsCodeApi(){return {' +
-    'getState(){return {activeTab:' + JSON.stringify(tab) + '}},' +
-    'setState(){},postMessage(){}}}</script>';
+    'getState(){return window.__saturivoState||{activeTab:' + JSON.stringify(tab) + '}},' +
+    'setState(value){window.__saturivoState=value},postMessage(){}}}</script>';
   html = html.replace(match[0], bridge + match[0]);
   return html;
 }
@@ -72,14 +73,14 @@ function main() {
   const chrome = findBrowser();
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), "saturivo-screenshots-"));
   try {
-    fs.mkdirSync(output, { recursive: true });
+    if (!verifyOnly) fs.mkdirSync(output, { recursive: true });
     const runs = values.map((_, i) => syntheticRun(i)).reverse();
     const state = {
       target: "http://127.0.0.1:8080/health", busy: false, message: "",
       latest: runs[0], history: runs, allowRemoteTargets: false,
       durationSeconds: 10, maxVirtualUsers: 100, maxRequests: 10000, sloMaxP95Ms: 100,
     };
-    for (const tab of ["overview", "load", "history", "diagnostics"]) {
+    for (const tab of (verifyOnly ? ["load", "history"] : ["overview", "load", "history", "diagnostics"])) {
       const document = path.join(temp, tab + ".html");
       const png = path.join(output, "control-center-" + tab + ".png");
       fs.writeFileSync(document, selectScreen(dashboard(state, "en"), tab));
@@ -115,6 +116,37 @@ function main() {
         }
         console.log("Interactive studio DOM (valid/invalid stages): PASS");
       }
+      if (tab === "history") {
+        const html = fs.readFileSync(document, "utf8");
+        const nonce = /<script nonce="([a-f0-9]+)">/.exec(html)?.[1];
+        if (!nonce) throw new Error("History script is missing CSP nonce");
+        const probe = [
+          'const controls=Array.from(document.querySelectorAll("button[data-inspect-run]"));',
+          'let valid=controls.length>1&&document.getElementById("run-detail-0")?.hidden===false;',
+          'if(controls[1])controls[1].click();',
+          'const selected=controls[1]&&document.getElementById(controls[1].getAttribute("aria-controls"));',
+          'valid=valid&&controls[1].getAttribute("aria-expanded")==="true"&&',
+          'controls[0].getAttribute("aria-expanded")==="false"&&',
+          'document.getElementById("run-detail-0").hidden&&selected&&!selected.hidden&&',
+          'document.activeElement===selected.querySelector("h3")&&',
+          'window.__saturivoState?.selectedRunId===controls[1].dataset.inspectRun;',
+          'document.documentElement.setAttribute("data-history-smoke",valid?"pass":"fail");',
+        ].join("");
+        const checked = html.replace("</body>",
+          '<script nonce="' + nonce + '">' + probe + '</script></body>');
+        const probePath = path.join(temp, "history-probe.html");
+        fs.writeFileSync(probePath, checked);
+        const outcome = spawnSync(chrome, [
+          "--headless=new", "--no-sandbox", "--disable-gpu",
+          "--disable-dev-shm-usage", "--dump-dom", "file://" + probePath,
+        ], { encoding: "utf8", timeout: 40000 });
+        if (outcome.status !== 0 || !outcome.stdout.includes('data-history-smoke="pass"')) {
+          throw new Error("Interactive history inspector browser check failed: " +
+            String(outcome.stderr).slice(-900));
+        }
+        console.log("Interactive history inspector DOM (selection/focus/state): PASS");
+      }
+      if (verifyOnly) continue; // No screenshot output or repository changes during ordinary CI.
       const args = [
         "--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars",
         "--disable-dev-shm-usage", "--force-device-scale-factor=1",
@@ -130,6 +162,7 @@ function main() {
       if (bytes < 10000 || bytes > 3000000) throw new Error("Unexpected screenshot size: " + bytes);
       console.log("Captured actual dashboard renderer: " + path.relative(root, png) + " (" + bytes + " bytes)");
     }
+    if (verifyOnly) console.log("Control Center browser interaction checks: PASS (no screenshots written)");
   } finally { fs.rmSync(temp, { recursive: true, force: true }); }
 }
 main();

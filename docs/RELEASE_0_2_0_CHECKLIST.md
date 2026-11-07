@@ -6,6 +6,10 @@ This document is the **release subset** of [the single current AAAA checklist](E
 
 ## Handoff de release — 2026-11-07
 
+- La validación funcional UI tiene job independiente `ui-browser` (Chrome headless, `--verify-only`, no imágenes): selección/historial y editor de escenarios. Capturas finales siguen manuales. **CI exacto pendiente.**
+
+
+
 - **P4 mejora UX:** inspector de una ejecución en el propio Control Center, navegación accesible, métricas registradas y ES/EN. **Implementado; CI y revisión manual pendiente.** Las capturas finales siguen diferidas.
 
 
