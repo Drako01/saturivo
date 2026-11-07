@@ -1,6 +1,6 @@
 # Saturivo — Enterprise AAAA Master Plan
 
-**Baseline:** PR #1 merged on 2026-11-07. **Status:** planning only. The following phases are not completed merely because they are documented.
+**Baseline:** PR #1 merged on 2026-11-07. **Contractual scope, not certification:** this Master Plan does not claim completion. See the [implementation checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md) and [release tracker](RELEASE_0_2_0_CHECKLIST.md) for exact-SHA evidence.
 
 ## Product target
 
@@ -102,3 +102,12 @@ Current evidence: TypeScript, tests, manifest on all three OS PASS, and preview 
 6. Review exact release candidate, then request explicit merge/publication approval.
 
 Next engineering PR after branding: Phase 0 + the first bounded vertical slice of Phase 1. Avoid one giant, hard-to-review patch.
+
+## Decisiones de alcance v0.2.0 y deuda explícita (2026-11-07)
+
+- **gRPC/ghz:** diferido. El criterio P3 admite probar WebSocket o gRPC; WebSocket RFC6455 con k6 superó el fixture real. No se promociona soporte gRPC.
+- **Node/Java/Python profilers, Vegeta/Fortio y BYO AI:** diferidos por YAGNI, pendientes de demanda verificable, diseño de seguridad y E2E con fixtures. Se soporta tráfico HTTP real contra Go/Node/Python y observaciones Linux read-only limitadas, no profiling especializado.
+- **Correlación Go:** goroutines/pprof/trace/GC y overhead son evidencia observacional; solo hallazgos `go test -race` con fuente validada permiten navegación a archivo/línea. No afirmar fuga, causalidad ni libertad de races.
+- **Entornos remotos:** el código presenta host de ejecución y exige selección explícita multi-root. WSL, Remote SSH y Dev Containers no tienen E2E de host remoto. Ver [runbook](REMOTE_VALIDATION.md); estado BLOCKED.
+- **Artefacto/capturas:** versión 0.2.0 non-preview, cuatro capturas README generadas con datos sintéticos en commit `6387739`; CI del SHA post-capturas/documentación y revisión visual humana todavía obligatorios.
+- **Governance:** PR #5 Draft no significa release aprobado. La autorización del propietario para merge, Git tag y publicación Marketplace/Open VSX es independiente y permanece BLOCKED.

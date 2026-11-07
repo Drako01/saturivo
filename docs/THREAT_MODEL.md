@@ -1,0 +1,105 @@
+# Saturivo 0.2.0 — Security threat model (living document)
+
+**Scope:** public VS Code extension source, local Control Center, child-process execution, local-only profiling, evidence files and the protected publication pipeline. This is an engineering review, **not** external security certification.
+
+## Trust boundaries
+
+| Boundary | Untrusted input | Required control |
+|---|---|---|
+| Webview → Extension Host | scenario form and action messages | action allowlist; parse and validate every field in extension; never trust target, privileges or limits supplied by the page |
+| Workspace → Go toolchain | project source, tests, benchmarks | Workspace Trust plus explicit user confirmation; tests may execute arbitrary local project code |
+| Extension → HTTP target | URL, DNS, redirects, configured workload | HTTP(S) GET/HEAD only, loopback default, opt-in remote settings, authorization modal, finite request/time/VU budgets |
+| Extension → profiler | runtime stack/heap/trace from process | only literal loopback IP and HTTP; no credentials/redirects; deadlines/size cap; explicit consent; local storage |
+| Extension → operating system | binary path and child process tree | no shell, bounded output, timeout, AbortSignal, terminate descendant tree on cancel where supported |
+| Evidence → Webview/export | JSON, names, paths, metrics, stack data | schema and size validation, HTML escaping and CSP, safe export defaults; user controls sharing |
+| GitHub CI → public registries | package, tags, credentials and provenance | pinned actions, least privilege, exact manifest/checksum, owner-controlled protected tag and approval environments |
+
+## Attack and failure cases
+
+| Risk | Current mitigation or observation | Open verification |
+|---|---|---|
+| SSRF to metadata, private or unapproved service | loopback is default; target authority is validated; remote testing requires separate opt-in and per-run confirmation | **PARTIAL:** public-IP validation and DNS pinning with adversarial tests added; proxy/IPv6 edge cases and actual hostile network fixture sign-off remain |
+| Spoofed localhost/DNS result | k6 explicitly pins localhost to 127.0.0.1; literal loopback addresses accepted; redirects disabled | **PARTIAL:** attack matrix for alternate encodings, IPv4/IPv6 and proxy settings |
+| Unbounded load or automatic traffic | no run on activation, defined requests/VUs/duration/arrival ceilings; explicit form submit and consent | **PARTIAL:** installed VSIX stress/cancel UI E2E, budget exhaustion and cleanup probes |
+| Adversarial Go correlation cancellation | A failed mid-load profile now aborts its owned in-flight k6 run; profile reads are regular-file/size checked | **PARTIAL:** targeted tests added, exact-SHA CI and hostile remote/Windows validation pending |
+| Child-process escape or zombie descendants | shell disabled; POSIX detached process group kill and Windows taskkill tree | **PARTIAL:** adversarial process descendants on all three OSes |
+| Malicious imported history | max 100 KiB, numeric/fingerprint/type checks, atomic write and corruption-tolerant reads | **PARTIAL:** version migration/reimport roundtrip and malformed field matrix |
+| Visual URL disclosure | Target URL query/fragment values are not displayed in the Control Center; runtime configuration and workload identity remain unchanged | **PARTIAL:** exact-SHA CI and manual shoulder-surf/screen reader review pending |
+| Evidence export privacy | Markdown strips URL query values while retaining the original scenario SHA; full-fidelity JSON requires an explicit local consent modal | **PARTIAL:** secrets in URL paths/manual JSON sharing remain operator risks; cross-platform E2E and redaction review required |
+| Profile/data exfiltration | local storage, no network upload/telemetry/AI by default; 4 MB/profile and 15 s/request, plus 30 owned files / 64 MiB local storage ceiling | **PARTIAL:** configurable run retention and Go profile quota added; export redaction and end-to-end limits still require review |
+| Misleading diagnostics | observed vs inferred distinctions; no race freedom or leak certainty claims | **PARTIAL:** independent Go contention and goroutine-growth fixtures |
+| Third-party dependency advisories | lockfile, CycloneDX SBOM, scope-separated license inventory | **PARTIAL:** exact-version release audit; development-only warnings must be disclosed |
+| Forged/repackaged release | pinned workflow actions, immutable VSIX/checksum and protected publish jobs | **PARTIAL:** exact release candidate install/upgrade and approval verification |
+
+## Security invariants for every release
+
+1. A run is always preceded by an explicit user action. Remote authorization is never inferred from changing a setting alone.
+2. A scenario cannot override the extension's target or security policy through Webview payloads.
+3. Every active process and request has a bounded deadline and abort path; unauthorized background load is prohibited.
+4. Imported, generated and captured evidence is local, size-bounded and never exported without user action.
+5. PASS requires a named test plus the exact commit/runner/CI URL. An absent test is NOT RUN.
+6. A green pull request is **not** a release authorization. Publishing requires the maintainer's protected tag and registry environment approvals.
+
+## Residual risks and release blockers
+
+- Testing an explicitly approved remote endpoint can still impact dependent systems; authorization and isolation remain the operator's responsibility.
+- Remote DNS rebinding/private network and proxy cases are not fully mitigated or fixture-verified. Do not market remote load testing as SSRF-hardened.
+- Complete Windows/macOS installed VSIX execution, process descendant cleanup and VSIX upgrades have not yet been evidenced.
+- Optional AI, remote runtime adapters and external protocol engines must never be introduced through silent downloads.
+- Sensitive snapshots, trace files and race output require a documented retention/redaction review.
+
+## Required evidence
+
+Record the exact commit, job URL, runtime versions, scenario fingerprint, approved endpoint classification, abort/cleanup result, artifact checksum, failure-case results and the reviewer/release sign-off. Maintain links in [the live checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md).
+
+**Status:** model documented; threat-model sign-off and unresolved fixtures remain open. This document does not declare Enterprise AAAA complete.
+
+## SSRF hardening — IPv6 transitional prefixes (2026-11-07)
+
+- Normalize IPv6 before classification so leading-zero documentation addresses cannot bypass checks.
+- Fail closed on 6to4 (2002::/16), Teredo/ORCHID special use (2001::/23), documentation (2001:db8::/32) and deprecated 6bone (3ffe::/16). Mixed public/private DNS remains rejected rather than silently selecting a public answer.
+- Coverage: deterministic unit tests with literal IPv6 URLs and injected DNS answers. **Pending:** exact-commit CI and manual proxy/redirect/rebinding matrix; this does not claim comprehensive SSRF elimination.
+
+## File descriptor hardening (2026-11-07)
+
+- History JSON and Go goroutine text are read through a single verified file descriptor (POSIX O_NOFOLLOW, pre/post identity check and nlink=1); symlinks/hardlinks are rejected. Byte limits are enforced **while** reading, even if files grow after stat.
+- Unit tests: normal UTF-8, oversized files, symbolic/hard links, and valid external evidence cannot enter HistoryStore through a hardlink. **Status:** implementation in PR #5; exact-commit CI and Windows reparse-point adversarial QA remain open.
+- Residual: Windows identity checks are defense-in-depth but not equivalent to a kernel-enforced no-follow open; no generalized untrusted-file-system claim.
+
+## Adversarial VSIX ZIP structure and release artifact validation
+
+The release auditor now rejects duplicate or case-colliding ZIP entry paths,
+unsafe path segments, symlinks (UNIX mode), encrypted entries, unsupported ZIP64
+or multipart archives, disagreement between local and central entry headers,
+oversized uncompressed entries and implausible compression ratios. Synthetic
+ZIP adversarial tests are included in the standard verification gate.
+
+**Limits:** This guard inspects the ZIP envelope and declared sizes, not the
+decompressed data or every ZIP parser implementation. The final exact VSIX must
+still pass VS Code installation, SHA-256 checksum/provenance, SBOM/license audit,
+and the protected publish preflight. A passing metadata check alone does not
+establish supply-chain integrity.
+
+## Markdown rendering and imported text
+
+Report generators now escape imported scenario names, warnings and timestamps as
+single-line literal Markdown text, including image/link syntax. Rendering an
+attacker-provided `![image](https://...)` inside the Markdown preview must not
+initiate a fetch solely because it was an imported scenario name. This is
+defense-in-depth; JSON exports remain lossless by design and require consent.
+
+## Nueva evidencia y bloqueantes de seguridad (2026-11-07)
+
+- El fixture real local contra proxy heredado/redirect 302 está respaldado por [CI #42420415145](https://github.com/Drako01/saturivo/actions/runs/42420415145) en `e8f8efa`. No prueba redes remotas ni DNS rebinding.
+- `THIRD_PARTY_NOTICES.md` distingue shipped de dependencias de desarrollo. La auditoría VSIX exige el notice; CI del nuevo SHA pendiente. `saturivo.release.json` enlaza HEAD/SHA-256, **no** sustituye una attestation criptográfica externa.
+- El experimento `scripts/go-overhead.cjs` registra observaciones P95/RPS con control; no atribuye causalidad ni garantiza overhead nulo. Revisar JSON del mismo CI SHA.
+- WSL, Remote-SSH, Dev Containers, cleanup de procesos hostiles Windows/WSL, DNS/proxy remoto, zoom 200% y screen reader continúan sin evidencia de ejecución en los hosts correspondientes. Ver [REMOTE_VALIDATION.md](REMOTE_VALIDATION.md).
+
+## Evidencia auditada pre-capturas y límites del release (2026-11-07)
+
+- [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667), SHA `0d73879b63204010f4cccaef329cd611c0e9b48f`: 7/7 PASS. Incluye cancelación hostil de descendientes Windows, fixture real loopback k6 con proxy heredado y redirect 302 bloqueados, análisis de ZIP malicioso, `THIRD_PARTY_NOTICES.md`, inventario shipped, SBOM y hashes/manifiesto de origen.
+- VSIX 0.1.0→0.2.0 instalado con CLI real en Windows/macOS/Linux y almacenamiento v1/v2 preservado/migrado. Esto **no** demuestra diálogos de usuario reales o instalación remota WSL/SSH/Dev Containers.
+- El inventario `require()` de JavaScript distribuido y el ZIP auditor son verificaciones estructurales, **no** una auditoría binaria integral ni una attestation criptográfica externa. `saturivo.release.json` enlaza SHA/origen/hash, pero no firma el artefacto.
+- Cuatro capturas con datos sintéticos generadas en commit `6387739`, [workflow #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472). No prueban accesibilidad manual, seguridad ni condiciones reales de tráfico.
+- **BLOCKED para release:** DNS rebinding/proxy/remoto contra red de pruebas controlada, WSL procesos hostiles, NVDA/VoiceOver y zoom 200%, revisión manual de licencias/dependencias shipped, attestation externa en entorno protegido, CI definitivo posterior a capturas y firma del responsable.
+- Ningún test de estas matrices debe usar sistemas de terceros ni infraestructura productiva. [Comandos de host remoto](REMOTE_VALIDATION.md).

@@ -53,3 +53,28 @@ test("v2 ramp stages are strictly bounded and consistent", () => {
     { durationSeconds: 5, targetVus: 2 }, { durationSeconds: 5, targetVus: 0 },
   ] }, policy), /ramping-vus model/);
 });
+
+test("adversarial target authority, credentials, private address and DNS lookalikes", () => {
+  for (const raw of [
+    "http://localhost.evil.example/", "http://127.0.0.1.evil.example/",
+    "http://169.254.169.254/latest/meta-data/", "http://192.168.1.1/",
+    "http://10.0.0.10/", "http://[fe80::1]/", "http://[::ffff:169.254.169.254]/",
+    "http://127.0.0.1@evil.example/", "gopher://127.0.0.1/",
+  ]) assert.throws(() => assertAllowedTarget(raw, policy));
+  assert.equal(assertAllowedTarget("http://[::1]:8080/", policy).hostname, "[::1]");
+  // Remote URLs are never allowed without both opt-in AND the UI's modal consent.
+  assert.equal(assertAllowedTarget("https://example.com/health",
+    {...policy, allowRemoteTargets: true}).hostname, "example.com");
+});
+
+test("warm-up and cool-down require a bounded v2 measurement window", () => {
+  const phased: Scenario = { ...scenario, workloadVersion: 2, warmupSeconds: 2,
+    cooldownSeconds: 2 };
+  assert.equal(validateScenario(phased, policy).warmupSeconds, 2);
+  for (const invalid of [
+    { ...phased, warmupSeconds: 5, cooldownSeconds: 1 },
+    { ...phased, warmupSeconds: 31 },
+    { ...phased, warmupSeconds: -1 },
+    { ...scenario, warmupSeconds: 2, cooldownSeconds: 2 },
+  ]) assert.throws(() => validateScenario(invalid, policy));
+});

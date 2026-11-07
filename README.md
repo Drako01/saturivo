@@ -22,7 +22,30 @@
 
 ---
 
-> **Public source · Development preview 0.1.0 (unreleased).** This branch is an Enterprise AAAA development candidate, **not a certified or published release**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
+> **Public source · 0.2.0 non-preview release candidate (PR #5; unreleased).** The extension is now packaged without the VS Code Marketplace Preview badge, but **this is not a release approval or Enterprise AAAA certification**. See [implementation status](STATUS.md) and [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Local measurements do not certify production capacity.
+
+## Control Center — 0.2.0
+
+The new Control Center opens in a **full editor tab**, not a narrow sidebar. The screenshots below are captured from the **real dashboard renderer** with a fixed **synthetic test dataset**; the displayed metrics are illustrative, not real performance measurements.
+
+![Saturivo Control Center — overview](media/screenshots/control-center-overview.png)
+
+<details>
+<summary>View load scenarios, run history and Go diagnostics</summary>
+
+![Bounded load scenarios](media/screenshots/control-center-load.png)
+
+![Saved run evidence and comparisons](media/screenshots/control-center-history.png)
+
+![Go runtime and concurrency diagnostics](media/screenshots/control-center-diagnostics.png)
+
+</details>
+
+### A workflow designed for developers
+
+The 0.2.0 Control Center is more than a set of commands: it guides setup, bounded execution, comparison and investigation. The **Scenario Studio** provides a live workload preview, readable safety budgets, interactive ramp editing, and preset cards that can be customized **without starting traffic**. Results include an accessible exact-value table and clear evidence limitations.
+
+The dashboard uses VS Code theme tokens, responsive layouts, keyboard navigation, and reduced-motion support. Preview and selection are local interactions; only an explicit run action can begin a workload.
 
 ## Why Saturivo?
 
@@ -40,16 +63,17 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 
 ## Capabilities
 
-| Area | Included in the current PR #4 candidate | Important boundary |
+| Area | Implemented in the PR #5 development branch | Important boundary |
 |---|---|---|
-| **Load testing** | k6 smoke, bounded constant-VU stress and constant-arrival-rate presets | HTTP(S) GET/HEAD only; local target by default |
+| **Load testing** | k6 presets, ramping VUs, and a bilingual editor for bounded v2 HTTP GET/HEAD workloads | HTTP(S) GET/HEAD only; local target by default |
 | **Metrics & SLOs** | RPS, failures, P50/P95/P99, dropped iterations; configurable P95 SLO | Single-run status is not a statistical confidence guarantee |
-| **Comparisons & capacity pilot** | Workload SHA-256, local history, baseline heuristics, 3-vs-3 P95 bootstrap, bounded literal-loopback arrival-rate pilot | Evidence is local and scenario-specific; **not a production capacity guarantee** |
-| **Go concurrency** | Race detector, benchmark commands, CPU/heap/goroutine/mutex/block pprof capture and local summaries | Tests only inspect executed paths; no automated root-cause proof |
+| **Comparisons & capacity pilot** | Workload SHA-256, explicit baseline choice, 3-vs-3 P95 bootstrap, bounded literal-loopback arrival-rate pilot | Evidence is local and scenario-specific; **not a production capacity guarantee** |
+| **WebSocket probe** | Explicit local ws:// loopback handshake/message probe backed by k6, with a fixture-backed E2E gate | Session duration is not HTTP latency; 5 seconds, 1 VU, 100 attempts; remote WebSocket targets are blocked |
+| **Go concurrency** | Race detection, benchmarks, CPU/heap/goroutine/mutex/block profiles, Go runtime trace and before/during/after stack observations | Tests only inspect executed paths; no automated root-cause proof |
 | **Evidence** | Markdown/JSON export; SARIF for observed Go race findings | Profiling files and reports may contain sensitive project information |
-| **Developer experience** | Activity Bar Control Center, ES/EN interface, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
+| **Developer experience** | Full editor-tab Control Center launched from Activity Bar, ES/EN interface, scenario form persistence, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
 
-**Limited preview:** an opt-in **local capacity pilot** now runs up to three bounded arrival-rate steps against a literal loopback HTTP target with a required P95 SLO. It reports only the highest observed passing arrival rate, not production capacity. **Still planned:** full automated capacity discovery with confidence/repeated trials, dynamic scenario editor/ramp profiles, correlated pre/during/post traces, gRPC/WebSocket adapters, Node/Java/Python runtime profiling, comprehensive remote development support and optional opt-in AI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
+**Experimental bounded capacity pilot:** up to three explicitly authorized loopback arrival-rate steps with a P95 SLO; passing rates do not certify production capacity. Saturivo 0.2.0 includes isolated warm-up/measurement/cool-down for v2, 3×3 regressions with uncertainty, Go race source evidence, pprof/trace/GC observations, real fixture-backed HTTP Go/Node/Python and bounded RFC6455 WebSocket. **Not implemented or not verified:** general gRPC/ghz, language-specific profilers Node/Java/Python, WSL/SSH/Dev Containers E2E and BYO AI. See [roadmap](ROADMAP.md).
 
 ## Quick start
 
@@ -61,12 +85,12 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 - **Node.js 22+** and npm for building this extension from source.
 - Git access to the public Saturivo source repository.
 
-### Build and install the preview
+### Build and install the 0.2.0 candidate from source
 
 ~~~bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-git switch feat/enterprise-aaaa-runtime-evidence
+git switch feat/enterprise-aaaa-v0.1.1
 npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
@@ -80,7 +104,9 @@ Open VS Code → **Extensions: Install from VSIX…** → select `saturivo.vsix`
 2. Click the **Saturivo** Activity Bar icon. The Control Center opens; **opening the view never starts traffic**.
 3. Choose **Configure Target**. Set the explicit local endpoint.
 4. Run **Smoke** (1 virtual user), **Bounded Stress** (up to 20 VUs) or **Arrival Rate** (25 attempted iterations/sec, bounded by available VUs). Each operation is user-initiated and can be cancelled.
-5. Inspect **P95/P99, RPS, failures, dropped iterations and run history**. Repeat comparable scenarios, choose **Compare Runs** and export the evidence.
+5. Inspect **P95/P99, RPS, failures, dropped iterations and run history**. Repeat comparable scenarios, choose **Compare Runs** and select an explicit baseline before exporting evidence.
+
+**Custom scenarios:** the Load Testing section includes a v2 editor for bounded GET/HEAD traffic (constant VUs, arrivals and ramp stages), with the current authorized target, per-run request limit and an optional P95 objective. Optional warm-up/cool-down windows exclude setup and recovery requests from the measured P50/P95/P99, HTTP error rate, RPS and SLO, while request budgets still apply across the whole run. Input is validated again inside the extension. **WebSocket:** the separate local-only probe explicitly asks for a ws:// loopback endpoint and confirmation; its report shows session and handshake metrics, not HTTP request latency.
 
 **Experimental local capacity pilot:** first configure a **P95 SLO**, keep the target on a literal loopback HTTP address (for example `http://127.0.0.1:8080/health`), then explicitly choose **Local Capacity Pilot**. It attempts 10, 20 and 40 arrivals/s at most, with three 10-second stages, resource budgets and stop-on-SLO/inconclusive behavior. Review the evidence in the output channel and run history. This is **not a production capacity benchmark**.
 
@@ -183,7 +209,7 @@ Design decisions and limitations are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Engineering quality
 
-The private PR #4 candidate was verified on commit `a819a894` in [GitHub Actions run #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010):
+An earlier PR #5 commit, `cbd3724`, passed [GitHub Actions run #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) (7/7 jobs):
 
 | Validation | Observed result |
 |---|---|
@@ -191,9 +217,9 @@ The private PR #4 candidate was verified on commit `a819a894` in [GitHub Actions
 | Disposable loopback service under real k6 load | **PASS** |
 | Packaged VSIX installation and real VS Code 1.99 Extension Host (Linux) | **PASS** |
 | Real Go race and pprof fixture (Linux) | **PASS** |
-| Preview VSIX and CycloneDX SBOM artifact generation | **PASS** |
+| VSIX candidate and CycloneDX SBOM artifact generation (historical SHA) | **PASS** |
 
-These are **commit-specific CI results**, not release certification. Additional threat modeling, language/protocol adapters, broader VS Code host coverage and final release validation remain pending.
+CI is commit-specific and does not certify later revisions. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) passed 7/7 on SHA `0d73879` (including real VSIX CLI upgrade/persisted history Windows/macOS/Linux). Four screenshots were regenerated from the production renderer with synthetic data in [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f). **Post-screenshot CI #42424211042 passed 7/7 on `e777dda`; the next documentation commit requires a new exact-SHA CI. Manual UX/security review remains BLOCKED. The owner authorized merge only after all required gates pass; tags and publication are not authorized.** PR #5 is Ready for review.
 
 Development commands:
 
@@ -205,11 +231,14 @@ npm run verify
 npm run package:vsix
 # Requires k6 and a local fixture; CI sets it up explicitly:
 npm run test:integration:k6
+# CI also runs real Go/Node/Python k6 and WebSocket fixtures:
+npm run test:integration:runtimes
+npm run test:integration:websocket
 # Requires a VS Code download / GUI-capable environment:
 npm run test:integration:vscode
 ~~~
 
-No Marketplace or Open VSX package has been published. **The source repository is public**; publication of a VSIX is a separate, explicitly approved release decision.
+**The source repository is public.** The package manifest does not use a private-repository flag. Publication to Marketplace, Open VSX or GitHub Releases is a separate, explicitly approved release decision, gated by a protected version tag and environment approvals. This PR does not publish an extension.
 
 ## Project documents
 

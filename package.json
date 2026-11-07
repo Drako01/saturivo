@@ -2,7 +2,7 @@
   "name": "saturivo",
   "displayName": "Saturivo",
   "description": "Evidence-based load, concurrency and performance diagnostics for local APIs and Go services.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "armotusitio",
   "author": {
     "name": "Alejandro Daniel Di Stefano",
@@ -17,8 +17,6 @@
     "url": "https://github.com/Drako01/saturivo/issues"
   },
   "homepage": "https://armotusitio.com.ar",
-  "private": true,
-  "preview": true,
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -42,7 +40,18 @@
     "p99",
     "stress testing",
     "benchmark",
-    "race detector"
+    "race detector",
+    "api testing",
+    "performance testing",
+    "http testing",
+    "websocket testing",
+    "profiling",
+    "pprof",
+    "goroutines",
+    "observability",
+    "regression testing",
+    "capacity testing",
+    "runtime diagnostics"
   ],
   "main": "./out/src/extension.js",
   "activationEvents": [
@@ -104,6 +113,11 @@
         "category": "Saturivo"
       },
       {
+        "command": "saturivo.navigateRace",
+        "title": "%command.navigateRace%",
+        "category": "Saturivo"
+      },
+      {
         "command": "saturivo.goBench",
         "title": "%command.bench%",
         "category": "Saturivo"
@@ -151,6 +165,21 @@
       {
         "command": "saturivo.runRamp",
         "title": "%command.ramp%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.correlateGo",
+        "title": "%command.correlateGo%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.websocketProbe",
+        "title": "%command.websocket%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.runtimeProbe",
+        "title": "%command.runtimeProbe%",
         "category": "Saturivo"
       }
     ],
@@ -237,6 +266,13 @@
           "maximum": 100000,
           "default": 10000,
           "description": "%setting.maxRequests%"
+        },
+        "saturivo.historyRetention": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 100,
+          "description": "%setting.historyRetention%"
         }
       }
     }
@@ -246,7 +282,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.cjs",
     "smoke:manifest": "node scripts/verify-manifest.cjs",
-    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses && node --test test/vsix-audit.test.cjs",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
     "vscode:prepublish": "npm run build",
     "test:integration:k6": "node scripts/k6-smoke.cjs",
@@ -256,7 +292,16 @@
     "test:integration:regression": "node scripts/k6-regression.cjs",
     "audit:vsix": "node scripts/audit-vsix.cjs saturivo.vsix",
     "checksum:vsix": "node scripts/vsix-checksum.cjs write saturivo.vsix && node scripts/vsix-checksum.cjs check saturivo.vsix",
-    "verify:release": "node scripts/release-gate.cjs"
+    "verify:release": "node scripts/release-gate.cjs",
+    "test:release-manifest": "node --test test/release-artifact.test.cjs",
+    "screenshots:readme": "node scripts/capture-readme.cjs",
+    "test:integration:runtimes": "node scripts/runtime-matrix.cjs",
+    "licenses:report": "node scripts/license-inventory.cjs",
+    "test:licenses": "node --test test/license-inventory.test.cjs",
+    "test:integration:websocket": "node scripts/ws-smoke.cjs",
+    "test:integration:compose": "node scripts/compose-smoke.cjs",
+    "test:integration:network-adversarial": "node scripts/network-adversarial-smoke.cjs",
+    "test:integration:upgrade": "node scripts/verify-vsix-upgrade.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

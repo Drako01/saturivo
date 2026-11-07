@@ -9,7 +9,30 @@
 
 [English README](../README.md) · [Arquitectura](../ARCHITECTURE.md) · [Estado real](../STATUS.md) · [Plan Enterprise AAAA](ENTERPRISE_AAAA_MASTER_PLAN.md)
 
-> **Código fuente público · Vista previa de desarrollo 0.1.0.** Las capacidades documentadas en el PR #4 son un candidato de desarrollo, no una versión publicada ni una certificación Enterprise AAAA.
+> **Código fuente público · Candidato 0.2.0 sin etiqueta Preview (PR #5, sin publicar).** Quitar Preview del manifiesto no implica autorización de merge/publicación ni certificación Enterprise AAAA.
+
+## Centro de Control — 0.2.0
+
+Saturivo ahora abre el Centro de Control en una **pestaña del editor**, con espacio para métricas, escenarios, historial y diagnóstico. Las capturas provienen del **renderizador real de la interfaz** con datos sintéticos y deterministas: **no representan mediciones reales**.
+
+![Saturivo — resumen del Centro de Control](../media/screenshots/control-center-overview.png)
+
+<details>
+<summary>Ver escenarios, historial y diagnóstico Go</summary>
+
+![Escenarios de carga](../media/screenshots/control-center-load.png)
+
+![Historial de ejecuciones](../media/screenshots/control-center-history.png)
+
+![Diagnóstico de concurrencia Go](../media/screenshots/control-center-diagnostics.png)
+
+</details>
+
+### Una experiencia diseñada para desarrolladores
+
+El Centro de Control propone un recorrido claro: **configurar → medir → analizar**. El **Scenario Studio** incluye una previsualización dinámica de las etapas, presupuestos de carga visibles, validación antes de ejecutar y presets que se pueden personalizar **sin enviar tráfico**. Los resultados agregan tablas accesibles, comparaciones contextualizadas y estados vacíos con acciones útiles.
+
+La interfaz respeta los temas de VS Code, el teclado, los diseños adaptables y la preferencia de movimiento reducido. Seleccionar o editar un escenario nunca inicia una prueba automáticamente.
 
 ## ¿Para qué sirve?
 
@@ -17,22 +40,23 @@ Saturivo permite medir cómo responde una API bajo una carga controlada, guardar
 
 | Necesidad | Función |
 |---|---|
-| Medir una API local | Prueba rápida, estrés acotado o tasa constante de llegadas |
+| Medir una API local | Presets de carga y editor de escenarios HTTP v2 (GET/HEAD) con límites y consentimiento |
 | Entender la degradación | P50/P95/P99, solicitudes por segundo, fallos e iteraciones descartadas |
-| Comparar cambios | Huella SHA-256 del escenario, historial y estimación de incertidumbre con pruebas repetidas |
-| Analizar Go | Detector de carreras con vínculos al código, benchmarks y perfiles CPU, heap, goroutines, mutex y block |
+| Comparar cambios | Huella SHA-256, selección de baseline e incertidumbre con pruebas repetidas |
+| Comprobar WebSocket | Prueba k6 de handshake y mensajes limitada a ws:// loopback, 5 segundos, 1 VU y hasta 100 sesiones; métricas de sesión, no latencia HTTP |
+| Analizar Go | Race detector, benchmarks, perfiles CPU, heap, goroutines, mutex/block, traza local y snapshots antes/durante/después |
 | Guardar evidencia | Exportación Markdown, JSON y SARIF para carreras observadas |
 
-**Experimental:** se incorporó un piloto manual de capacidad local con 3 etapas de carga acotada, SLO P95 obligatorio y parada ante fallos o resultados inconclusos. No certifica capacidad de producción. **Todavía no implementado:** descubrimiento completo y estadísticamente robusto de capacidad, editor avanzado de rampas, correlación temporal integral de trazas, adaptadores gRPC/WebSockets, profiling especializado de Node/Java/Python e IA opcional. Consultá el [roadmap](../ROADMAP.md).
+**Piloto experimental de capacidad:** tres etapas de carga explícita local con SLO P95; no certifica capacidad de producción. Saturivo 0.2.0 ya implementa ventanas warm-up/medición/cool-down aisladas, comparaciones 3×3 con incertidumbre, navegación de hallazgos Go race a fuente verificada, pprof/trace/GC, HTTP real Go/Node/Python y WebSocket RFC6455. **No implementado o no validado:** gRPC/ghz, profilers especializados Node/Java/Python, WSL/SSH/Dev Containers E2E e IA BYO. Upgrade VSIX 0.1.0→0.2.0 con persistencia de historial PASS Windows/macOS/Linux en [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667). Las cuatro imágenes README fueron actualizadas con datos sintéticos, commit `6387739`; el CI postcapturas [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042) pasó 7/7 en `e777dda`; faltan revisión visual humana y el CI del SHA final tras esta actualización.
 
 ## Instalación y uso
 
-**Requisitos:** VS Code 1.99+, Grafana k6 en `PATH`; Go instalado para análisis de concurrencia. Node.js 22+ y npm para compilar desde el repositorio privado.
+**Requisitos:** VS Code 1.99+, Grafana k6 en `PATH`; Go instalado para análisis de concurrencia. Node.js 22+ y npm para compilar desde el repositorio público.
 
 ~~~bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-git switch feat/enterprise-aaaa-runtime-evidence
+git switch feat/enterprise-aaaa-v0.1.1
 npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
@@ -44,7 +68,9 @@ En VS Code ejecutá **Extensions: Install from VSIX…** y seleccioná `saturivo
 2. Abrí el **Centro de Control** desde el ícono Saturivo. Esto **no genera tráfico automáticamente**.
 3. Elegí **Configurar destino** y completá la URL local.
 4. Ejecutá una prueba rápida, una carga por usuarios virtuales o una tasa de llegadas (*open loop*). Podés cancelar.
-5. Revisá P95/P99, RPS, errores e historial; repetí el mismo escenario para comparar y exportar resultados.
+5. Revisá P95/P99, RPS, errores e historial; repetí el mismo escenario, elegí un baseline explícito y exportá resultados.
+
+**Editor propio:** en Pruebas de carga podés definir GET/HEAD, VUs, tasa de llegadas o etapas de rampa, duración, presupuesto y P95 objetivo. El calentamiento y enfriamiento opcionales se separan de la ventana medida: P50/P95/P99, errores y RPS se calculan únicamente para esa ventana, mientras el presupuesto sigue cubriendo toda la ejecución. La extensión revalida todo antes de ejecutar. **WebSocket:** existe una prueba separada de loopback que pide endpoint ws:// y consentimiento; sus métricas corresponden a sesiones WebSocket, no a requests HTTP.
 
 **Piloto de capacidad local:** configurá primero un SLO P95, elegí una URL HTTP con IP literal de loopback (por ejemplo `http://127.0.0.1:8080/health`) y ejecutá **Piloto de capacidad local**. Hace hasta 3 etapas acotadas de 10 segundos (10, 20 y 40 llegadas/s), con presupuesto finito, cancelación y corte por SLO o evidencia insuficiente. No representa el límite real de producción.
 
@@ -75,7 +101,7 @@ Cuando existen al menos tres ejecuciones compatibles por grupo, Saturivo permite
 
 **Benchmarks:** ejecuta `go test -run ^$ -bench . -benchmem ./...` después de confirmar. Los tests pueden ejecutar código del proyecto; usá entornos controlados.
 
-**Profiling:** habilitá `net/http/pprof` solamente en un listener HTTP local de desarrollo (por ejemplo, `127.0.0.1:6060`), configurá el origen en Saturivo y capturá el perfil que necesites: CPU, heap, goroutines, mutex o block. Los artefactos quedan locales. El estado de las goroutines es una fotografía del momento, no una prueba definitiva de fugas.
+**Profiling:** habilitá `net/http/pprof` solamente en un listener HTTP local de desarrollo (por ejemplo, `127.0.0.1:6060`), configurá el origen en Saturivo y capturá CPU, heap, goroutines, mutex, block o una traza Go de duración acotada. Los artefactos quedan locales. El estado de las goroutines es una fotografía del momento, no una prueba definitiva de fugas.
 
 ## Seguridad y privacidad
 
@@ -92,7 +118,7 @@ Cuando existen al menos tres ejecuciones compatibles por grupo, Saturivo permite
 
 ## Calidad y estado
 
-El commit `a819a894` del PR #4 pasó las seis verificaciones del [CI #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010): checks en Linux/Windows/macOS, integración real con k6, instalación VSIX en Extension Host, fixture Go race/pprof y artefactos de SBOM. Esto acredita ese commit, **no** el cumplimiento completo de Enterprise AAAA.
+El commit anterior `cbd3724` del PR #5 pasó las siete verificaciones del [CI #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890): checks en Linux/Windows/macOS, integración real con k6, instalación VSIX en Extension Host, fixture Go race/pprof y artefactos de SBOM. Esto acredita solo ese commit, **no** los cambios posteriores ni el cumplimiento completo de Enterprise AAAA.
 
 Para conocer los pendientes reales, revisá el [checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md), los [criterios de aceptación](ACCEPTANCE_CRITERIA.md) y el [plan maestro](ENTERPRISE_AAAA_MASTER_PLAN.md).
 

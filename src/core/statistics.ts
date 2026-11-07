@@ -1,4 +1,5 @@
 import { fingerprintScenario } from "./fingerprint";
+import { measurementQualityReasons } from "./evidence-quality";
 import type { RunResult } from "./types";
 
 export type StatisticalStatus = "regression" | "improvement" | "stable" | "inconclusive";
@@ -40,6 +41,17 @@ export function compareTrialGroups(
   const reasons: string[] = [];
   const all = [...baseline, ...candidate];
   if (baseline.length < 3 || candidate.length < 3) reasons.push("At least 3 independent runs per group required");
+  if (new Set(all.map(run => run.id)).size !== all.length) {
+    reasons.push("Duplicate run IDs: baseline and candidate trials must be independent");
+  }
+  const environmentHashes = all.map(run => run.environment.environmentHash);
+  if (environmentHashes.some(Boolean)) {
+    if (environmentHashes.some(value => !value)) {
+      reasons.push("Environment fingerprint absent from some trials");
+    } else if (new Set(environmentHashes).size > 1) {
+      reasons.push("Load-generator environment fingerprint differs");
+    }
+  }
   const first = all[0];
   if (!first) reasons.push("No measurements");
   else {
@@ -55,8 +67,11 @@ export function compareTrialGroups(
         reasons.push("Execution environment differs"); break;
       }
     }
-    if (all.some(run => run.metrics.requests < 100 || run.metrics.droppedIterations > 0)) {
-      reasons.push("Insufficient requests or dropped load-generator iterations");
+    if (all.some(run => run.metrics.requests < 100)) {
+      reasons.push("Insufficient measured requests");
+    }
+    for (const reason of new Set(all.flatMap(run => measurementQualityReasons(run)))) {
+      reasons.push(reason);
     }
     if (all.some(run => !Number.isFinite(run.metrics.p95Ms) || run.metrics.p95Ms <= 0)) {
       reasons.push("Missing positive P95 measurement");

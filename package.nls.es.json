@@ -26,5 +26,10 @@
   "command.capacity": "Ejecutar piloto acotado de capacidad local",
   "command.importJson": "Importar ejecución JSON",
   "command.clearProfiles": "Eliminar perfiles Go capturados",
-  "command.ramp": "Ejecutar rampa acotada de usuarios virtuales"
+  "command.ramp": "Ejecutar rampa acotada de usuarios virtuales",
+  "command.correlateGo": "Capturar correlación de carga Go",
+  "command.websocket": "Probar WebSocket local",
+  "setting.historyRetention": "Cantidad máxima de informes guardados por workspace (1–1000). El excedente se elimina al guardar o cambiar la configuración.",
+  "command.runtimeProbe": "Inspeccionar métricas locales del proceso runtime",
+  "command.navigateRace": "Abrir ubicación de código verificada de carrera Go"
 }

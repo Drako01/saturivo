@@ -7,7 +7,8 @@ const { spawn } = require("node:child_process");
 const { runBoundedProcess } = require("../out/src/core/process.js");
 const { parseGoRaceOutput } = require("../out/src/core/race.js");
 const { captureGoProfile } = require("../out/src/core/go-profiler.js");
-const { summarizeGoPprof } = require("../out/src/core/go-profile-analysis.js");
+const { readGoGcMetrics } = require("../out/src/core/go-gc.js");
+const { summarizeGoPprof, analyzeGoroutineStacks } = require("../out/src/core/go-profile-analysis.js");
 const root = path.resolve(__dirname, "..");
 
 async function main() {
@@ -49,13 +50,43 @@ async function main() {
       server.on("exit", code => { clearTimeout(timer); reject(new Error("Fixture quit " + code)); });
     });
     const origin = "http://127.0.0.1:" + port + "/";
+    const gcBefore = await readGoGcMetrics(origin, signal);
+    assert.equal(gcBefore.status, "SUPPORTED", "Real Go expvar fixture must expose GC counters");
     const goroutines = await captureGoProfile(origin, "goroutine", temp, signal);
     const stacks = await fs.readFile(goroutines.localPath, "utf8");
     assert.match(stacks, /goroutine \d+ \[/);
+    const beforeCount = analyzeGoroutineStacks(stacks).observedStacks;
+    const response = await fetch(origin + "grow?count=8");
+    assert.equal(response.status, 200, "Fixture must produce bounded goroutine growth");
+    await response.arrayBuffer();
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const afterFile = await captureGoProfile(origin, "goroutine", temp, signal);
+    const afterCount = analyzeGoroutineStacks(await fs.readFile(afterFile.localPath, "utf8")).observedStacks;
+    assert(afterCount - beforeCount >= 6, "Expected observed goroutine growth after controlled fixture");
+    console.log("Go goroutine growth: before=" + beforeCount + " after=" + afterCount +
+      " (observation only; no asserted leak root cause)");
+    const gcAfter = await readGoGcMetrics(origin, signal);
+    assert.equal(gcAfter.status, "SUPPORTED", "Real Go expvar should remain accessible");
+    assert(gcAfter.metrics.totalAllocBytes >= gcBefore.metrics.totalAllocBytes,
+      "TotalAlloc must be monotonic in the real Go process");
+    assert(gcAfter.metrics.numGc >= gcBefore.metrics.numGc,
+      "NumGC must be monotonic in the real Go process");
+    console.log("Real Go expvar GC/allocation counters: PASS (observational only)");
+    await Promise.all(Array.from({ length: 12 }, async () => {
+      const result = await fetch(origin + "contend");
+      assert.equal(result.status, 200);
+      await result.arrayBuffer();
+    }));
     const heap = await captureGoProfile(origin, "heap", temp, signal);
     assert(heap.bytes > 0);
     const top = await summarizeGoPprof(heap.localPath, runtimeFolder, signal);
     assert.match(top, /Showing nodes accounting|File:|Type:/);
+    for (const kind of ["mutex", "block", "trace"]) {
+      const observed = await captureGoProfile(origin, kind, temp, signal);
+      assert(observed.bytes > 0, "Empty real Go " + kind + " output");
+      assert(observed.localPath.endsWith(kind === "trace" ? ".trace" : ".pprof"));
+    }
+    console.log("Go pprof mutex/block + runtime trace integration: PASS");
     console.log("Go pprof real runtime integration: PASS");
   } finally {
     if (server) server.kill();

@@ -1,4 +1,5 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
+import { realpath } from "node:fs/promises";
 
 export interface GoRaceFinding {
   readonly file: string;
@@ -36,4 +37,21 @@ export function parseGoRaceOutput(output: string, workspace: string): GoRaceFind
     if (result.length >= 200) break;
   }
   return result;
+}
+
+/**
+ * Race detector paths may refer to moved files or symlinks. Resolve the real
+ * path at the time the user clicks, then enforce the original workspace root.
+ * Never navigate to untrusted out-of-workspace source through this action.
+ */
+export async function validatedGoRaceSourcePath(
+  workspace: string, file: string
+): Promise<string> {
+  const [root, source] = await Promise.all([realpath(workspace), realpath(file)]);
+  const relativePath = relative(root, source);
+  if (!source.endsWith(".go") || !relativePath || relativePath === ".." ||
+      relativePath.startsWith(".." + sep) || isAbsolute(relativePath)) {
+    throw new Error("Go race evidence source is outside the original trusted workspace");
+  }
+  return source;
 }

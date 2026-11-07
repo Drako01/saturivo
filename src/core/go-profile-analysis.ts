@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readBoundedRegularTextFile } from "./bounded-file";
 import { runBoundedProcess } from "./process";
 
 export interface GoroutineSnapshot {
@@ -46,7 +46,9 @@ export async function summarizeGoPprof(
   return response.stdout + (response.truncated ? "\n[Output truncated]" : "");
 }
 export async function readGoroutineSnapshot(file: string): Promise<GoroutineSnapshot> {
-  const content = await readFile(file, "utf8");
-  if (Buffer.byteLength(content) > 4_000_000) throw new Error("Goroutine snapshot exceeds size limit");
-  return analyzeGoroutineStacks(content);
+  try {
+    return analyzeGoroutineStacks(await readBoundedRegularTextFile(file, 4_000_000));
+  } catch (error) {
+    throw new Error("Goroutine snapshot exceeds size limit or is not a regular file", { cause: error });
+  }
 }

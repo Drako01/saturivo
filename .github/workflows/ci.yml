@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      capture_screenshots:
+        description: 'Final README screenshot refresh only after UX sign-off (PR #5)'
+        type: boolean
+        required: false
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -22,7 +28,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Build and validate the immutable PR HEAD, not GitHub's synthetic
+          # pull_request merge commit, so release evidence binds to one SHA.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+          fetch-depth: 0 # Required for pinned 0.1.0 worktree during Windows/macOS installed upgrade
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -30,34 +40,62 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify TypeScript, tests and manifest
         run: npm run verify
+      - name: Package real 0.2.0 VSIX for Windows/macOS upgrade
+        if: runner.os != 'Linux'
+        run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
+      - name: Install 0.1.0 then upgrade VSIX with persistent history (real OS CLI)
+        if: runner.os != 'Linux'
+        run: npm run test:integration:upgrade
       - name: Generate reproducible dependency SBOM
         if: runner.os == 'Linux'
         run: |
           mkdir -p reports
           npm sbom --sbom-format cyclonedx > reports/saturivo-sbom.cdx.json
+      - name: Generate exact-lockfile license inventory
+        if: runner.os == 'Linux'
+        run: npm run licenses:report
       - name: Archive dependency SBOM
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: saturivo-sbom
-          path: reports/saturivo-sbom.cdx.json
+          path: |
+            reports/saturivo-sbom.cdx.json
+            reports/saturivo-licenses.json
+            reports/saturivo-licenses.md
           if-no-files-found: error
-      - name: Package preview VSIX
+      - name: Package candidate VSIX
         if: runner.os == 'Linux'
         run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
-      - name: Audit and checksum preview VSIX
+      - name: Audit and checksum candidate VSIX
         if: runner.os == 'Linux'
         run: |
           npm run audit:vsix
           npm run checksum:vsix
-      - name: Upload preview VSIX
+      - name: Inspect shipped VSIX content, runtime requires and notices
+        if: runner.os == 'Linux'
+        run: node scripts/shipped-inventory.cjs saturivo.vsix
+      - name: Bind candidate package to checked-out commit and verify release manifest
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA="$(git rev-parse --verify HEAD)"
+          test "$SOURCE_SHA" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          VERSION="$(node -p 'require("./package.json").version')"
+          node scripts/release-manifest.cjs write saturivo.vsix "$SOURCE_SHA" "$VERSION"
+          node scripts/release-manifest.cjs check saturivo.vsix "$SOURCE_SHA" "$VERSION"
+          node --test test/release-artifact.test.cjs
+      - name: Upload candidate VSIX
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: saturivo-preview-vsix
+          name: saturivo-candidate-vsix
           path: |
             saturivo.vsix
             saturivo.vsix.sha256
+            saturivo.release.json
+            reports/saturivo-shipped-inventory.json
           if-no-files-found: error
 
   integration-k6:
@@ -67,6 +105,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Build and validate the immutable PR HEAD, not GitHub's synthetic
+          # pull_request merge commit, so release evidence binds to one SHA.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -90,11 +131,15 @@ jobs:
   extension-host:
     name: Real VS Code Extension Host (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Build and validate the immutable PR HEAD, not GitHub's synthetic
+          # pull_request merge commit, so release evidence binds to one SHA.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+          fetch-depth: 0 # Access the immutable 0.1.0 baseline for a real upgrade check
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -104,8 +149,15 @@ jobs:
         run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
       - name: Audit VSIX before host installation
         run: npm run audit:vsix
-      - name: Launch actual VS Code 1.99 Extension Host
+      - uses: grafana/setup-k6-action@43b9fc21641a76002687994433dd586f56e791b1 # v1
+        with:
+          k6-version: '1.8.2'
+      - name: Launch actual VS Code 1.99 Extension Host, run and cancel real k6
         run: xvfb-run -a npm run test:integration:vscode
+        env:
+          K6_NO_USAGE_REPORT: 'true'
+      - name: Upgrade installed VSIX from pinned 0.1.0 to candidate 0.2.0
+        run: node scripts/verify-vsix-upgrade.cjs
 
   go-runtime-evidence:
     name: Real Go race and pprof fixture (Linux)
@@ -114,6 +166,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Build and validate the immutable PR HEAD, not GitHub's synthetic
+          # pull_request merge commit, so release evidence binds to one SHA.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -125,3 +180,95 @@ jobs:
       - run: npm run build
       - name: Verify real Go race evidence and pprof
         run: node scripts/go-evidence.cjs
+      - name: Measure real Go profiling overhead versus unprofiled control
+        run: node scripts/go-overhead.cjs
+      - name: Preserve Go profiling overhead evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: saturivo-go-profile-overhead
+          path: reports/go-profile-overhead.json
+          if-no-files-found: error
+      - uses: grafana/setup-k6-action@43b9fc21641a76002687994433dd586f56e791b1 # v1
+        with:
+          k6-version: '1.8.2'
+      - name: Verify real HTTP k6 on Go, Node.js and Python
+        run: npm run test:integration:runtimes
+        env:
+          K6_NO_USAGE_REPORT: 'true'
+      - name: Verify real loopback WebSocket k6 protocol
+        run: npm run test:integration:websocket
+        env:
+          K6_NO_USAGE_REPORT: 'true'
+      - name: Refuse runtime proxy inheritance and HTTP redirects (real k6 loopback)
+        run: npm run test:integration:network-adversarial
+        env:
+          K6_NO_USAGE_REPORT: 'true'
+      - name: Verify Docker Compose real Go service with k6 (offline scratch image)
+        run: npm run test:integration:compose
+        env:
+          K6_NO_USAGE_REPORT: 'true'
+
+  ui-browser:
+    name: Control Center browser interactions (no screenshots)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Build and validate the immutable PR HEAD, not GitHub's synthetic
+          # pull_request merge commit, so release evidence binds to one SHA.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run build
+      - name: Validate scenario studio and history inspector interactions
+        run: node scripts/capture-readme.cjs --verify-only
+
+  screenshots:
+    name: Capture actual Control Center views for README
+    # Manual final stage only: ordinary PR CI must not mutate README screenshots.
+    # The historical feature branch is retained for PR #5; never writes to main or forks.
+    if: github.event_name == 'workflow_dispatch' && inputs.capture_screenshots == true && github.ref == 'refs/heads/feat/enterprise-aaaa-v0.1.1' && github.repository == 'Drako01/saturivo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true # only this trusted documentation screenshot job
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run build
+      - name: Render four production UI views with synthetic fixture data
+        run: npm run screenshots:readme
+      - name: Upload screenshots for reviewer inspection
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: saturivo-control-center-screenshots
+          path: media/screenshots/*.png
+          if-no-files-found: error
+      - name: Commit changed generated screenshots to THIS feature branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add media/screenshots/
+          if git diff --staged --quiet; then
+            echo "Readme screenshots are unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs(readme): capture 0.2.0 control center from production renderer"
+          git push origin "HEAD:refs/heads/feat/enterprise-aaaa-v0.1.1"
+          # GitHub-token pushes do not trigger workflows. Dispatch explicitly at the new commit.
+          GH_TOKEN="${{ github.token }}" gh workflow run ci.yml --ref feat/enterprise-aaaa-v0.1.1

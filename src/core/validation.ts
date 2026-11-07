@@ -1,6 +1,7 @@
 import { isIP } from "node:net";
 import type { Scenario } from "./types";
 import { assertValidSlo } from "./slo";
+import { isPublicIp } from "./network-safety";
 
 export interface TargetPolicy {
   readonly allowRemoteTargets: boolean;
@@ -22,8 +23,14 @@ export function assertAllowedTarget(raw: string, policy: TargetPolicy): URL {
   if (!["http:", "https:"].includes(url.protocol)) throw new Error("Only http(s) targets are supported");
   if (url.username || url.password) throw new Error("Credentials inside target URLs are not permitted");
   if (url.hash) throw new Error("URL fragments are not supported");
-  if (!policy.allowRemoteTargets && !isLoopbackHost(url.hostname)) {
-    throw new Error("Remote targets are disabled. Enable them explicitly in Saturivo settings.");
+  if (!isLoopbackHost(url.hostname)) {
+    if (!policy.allowRemoteTargets) {
+      throw new Error("Remote targets are disabled. Enable them explicitly in Saturivo settings.");
+    }
+    const host = url.hostname.replace(/^\[|\]$/g, "");
+    if (isIP(host) && !isPublicIp(host)) {
+      throw new Error("Private or special-use remote IP is prohibited");
+    }
   }
   return url;
 }
@@ -55,8 +62,23 @@ export function validateScenario(input: Scenario, policy: TargetPolicy): Scenari
     if (stages.reduce((sum, stage) => sum + stage.durationSeconds, 0) !== input.durationSeconds) {
       throw new Error("Ramp stages must sum to scenario duration");
     }
-  } else if (input.stages !== undefined || input.workloadVersion !== undefined) {
-    throw new Error("Ramping stage definitions require the ramping-vus model");
+  } else {
+    if (input.stages !== undefined) {
+      throw new Error("Ramping stage definitions require the ramping-vus model");
+    }
+    if (input.workloadVersion !== undefined && input.workloadVersion !== 2) {
+      throw new Error("Unsupported workload version");
+    }
+  }
+  const warmup = input.warmupSeconds ?? 0;
+  const cooldown = input.cooldownSeconds ?? 0;
+  if (input.warmupSeconds !== undefined || input.cooldownSeconds !== undefined) {
+    if (input.workloadVersion !== 2) throw new Error("Load phases require workload version 2");
+    if (!Number.isInteger(warmup) || warmup < 0 || warmup > 30 ||
+        !Number.isInteger(cooldown) || cooldown < 0 || cooldown > 30 ||
+        warmup + cooldown > input.durationSeconds - 5) {
+      throw new Error("Warm-up and cool-down must allow at least 5 measured seconds");
+    }
   }
   const maxRequests = input.maxRequests ?? policy.maxRequests ?? 10000;
   if (!Number.isInteger(maxRequests) || maxRequests < 100 || maxRequests > 100000) {

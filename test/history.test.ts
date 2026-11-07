@@ -1,9 +1,10 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
-import { mkdtemp, rm, writeFile, mkdir, readdir } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, mkdir, readdir, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HistoryStore, isStoredRun } from "../src/core/history";
+import { HistoryStore, isStoredRun, migrateImportedRun } from "../src/core/history";
+import { fingerprintScenario } from "../src/core/fingerprint";
 import type { RunResult } from "../src/core/types";
 
 const sample: RunResult = {
@@ -22,7 +23,7 @@ test("durable history, newest first, corrupt records ignored, explicit deletion"
     const store = new HistoryStore(dir);
     await store.save(sample);
     await store.save({ ...sample, schemaVersion: 2, id: "22222222-2222-4222-8222-222222222222",
-      startedAt: "2026-11-07T11:00:00Z" });
+      startedAt: "2026-11-07T11:00:00Z", endedAt: "2026-11-07T11:00:10Z" });
     await mkdir(join(dir, "runs"), { recursive: true });
     await writeFile(join(dir, "runs", "20261107120000-00000000-0000-4000-8000-000000000000.json"), "{invalid");
     const values = await store.list();
@@ -55,4 +56,137 @@ test("legacy reports read; malicious, oversized and invalid metrics rejected", a
     assert(isStoredRun({ ...sample, schemaVersion: 2 }));
     assert.equal((await readdir(directory)).length, 3);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("import rejects credential URLs, hostile SLOs, inconsistent stage definitions and malformed evidence", () => {
+  assert.equal(isStoredRun(sample), true, "historical v1 report must remain importable");
+  for (const value of [
+    { ...sample, scenario: { ...sample.scenario, target: "file:///etc/passwd" } },
+    { ...sample, scenario: { ...sample.scenario, target: "http://user:pass@localhost/" } },
+    { ...sample, scenario: { ...sample.scenario, maxRequests: -1 } },
+    { ...sample, scenario: { ...sample.scenario, stages: [{ targetVus: 100, durationSeconds: 10 }] } },
+    { ...sample, scenario: { ...sample.scenario, slo: { maxP95Ms: "nan" } } },
+    { ...sample, sloAssessment: { status: "pass", violations: "fake" } },
+    { ...sample, environment: { ...sample.environment, cpuModel: "<".repeat(10000) } },
+    { ...sample, endedAt: "2020-01-01T00:00:00Z" },
+    { ...sample, metrics: { ...sample.metrics, failedRate: 2 } },
+  ]) assert.equal(isStoredRun(value), false);
+});
+
+test("retention is configurable, validated and applied after import", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-retention-"));
+  try {
+    const store = new HistoryStore(dir, 2);
+    assert.throws(() => store.setRetention(1001), /retention/);
+    for (let i = 1; i <= 3; i++) {
+      await store.save({
+        ...sample, id: String(i).padStart(8, "0") + "-1111-4111-8111-111111111111",
+        startedAt: "2026-11-07T10:00:" + String(i).padStart(2, "0") + "Z",
+      });
+    }
+    const items = await store.list();
+    assert.equal(items.length, 2);
+    assert.deepEqual(items.map(x => x.startedAt), [
+      "2026-11-07T10:00:03Z", "2026-11-07T10:00:02Z",
+    ]);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("history never reads files through attacker-created symlinks", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-link-"));
+  const outside = await mkdtemp(join(tmpdir(), "saturivo-other-"));
+  try {
+    const external = join(outside, "confidential.json");
+    await writeFile(external, JSON.stringify(sample));
+    await mkdir(join(dir, "runs"), { recursive: true });
+    const maliciousName = "20261107110000-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.json";
+    await symlink(external, join(dir, "runs", maliciousName));
+    const store = new HistoryStore(dir);
+    assert.deepEqual(await store.list(), []);
+    assert.equal(await store.clear(), 0, "Unowned symlink must never be followed or deleted");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
+});
+
+test("v2 run evidence rejects forged fingerprints, SLO decisions and HTTP counts", async () => {
+  const scenario = { ...sample.scenario, slo: { maxP95Ms: 5 } };
+  const run: RunResult = { ...sample, schemaVersion: 2, scenarioHash: fingerprintScenario(scenario),
+    metrics: { ...sample.metrics, statusDistribution: {
+      "1xx": 0, "2xx": 100, "3xx": 0, "4xx": 0, "5xx": 0, unknown: 0,
+    } },
+    scenario,
+    sloAssessment: { status: "pass", violations: [] },
+  };
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-roundtrip-"));
+  try {
+    const store = new HistoryStore(dir);
+    await store.save(run);
+    const [reloaded] = await store.list();
+    assert.deepEqual(reloaded, run, "JSON roundtrip must preserve every metric");
+    assert.equal(isStoredRun({ ...run, scenarioHash: "f".repeat(64) }), false);
+    assert.equal(isStoredRun({ ...run, sloAssessment: { status: "fail", violations: [] } }), false);
+    assert.equal(isStoredRun({ ...run, metrics: { ...run.metrics,
+      statusDistribution: { ...run.metrics.statusDistribution, "2xx": 99 } } }), false);
+    assert.equal(isStoredRun({ ...sample, schemaVersion: 1 }), true);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("phased imported history cannot forge total request budgets or an invalid SLO decision", () => {
+  const scenario = { ...sample.scenario, workloadVersion: 2 as const,
+    durationSeconds: 10, warmupSeconds: 2, cooldownSeconds: 2,
+    maxRequests: 100, slo: { maxP95Ms: 10 } };
+  const run: RunResult = {
+    ...sample, schemaVersion: 2, scenario, scenarioHash: fingerprintScenario(scenario),
+    metrics: { ...sample.metrics, requests: 50, totalRequests: 100, requestsPerSecond: 8.33 },
+    sloAssessment: { status: "inconclusive", violations: [
+      "Request budget reached; throughput is capped",
+    ] },
+  };
+  assert.equal(isStoredRun(run), true);
+  assert.equal(isStoredRun({ ...run, metrics: { ...run.metrics, totalRequests: 10 } }), false);
+  assert.equal(isStoredRun({ ...run, metrics: { ...run.metrics, totalRequests: undefined } }), false);
+  assert.equal(isStoredRun({ ...run, sloAssessment: { status: "pass", violations: [] } }), false);
+  assert.equal(isStoredRun({ ...run, scenario: { ...scenario, warmupSeconds: 8 } }), false);
+});
+
+test("explicit v1-to-v2 JSON migration preserves observations, then roundtrips safely", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "saturivo-migrate-v1-"));
+  try {
+    const report = migrateImportedRun(JSON.parse(JSON.stringify(sample)) as unknown);
+    assert.equal(report.schemaVersion, 2);
+    assert.equal(report.scenarioHash, fingerprintScenario(sample.scenario));
+    assert.deepEqual(report.metrics, sample.metrics);
+    assert.deepEqual(report.environment, sample.environment);
+    assert.equal(report.id, sample.id);
+    assert.equal(report.startedAt, sample.startedAt);
+    assert.equal(report.endedAt, sample.endedAt);
+    assert.equal(migrateImportedRun(report), report, "Repeated migration must be idempotent");
+    const store = new HistoryStore(folder);
+    await store.save(report);
+    const [reloaded] = await store.list();
+    assert.deepEqual(reloaded, report, "Explicit v1 import → v2 disk → v2 reimport");
+    await store.save(sample);
+    const historical = (await store.list())[0];
+    assert.equal(historical?.schemaVersion, 1,
+      "Existing v1 history must remain readable without implicit migration");
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
+
+test("migration refuses malformed or contradictory legacy fingerprints and counts", () => {
+  assert.throws(() => migrateImportedRun({ ...sample, metrics: { ...sample.metrics,
+    p95Ms: "fake" } }), /Invalid imported/);
+  assert.throws(() => migrateImportedRun({ ...sample,
+    scenarioHash: "a".repeat(64) }), /fingerprint mismatch/);
+  assert.throws(() => migrateImportedRun({ ...sample, schemaVersion: 1,
+    metrics: { ...sample.metrics, statusDistribution: {
+      "1xx": 0, "2xx": 70, "3xx": 0, "4xx": 0, "5xx": 0, unknown: 0,
+    } } }), /cannot be safely migrated/);
+  const withSlo = { ...sample, scenario: { ...sample.scenario,
+    slo: { maxP95Ms: 10 } },
+    sloAssessment: { status: "fail" as const, violations: ["old untrusted claim"] } };
+  const migrated = migrateImportedRun(withSlo);
+  assert.deepEqual(migrated.sloAssessment, { status: "pass", violations: [] });
+  assert.equal(isStoredRun(migrated), true);
 });
