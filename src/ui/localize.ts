@@ -121,6 +121,8 @@ const english: Dictionary = {
   compareRequiresTwo: "Saturivo: at least two runs are required.",
   compatibleBaseline: "Matching workload fingerprint",
   incompatibleBaseline: "Different workload: the comparison may be inconclusive",
+  traceSaved: "Go runtime trace saved locally:",
+  traceCaution: "Trace files can contain sensitive data and are not analyzed automatically. Inspect with an appropriate Go toolchain.",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -243,6 +245,8 @@ const spanish: Dictionary = {
   compareRequiresTwo: "Saturivo: necesitás al menos dos ejecuciones.",
   compatibleBaseline: "Misma huella del escenario",
   incompatibleBaseline: "Otro escenario: la comparación puede ser inconclusa",
+  traceSaved: "Traza del runtime Go guardada localmente:",
+  traceCaution: "Las trazas pueden contener datos sensibles y no se analizan automáticamente. Revisalas con una herramienta Go compatible.",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;
