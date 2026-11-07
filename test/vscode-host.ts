@@ -39,7 +39,7 @@ export async function run(): Promise<void> {
     }
     if (!dashboardTab) {
       const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs)
-        .map(tab => ({ label: tab.label, type: tab.input.constructor.name,
+        .map(tab => ({ label: tab.label, type: Object.prototype.toString.call(tab.input),
           viewType: tab.input instanceof vscode.TabInputWebview ? tab.input.viewType : null }));
       console.log("Observed VS Code editor tabs: " + JSON.stringify(tabs));
     }
