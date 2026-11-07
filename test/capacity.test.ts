@@ -31,7 +31,7 @@ test("bounded discovery stops on first measured SLO breach", async () => {
   const rates: number[] = [];
   const result = await discoverLocalCapacity(plan, policy, async scenario => fixture(scenario),
     new AbortController().signal, rate => rates.push(rate));
-  assert.deepEqual(rates, [5, 10, 20, 40]);
+  assert.deepEqual(rates, [5]);
   // 5/s yields just 50 requests, so evidence is inconclusive, not a false PASS.
   assert.equal(result.stopReason, "inconclusive");
   assert.equal(result.highestPassingArrivalRate, null);
@@ -63,10 +63,17 @@ test("rejects unauthorized remote targets and missing SLO", async () => {
     execute, new AbortController().signal), /requires a P95/);
 });
 test("stops when budget is consumed and propagates abort", async () => {
-  const result = await discoverLocalCapacity({ ...plan, startRate: 10, totalRequestBudget: 200 },
-    policy, async scenario => fixture(scenario), new AbortController().signal);
-  assert.equal(result.totalRequests, 100);
-  assert.equal(result.stopReason, "inconclusive");
+  const result = await discoverLocalCapacity({ ...plan, startRate: 10, totalRequestBudget: 250 },
+    policy, async scenario => {
+      const measurement = fixture(scenario);
+      return { ...measurement, metrics: { ...measurement.metrics,
+        requests: scenario.arrivalRate === 20 ? 140 : 100 } };
+    }, new AbortController().signal);
+  assert.equal(result.totalRequests, 240);
+  assert.equal(result.stopReason, "request-budget");
+  await assert.rejects(discoverLocalCapacity({ ...plan, startRate: 10, totalRequestBudget: 200 },
+    policy, async scenario => fixture(scenario), new AbortController().signal),
+    /exceeded its request budget/);
   const abort = new AbortController(); abort.abort();
   await assert.rejects(discoverLocalCapacity(plan, policy, async scenario => fixture(scenario),
     abort.signal), /Cancelled/);
