@@ -47,7 +47,7 @@ Saturivo permite medir cómo responde una API bajo una carga controlada, guardar
 | Analizar Go | Race detector, benchmarks, perfiles CPU, heap, goroutines, mutex/block, traza local y snapshots antes/durante/después |
 | Guardar evidencia | Exportación Markdown, JSON y SARIF para carreras observadas |
 
-**Experimental:** se incorporó un piloto manual de capacidad local con 3 etapas de carga acotada, SLO P95 obligatorio y parada ante fallos o resultados inconclusos. No certifica capacidad de producción. **Todavía pendiente:** capacidad con intervalos robustos, exclusión temporal de warm-up, correlación profunda de perfiles Go, adaptadores completos gRPC/WebSockets más allá de la prueba WebSocket local, profiling especializado de Node/Java/Python, entornos remotos e IA opt-in. Se incorporó al CI una matriz HTTP real de Go/Node/Python, que no equivale a profiling de esos lenguajes. Consultá el [roadmap](../ROADMAP.md).
+**Piloto experimental de capacidad:** tres etapas de carga explícita local con SLO P95; no certifica capacidad de producción. Saturivo 0.2.0 ya implementa ventanas warm-up/medición/cool-down aisladas, comparaciones 3×3 con incertidumbre, navegación de hallazgos Go race a fuente verificada, pprof/trace/GC, HTTP real Go/Node/Python y WebSocket RFC6455. **No implementado o no validado:** gRPC/ghz, profilers especializados Node/Java/Python, WSL/SSH/Dev Containers E2E e IA BYO. Upgrade VSIX 0.1.0→0.2.0 con persistencia de historial PASS Windows/macOS/Linux en [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667). Las cuatro imágenes README fueron actualizadas con datos sintéticos, commit `6387739`; faltan revisión visual y CI del SHA definitivo.
 
 ## Instalación y uso
 
