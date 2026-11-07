@@ -9,6 +9,13 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Accesibilidad de navegación y foco — P4 (2026-11-07)
+
+- [x] `Skip navigation` ES/EN disponible al enfocar con teclado. Paneles ARIA de pestañas reciben foco (`tabindex=0`); Escape devuelve foco al botón que abrió el inspector.
+- [x] Pruebas estructurales ES/EN y Chromium sobre ArrowRight/Home/End, `aria-selected`, visibilidad de paneles y foco. `--verify-only` no genera capturas.
+- [ ] Auditoría manual con NVDA/VoiceOver, zoom 200%, modo oscuro/claro, contraste 4.5:1 y estados asíncronos. No declararlo WCAG PASS sin comprobar.
+- [ ] CI de commit exacto antes de aprobar esta subfase.
+
 ## Bloque verificable — Provenance del VSIX y resumen k6 (2026-11-07)
 
 - [x] Los jobs `verify`, `k6`, `extension-host`, `Go` y `ui-browser` hacen checkout del **commit HEAD real del PR**, evitando etiquetar un VSIX compilado desde el merge sintético como si fuese el SHA fuente.

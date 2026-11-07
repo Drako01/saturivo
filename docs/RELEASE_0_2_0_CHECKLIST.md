@@ -4,6 +4,12 @@
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
+## UX accesible — gates de QA
+
+- [x] Navegación asistida ES/EN y foco accesible en paneles, Chromium keyboard smoke ampliado sin capturas.
+- [ ] Pruebas manuales con lector de pantalla, zoom 200%, contraste y tema claro/oscuro.
+- [ ] CI del commit que incorpora cambios de navegación.
+
 ## Evidencia del artefacto VSIX exacto
 
 - [x] CI usa checkout del HEAD del PR (no merge sintético), audita `saturivo.vsix`, verifica `saturivo.vsix.sha256` y genera `saturivo.release.json` vinculado al git SHA y versión 0.2.0.

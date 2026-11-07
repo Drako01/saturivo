@@ -255,3 +255,19 @@ test("Control Center masks URL query tokens in visual targets without altering r
   assert(!markup.includes("DO_NOT_RENDER"));
   assert(!markup.includes("api_key="));
 });
+
+test("keyboard accessibility includes skip-navigation, focusable tabs and escape recovery", () => {
+  for (const locale of ["en", "es-AR"]) {
+    const html = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+      history: [], message: "" }, locale);
+    assert.match(html, /class="skip-link" href="#main-workspace"/);
+    assert.match(html, /id="main-workspace" tabindex="-1"/);
+    assert.match(html, /\.skip-link:focus-visible/);
+    assert(html.includes('event.key!=="Escape"'));
+    for (const view of ["overview", "load", "history", "diagnostics"]) {
+      assert(html.includes('role="tabpanel" id="view-' + view + '" tabindex="0"'));
+    }
+  }
+  assert.match(translate("en", "skipToContent"), /Skip navigation/);
+  assert.match(translate("es-AR", "skipToContent"), /Saltar navegación/);
+});

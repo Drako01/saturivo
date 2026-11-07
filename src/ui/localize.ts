@@ -38,6 +38,7 @@ const english: Dictionary = {
 
   "editorLauncher": "The Control Center opens in an editor tab.",
   "navigation": "Control Center navigation",
+  "skipToContent": "Skip navigation and go to the active workspace",
   "tab_overview": "Overview",
   "tab_load": "Load Testing",
   "tab_history": "Run History",
@@ -241,6 +242,7 @@ const spanish: Dictionary = {
 
   "editorLauncher": "El Centro de Control se abre en una pestaña del editor.",
   "navigation": "Navegación del Centro de Control",
+  "skipToContent": "Saltar navegación e ir al área de trabajo activa",
   "tab_overview": "Resumen",
   "tab_load": "Pruebas de carga",
   "tab_history": "Historial",
