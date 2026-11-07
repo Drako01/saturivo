@@ -11,10 +11,10 @@ const {
 const BASE = "a3eaa3768b6b43e811a0b7b6bf1b71e574a644a0";
 const CANDIDATE_VERSION = require("../package.json").version;
 
-function command(executable, args, cwd, timeout = 120000) {
+function command(executable, args, cwd, timeout = 120000, additionalEnv = {}) {
   const outcome = spawnSync(executable, args, {
     cwd, encoding: "utf8", shell: false, timeout, stdio: "pipe",
-    env: { ...process.env, npm_config_audit: "false" },
+    env: { ...process.env, npm_config_audit: "false", ...additionalEnv },
   });
   if (outcome.error || outcome.status !== 0) {
     throw new Error(executable + " " + args.slice(0, 2).join(" ") + ": " +
@@ -36,16 +36,31 @@ function npmCommand(args, cwd, timeout = 180000) {
   return command("npm", args, cwd, timeout);
 }
 
+function vscodeCli(executable, directory, args) {
+  const [binary, ...prefix] = resolveCliArgsFromVSCodeExecutablePath(executable);
+  const cliArgs = [...prefix, "--extensions-dir", directory, ...args];
+  if (process.platform === "win32" && /\\code\.cmd$/i.test(binary)) {
+    // @vscode/test-electron resolves a Windows .cmd shim. Node spawnSync with
+    // shell:false cannot execute .cmd (EINVAL). Launch Code.exe as its own
+    // Electron/Node CLI directly instead of running an unsafe cmd.exe shell.
+    const appRoot = path.resolve(path.dirname(binary), "..");
+    const electron = path.join(appRoot, "Code.exe");
+    const cliJs = path.join(appRoot, "resources", "app", "out", "cli.js");
+    assert(fs.existsSync(electron) && fs.existsSync(cliJs),
+      "Installed VS Code Windows archive is missing its native CLI");
+    return command(electron, [cliJs, ...cliArgs], process.cwd(), 120000,
+      { ELECTRON_RUN_AS_NODE: "1" });
+  }
+  return command(binary, cliArgs, process.cwd());
+}
+
 function installedExtensions(executable, directory) {
-  const [bin, ...args] = resolveCliArgsFromVSCodeExecutablePath(executable);
-  return command(bin, [...args, "--extensions-dir", directory, "--list-extensions",
-    "--show-versions"], process.cwd()).trim().toLowerCase();
+  return vscodeCli(executable, directory, ["--list-extensions", "--show-versions"])
+    .trim().toLowerCase();
 }
 
 function install(executable, directory, vsix) {
-  const [bin, ...args] = resolveCliArgsFromVSCodeExecutablePath(executable);
-  command(bin, [...args, "--extensions-dir", directory,
-    "--install-extension", vsix, "--force"], process.cwd());
+  vscodeCli(executable, directory, ["--install-extension", vsix, "--force"]);
 }
 
 async function main() {
