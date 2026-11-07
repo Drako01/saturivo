@@ -3,8 +3,8 @@ import { compareRuns } from "./core/comparison";
 import { runGo, type GoTask } from "./core/go";
 import { captureGoProfile, localPprofEndpoint, type GoProfileKind } from "./core/go-profiler";
 import { analyzeGoroutineStacks, summarizeGoPprof } from "./core/go-profile-analysis";
-import { readFile } from "node:fs/promises";
-import { HistoryStore } from "./core/history";
+import { readFile, rm } from "node:fs/promises";
+import { HistoryStore, isStoredRun } from "./core/history";
 import { runK6 } from "./core/k6";
 import { markdownReport } from "./core/report";
 import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
@@ -55,6 +55,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         capacityPilot: "saturivo.capacityPilot",
         compare: "saturivo.compare", export: "saturivo.export",
         exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
+        importJson: "saturivo.importJson", clearProfiles: "saturivo.clearProfiles",
         clearHistory: "saturivo.clearHistory",
         configureSlo: "saturivo.configureSlo",
         goRace: "saturivo.goRace", goBench: "saturivo.goBench",
@@ -296,6 +297,38 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(this.latest, null, 2), "utf8"));
   }
 
+  async importJson(): Promise<void> {
+    if (this.busy) return;
+    const selected = await vscode.window.showOpenDialog({
+      canSelectMany: false, canSelectFolders: false, canSelectFiles: true,
+      openLabel: this.t("importJson"), filters: { JSON: ["json"] },
+    });
+    const uri = selected?.[0];
+    if (!uri) return;
+    const metadata = await vscode.workspace.fs.stat(uri);
+    if (metadata.size <= 0 || metadata.size > 100_000) throw new Error(this.t("importInvalid"));
+    let candidate: unknown;
+    try { candidate = JSON.parse(Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf8")); }
+    catch { throw new Error(this.t("importInvalid")); }
+    if (!isStoredRun(candidate)) throw new Error(this.t("importInvalid"));
+    await this.store.save(candidate);
+    await this.loadHistory();
+    this.message = this.t("importSuccess");
+    this.refresh();
+  }
+
+  async clearProfiles(): Promise<void> {
+    if (this.busy) return;
+    const confirmation = await vscode.window.showWarningMessage(
+      this.t("clearProfilesWarning"), { modal: true }, this.t("clearProfilesConfirm")
+    );
+    if (confirmation !== this.t("clearProfilesConfirm")) return;
+    await rm(vscode.Uri.joinPath(vscode.Uri.file(this.storageDir), "go-profiles").fsPath,
+      { recursive: true, force: true });
+    this.message = this.t("clearProfilesSuccess");
+    this.refresh();
+  }
+
   async exportRaceSarif(): Promise<void> {
     if (!this.raceFindings.length) {
       void vscode.window.showInformationMessage("Saturivo: run Go race detection and obtain findings first.");
@@ -338,7 +371,17 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   async runGoTask(task: GoTask): Promise<void> {
     if (this.busy) return;
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
-    const folder = this.folder();
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    let folder: string | undefined;
+    if (folders.length === 1) folder = folders[0]?.uri.fsPath;
+    else if (folders.length > 1) {
+      const selected = await vscode.window.showQuickPick(
+        folders.map(item => ({ label: item.name, description: item.uri.fsPath, value: item.uri.fsPath })),
+        { placeHolder: this.t("chooseGoFolder"), title: this.t("chooseGoFolder") }
+      );
+      folder = selected?.value;
+      if (!folder) return;
+    }
     if (!folder) throw new Error("Open a folder containing a Go project first.");
     const response = await vscode.window.showWarningMessage(
       "Saturivo will execute Go " + task + " tests in " + folder +
@@ -477,6 +520,8 @@ export function activate(context: vscode.ExtensionContext): void {
     compare: () => app.compare(),
     export: () => app.exportReport(),
     exportJson: () => app.exportJson(),
+    importJson: () => app.importJson(),
+    clearProfiles: () => app.clearProfiles(),
     exportSarif: () => app.exportRaceSarif(),
     clearHistory: () => app.clearHistory(),
     goRace: () => app.runGoTask("race"),

@@ -23,5 +23,7 @@
   "command.json": "Export Run as JSON",
   "command.sarif": "Export Verified Go Race Evidence as SARIF",
   "command.clearHistory": "Delete Local Run History",
-  "command.capacity": "Run Bounded Local Capacity Pilot"
+  "command.capacity": "Run Bounded Local Capacity Pilot",
+  "command.importJson": "Import Saved Run JSON",
+  "command.clearProfiles": "Delete Captured Go Profiles"
 }

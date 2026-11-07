@@ -137,6 +137,16 @@
         "command": "saturivo.capacityPilot",
         "title": "%command.capacity%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.importJson",
+        "title": "%command.importJson%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.clearProfiles",
+        "title": "%command.clearProfiles%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {

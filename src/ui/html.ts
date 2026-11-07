@@ -26,6 +26,8 @@ export function dashboard(state: DashboardState, locale: string): string {
     ["compare", "compare", state.busy],
     ["export", "export", !state.latest],
     ["exportJson", "exportJson", !state.latest],
+    ["importJson", "importJson", state.busy],
+    ["clearProfiles", "clearProfiles", state.busy],
     ["exportSarif", "exportSarif", state.busy],
     ["clearHistory", "clearHistory", state.busy || !state.history.length], ["goRace", "race", state.busy],
     ["goBench", "benchmark", state.busy], ["captureGoProfile", "profile", state.busy],
