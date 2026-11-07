@@ -55,8 +55,13 @@ export function validateScenario(input: Scenario, policy: TargetPolicy): Scenari
     if (stages.reduce((sum, stage) => sum + stage.durationSeconds, 0) !== input.durationSeconds) {
       throw new Error("Ramp stages must sum to scenario duration");
     }
-  } else if (input.stages !== undefined || input.workloadVersion !== undefined) {
-    throw new Error("Ramping stage definitions require the ramping-vus model");
+  } else {
+    if (input.stages !== undefined) {
+      throw new Error("Ramping stage definitions require the ramping-vus model");
+    }
+    if (input.workloadVersion !== undefined && input.workloadVersion !== 2) {
+      throw new Error("Unsupported workload version");
+    }
   }
   const maxRequests = input.maxRequests ?? policy.maxRequests ?? 10000;
   if (!Number.isInteger(maxRequests) || maxRequests < 100 || maxRequests > 100000) {
