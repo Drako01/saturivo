@@ -2,7 +2,7 @@
   "name": "saturivo",
   "displayName": "Saturivo",
   "description": "Evidence-based load, concurrency and performance diagnostics for local APIs and Go services.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "armotusitio",
   "author": {
     "name": "Alejandro Daniel Di Stefano",

@@ -1,6 +1,6 @@
 # Saturivo — Estado de implementación
 
-Actualizado: **2026-11-07**. PR de evolución: [#4](https://github.com/Drako01/saturivo/pull/4), rama `feat/enterprise-aaaa-runtime-evidence`. El repositorio es **público**, la extensión **todavía no publicada** y el PR **Draft**.
+Actualizado: **2026-11-07**. Base: PR #4 fusionado, CI de main [#42401614937](https://github.com/Drako01/saturivo/actions/runs/42401614937) PASS. Evolución 0.1.1: rama `feat/enterprise-aaaa-v0.1.1`. El repositorio es público; el manifest 0.1.1 permanece con `private: true` hasta aprobación explícita de publicación. El registro público de la 0.1.0 debe confirmarse por marketplace, independientemente de GitHub Releases.
 
 ## Estado ejecutivo
 

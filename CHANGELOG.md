@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased] — 0.1.1 Enterprise AAAA implementation
+
+- Upgrade work begins from the verified 0.1.0 preview baseline.
+- Hardened distribution pipeline, workload reproducibility, Go tracing and runtime diagnostics are tracked in the 0.1.1 checklist.
+- **Not yet released:** all subsequent feature completion must be verified on the exact release commit.
+
+
 ## [Unreleased] — Enterprise AAAA Phase 0 / Phase 1 foundation
 
 - Fixed fully transparent rounded corners on Marketplace/README PNG; added pixel-level regression test.
