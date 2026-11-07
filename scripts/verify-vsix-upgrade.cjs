@@ -23,6 +23,19 @@ function command(executable, args, cwd, timeout = 120000) {
   return outcome.stdout || "";
 }
 
+function npmCommand(args, cwd, timeout = 180000) {
+  // Native Windows Node cannot spawn .cmd wrappers with shell:false.
+  // npm run sets npm_execpath to its trusted npm-cli.js, so invoke it directly.
+  if (process.platform === "win32") {
+    const npmCli = process.env.npm_execpath;
+    if (!npmCli || !npmCli.endsWith("npm-cli.js")) {
+      throw new Error("Windows upgrade runner requires npm run (npm_execpath)");
+    }
+    return command(process.execPath, [npmCli, ...args], cwd, timeout);
+  }
+  return command("npm", args, cwd, timeout);
+}
+
 function installedExtensions(executable, directory) {
   const [bin, ...args] = resolveCliArgsFromVSCodeExecutablePath(executable);
   return command(bin, [...args, "--extensions-dir", directory, "--list-extensions",
@@ -49,9 +62,8 @@ async function main() {
     command("git", ["cat-file", "-e", BASE + "^{commit}"], repo);
     command("git", ["worktree", "add", "--detach", baseline, BASE], repo);
     worktreeCreated = true;
-    command("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
-      baseline, 180000);
-    command("npm", ["run", "build"], baseline, 180000);
+    npmCommand(["ci", "--ignore-scripts", "--no-audit", "--no-fund"], baseline);
+    npmCommand(["run", "build"], baseline);
     // Use the compiled history implementation from the actual 0.1.0 baseline,
     // not a hand-written simulation of its persistence format.
     const oldHistory = require(path.join(baseline, "out", "src", "core", "history.js"));
@@ -71,8 +83,7 @@ async function main() {
     await new oldHistory.HistoryStore(persistence).save(legacyRun);
     assert.deepEqual((await new oldHistory.HistoryStore(persistence).list())[0], legacyRun);
     const oldVsix = path.join(directory, "saturivo-0.1.0.vsix");
-    command(path.join(baseline, "node_modules", ".bin", "vsce"),
-      ["package", "--no-dependencies", "--out", oldVsix], baseline, 180000);
+    npmCommand(["exec", "--", "vsce", "package", "--no-dependencies", "--out", oldVsix], baseline);
 
     const executable = await downloadAndUnzipVSCode("1.99.0");
     install(executable, extensions, oldVsix);
