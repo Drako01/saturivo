@@ -18,7 +18,10 @@ export function compareRuns(baseline: RunResult, candidate: RunResult): Comparis
     baseline.environment.arch !== candidate.environment.arch ||
     baseline.environment.node !== candidate.environment.node ||
     baseline.environment.cpuCount !== candidate.environment.cpuCount) reasons.push("Execution environment differs");
-  if (baseline.environment.environmentHash && candidate.environment.environmentHash &&
+  if (Boolean(baseline.environment.environmentHash) !==
+      Boolean(candidate.environment.environmentHash)) {
+    reasons.push("Environment fingerprint missing from one run");
+  } else if (baseline.environment.environmentHash && candidate.environment.environmentHash &&
       baseline.environment.environmentHash !== candidate.environment.environmentHash) {
     reasons.push("Load-generator environment fingerprint differs");
   }

@@ -4,6 +4,18 @@
 
 Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) define el alcance; [tracker de versión](RELEASE_0_1_1_CHECKLIST.md) registra los gates de release. PASS significa implementación, prueba y evidencia del **SHA indicado**. PARTIAL indica funciones implementadas sin todos los casos o plataformas. NOT RUN nunca equivale a aprobado.
 
+
+## Engineering block — evidence integrity (2026-11-07)
+
+**Implementation staged for the next PR #5 commit. CI for these modifications: NOT RUN until the exact SHA is checked.**
+
+- `src/core/history.ts`: validates v2 scenario SHA, SLO conclusions against the stored metrics and effective request cap, nonzero requests/P95 and HTTP status counts; legacy v1 remains readable.
+- `src/core/metrics.ts`: rejects incomplete k6 HTTP summaries rather than converting missing failure rates/P99 into fabricated zeroes.
+- `src/core/statistics.ts`: rejects repeated run IDs across 3+3 cohorts and dissimilar or partially missing environment fingerprints; `src/core/comparison.ts` treats one-sided environment evidence as INCONCLUSIVE.
+- Focused regression cases added in `test/history.test.ts`, `test/metrics.test.ts`, `test/statistics.test.ts`, `test/comparison.test.ts`.
+- **Status:** IMPLEMENTED (pending pushed commit and CI). Prior CI 42411578910 was 7/7 green on `5fabbbb`, not on these edits.
+- **Next:** exact-SHA CI inspection; then further security/export/release gaps. No automatic load, publication, merge or tag.
+
 ## Handoff 2026-11-07 — auditoría de continuación
 
 Este bloque prevalece sobre estados anteriores cuando los commits son más recientes. El checklist se actualiza durante el desarrollo, pero no sustituye una ejecución de pruebas en el SHA exacto.

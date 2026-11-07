@@ -23,3 +23,9 @@ test("do not compare unlike workloads or tiny samples", () => {
   assert.equal(compareRuns(base, { ...base, metrics: { ...base.metrics, requests: 50 } }).comparable, false);
   assert.equal(compareRuns(base, { ...base, environment: { ...base.environment, cpuCount: 16 } }).status, "inconclusive");
 });
+
+test("one-sided environment evidence cannot establish a comparable baseline", () => {
+  const newer = { ...base, id: "b", environment: { ...base.environment,
+    environmentHash: "a".repeat(64) } };
+  assert.equal(compareRuns(base, newer).status, "inconclusive");
+});

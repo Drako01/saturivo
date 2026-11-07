@@ -1,7 +1,9 @@
 import { mkdir, readdir, readFile, rename, lstat, stat, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import type { RunResult, SloDefinition } from "./types";
+import type { RunResult, Scenario, Metrics, SloDefinition } from "./types";
+import { fingerprintScenario } from "./fingerprint";
+import { assessSlo } from "./slo";
 import { assertAllowedTarget } from "./validation";
 import { assertValidSlo } from "./slo";
 
@@ -54,7 +56,8 @@ export function isStoredRun(value: unknown): value is RunResult {
   if (!object(m) ||
       !["requests", "requestsPerSecond", "failedRate", "avgMs", "p50Ms",
         "p95Ms", "p99Ms", "droppedIterations"].every(key => finite(m[key])) ||
-      !Number.isInteger(m.requests) || (m.failedRate as number) > 1 ||
+      !Number.isInteger(m.requests) || (m.requests as number) < 1 ||
+      (m.p95Ms as number) <= 0 || (m.failedRate as number) > 1 ||
       !Number.isInteger(m.droppedIterations)) return false;
   if (m.targetArrivalRate !== undefined && (!Number.isInteger(m.targetArrivalRate) ||
       (m.targetArrivalRate as number) < 1 || (m.targetArrivalRate as number) > 500)) return false;
@@ -67,6 +70,10 @@ export function isStoredRun(value: unknown): value is RunResult {
           const value = (m.statusDistribution as Record<string, unknown>)[key];
           return Number.isInteger(value) && (value as number) >= 0;
         })) return false;
+    if (value.schemaVersion === 2 && buckets.reduce((sum, key) =>
+        sum + ((m.statusDistribution as Record<string, number>)[key] ?? 0), 0) !== m.requests) {
+      return false;
+    }
   }
   if (!object(e) || !shortString(e.platform, 100) || !shortString(e.arch, 100) ||
       !shortString(e.node, 100) || !Number.isInteger(e.cpuCount) ||
@@ -88,9 +95,17 @@ export function isStoredRun(value: unknown): value is RunResult {
         !["pass", "fail", "inconclusive", "not-configured"].includes(String(assessment.status)) ||
         !Array.isArray(assessment.violations) || assessment.violations.length > 30 ||
         !assessment.violations.every(v => typeof v === "string" && v.length <= 500)) return false;
+    if (value.schemaVersion === 2) {
+      const expected = assessSlo(m as unknown as Metrics, s.slo as SloDefinition | undefined,
+        (m.requests as number) >= ((s.maxRequests as number | undefined) ?? 10000));
+      if (assessment.status !== expected.status ||
+          JSON.stringify(assessment.violations) !== JSON.stringify(expected.violations)) return false;
+    }
   }
   if (value.scenarioHash !== undefined && (typeof value.scenarioHash !== "string" ||
       !/^[a-f0-9]{64}$/.test(value.scenarioHash))) return false;
+  if (value.schemaVersion === 2 && value.scenarioHash !== undefined &&
+      value.scenarioHash !== fingerprintScenario(s as unknown as Scenario)) return false;
   return true;
 }
 

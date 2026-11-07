@@ -12,8 +12,12 @@ const example: RunResult = {
   environment: { platform: "linux", arch: "x64", node: "v22", cpuCount: 8,
     cpuModel: "Fixture CPU", k6Version: "k6 v1.8.2" }, warnings: [],
 };
-const runs = (values: number[]): RunResult[] => values.map((p95, i) =>
-  ({ ...example, id: "run" + i, metrics: { ...example.metrics, p95Ms: p95 } }));
+let trialSequence = 0;
+const runs = (values: number[]): RunResult[] => {
+  const sequence = ++trialSequence;
+  return values.map((p95, i) =>
+    ({ ...example, id: "run-" + sequence + "-" + i, metrics: { ...example.metrics, p95Ms: p95 } }));
+};
 test("detects clear reproducible P95 regressions and improvements", () => {
   const a = runs([100, 101, 99]), b = runs([150, 151, 149]);
   const worse = compareTrialGroups(a, b);
@@ -36,4 +40,21 @@ test("rejects different host/runtime and dropped arrivals", () => {
   assert.equal(compareTrialGroups(a, runs([150, 150, 150]).map(run => ({
     ...run, metrics: { ...run.metrics, droppedIterations: 2 },
   }))).status, "inconclusive");
+});
+
+test("duplicate trials and missing or mismatched environment identities are inconclusive", () => {
+  const baseline = runs([100, 101, 99]);
+  const candidate = runs([150, 151, 149]);
+  const duplicates = compareTrialGroups(baseline, [...baseline]);
+  assert.equal(duplicates.status, "inconclusive");
+  assert.match(duplicates.reasons.join(" "), /Duplicate run IDs/);
+  const a = baseline.map(run => ({ ...run, environment: { ...run.environment,
+    environmentHash: "a".repeat(64) } }));
+  const differentHost = candidate.map(run => ({ ...run, environment: { ...run.environment,
+    environmentHash: "b".repeat(64) } }));
+  assert.equal(compareTrialGroups(a, differentHost).status, "inconclusive");
+  assert.equal(compareTrialGroups(a, candidate).status, "inconclusive");
+  const sameHost = candidate.map(run => ({ ...run, environment: { ...run.environment,
+    environmentHash: "a".repeat(64) } }));
+  assert.equal(compareTrialGroups(a, sameHost).status, "regression");
 });

@@ -4,6 +4,7 @@ import { mkdtemp, rm, writeFile, mkdir, readdir, symlink } from "node:fs/promise
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HistoryStore, isStoredRun } from "../src/core/history";
+import { fingerprintScenario } from "../src/core/fingerprint";
 import type { RunResult } from "../src/core/types";
 
 const sample: RunResult = {
@@ -107,4 +108,27 @@ test("history never reads files through attacker-created symlinks", async () => 
     await rm(dir, { recursive: true, force: true });
     await rm(outside, { recursive: true, force: true });
   }
+});
+
+test("v2 run evidence rejects forged fingerprints, SLO decisions and HTTP counts", async () => {
+  const scenario = { ...sample.scenario, slo: { maxP95Ms: 5 } };
+  const run: RunResult = { ...sample, schemaVersion: 2, scenarioHash: fingerprintScenario(scenario),
+    metrics: { ...sample.metrics, statusDistribution: {
+      "1xx": 0, "2xx": 100, "3xx": 0, "4xx": 0, "5xx": 0, unknown: 0,
+    } },
+    scenario,
+    sloAssessment: { status: "pass", violations: [] },
+  };
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-roundtrip-"));
+  try {
+    const store = new HistoryStore(dir);
+    await store.save(run);
+    const [reloaded] = await store.list();
+    assert.deepEqual(reloaded, run, "JSON roundtrip must preserve every metric");
+    assert.equal(isStoredRun({ ...run, scenarioHash: "f".repeat(64) }), false);
+    assert.equal(isStoredRun({ ...run, sloAssessment: { status: "fail", violations: [] } }), false);
+    assert.equal(isStoredRun({ ...run, metrics: { ...run.metrics,
+      statusDistribution: { ...run.metrics.statusDistribution, "2xx": 99 } } }), false);
+    assert.equal(isStoredRun({ ...sample, schemaVersion: 1 }), true);
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });

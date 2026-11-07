@@ -1,10 +1,13 @@
 # Saturivo 0.1.1 — Enterprise AAAA release tracker
 
-**Public repo:** Drako01/saturivo · **Source PR:** [#5](https://github.com/Drako01/saturivo/pull/5), currently OPEN (not Draft) · **Base:** main a3eaa376 · **Target version:** 0.1.1 · **Publication:** BLOCKED until explicit owner approval.
+**Public repo:** Drako01/saturivo · **Source PR:** [#5](https://github.com/Drako01/saturivo/pull/5), currently OPEN as Draft · **Base:** main a3eaa376 · **Target version:** 0.1.1 · **Publication:** BLOCKED until explicit owner approval.
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
 ## Handoff de release — 2026-11-07
+
+- Integridad de evidencias/comparaciones reforzada en el bloque siguiente a `5fabbbb`; ver checklist maestro. **Sin PASS** hasta CI verde del SHA del cambio.
+
 
 - El estado técnico consolidado y los gates medibles están en [ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); este archivo se limita a las condiciones de publicación.
 - Actualización técnica: escenario ramp v2 y preview UX, fingerprints y observabilidad de arribo/status, nuevos tests adversariales DNS/archivo/proceso, perfilar Go con cuota, probe WebSocket, métricas runtime Linux, experiencia ES/EN y script real de VSIX upgrade.

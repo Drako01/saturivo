@@ -19,6 +19,13 @@ export function readK6Summary(raw: unknown, targetArrivalRate?: number): Metrics
   const dropped = metric(metrics, "dropped_iterations");
   const count = finite(requests.count);
   if (count === 0) throw new Error("k6 produced no HTTP requests; results cannot be interpreted");
+  // Missing HTTP metrics are not zeros: incomplete evidence cannot claim success.
+  const required = [requests.rate, failures.rate, durations.avg, durations.med,
+    durations["p(95)"], durations["p(99)"]];
+  if (required.some(value => typeof value !== "number" || !Number.isFinite(value) || value < 0) ||
+      !Number.isInteger(count) || (failures.rate as number) > 1) {
+    throw new Error("k6 summary is missing or corrupt required HTTP metrics");
+  }
   const p95 = finite(durations["p(95)"]);
   if (!p95) throw new Error("k6 summary is missing p(95) latency");
   return {

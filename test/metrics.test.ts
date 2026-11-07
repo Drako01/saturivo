@@ -82,3 +82,16 @@ test("generated k6 script instruments HTTP response statuses without unbounded o
   assert.match(script, /statuses\[group\]\.add\(1\)/);
   assert.match(script, /iterationInTest >= 1000/);
 });
+
+test("incomplete or corrupt k6 HTTP summary cannot be interpreted as zero failures", () => {
+  const base = {
+    http_reqs: { values: { count: 100, rate: 10 } },
+    http_req_failed: { values: { rate: 0 } },
+    http_req_duration: { values: { avg: 10, med: 9, "p(95)": 20, "p(99)": 30 } },
+  };
+  for (const broken of [
+    { ...base, http_req_failed: undefined },
+    { ...base, http_req_failed: { values: { rate: 1.5 } } },
+    { ...base, http_req_duration: { values: { avg: 10, med: 9, "p(95)": 20 } } },
+  ]) assert.throws(() => readK6Summary({ metrics: broken }), /missing or corrupt/);
+});
