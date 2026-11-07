@@ -1,6 +1,6 @@
 import { request } from "node:http";
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, lstat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { isIP } from "node:net";
 
@@ -11,6 +11,29 @@ export interface CapturedGoProfile {
   readonly bytes: number;
   readonly capturedAt: string;
 }
+const MAX_PROFILE_FILES = 30;
+const MAX_PROFILE_BYTES = 64 * 1024 * 1024;
+const profileName = /^[a-f0-9-]{36}-(cpu|heap|goroutine|mutex|block|trace)\.(pprof|txt|trace)$/i;
+
+export async function checkGoProfileQuota(storeDir: string, incomingBytes = 0): Promise<void> {
+  const directory = join(storeDir, "go-profiles");
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const files = (await readdir(directory)).filter(name => profileName.test(name));
+  let bytes = 0;
+  let count = 0;
+  for (const name of files) {
+    try {
+      const info = await lstat(join(directory, name));
+      if (!info.isFile()) continue;
+      count++;
+      bytes += info.size;
+    } catch { /* Another operation may remove a file during enumeration. */ }
+  }
+  if (count >= MAX_PROFILE_FILES || bytes + incomingBytes > MAX_PROFILE_BYTES) {
+    throw new Error("Go profile storage quota reached; explicitly delete stored profiles before capturing more");
+  }
+}
+
 const paths: Record<GoProfileKind, string> = {
   cpu: "/debug/pprof/profile?seconds=5",
   heap: "/debug/pprof/heap",
@@ -41,6 +64,7 @@ export async function captureGoProfile(
   baseUrl: string, kind: GoProfileKind, storeDir: string, signal: AbortSignal
 ): Promise<CapturedGoProfile> {
   if (signal.aborted) throw new Error("Cancelled");
+  await checkGoProfileQuota(storeDir);
   const url = localPprofEndpoint(baseUrl, kind);
   const data = await new Promise<Buffer>((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -81,7 +105,7 @@ export async function captureGoProfile(
   if (data.length < 1) throw new Error("Go profiler returned an empty response");
   const id = randomUUID();
   const directory = join(storeDir, "go-profiles");
-  await mkdir(directory, { recursive: true, mode: 0o700 });
+  await checkGoProfileQuota(storeDir, data.byteLength);
   const suffix = kind === "goroutine" ? "txt" : kind === "trace" ? "trace" : "pprof";
   const localPath = join(directory, id + "-" + kind + "." + suffix);
   await writeFile(localPath, data, { mode: 0o600, flag: "wx" });
