@@ -3,9 +3,12 @@ import type { RunResult } from "../core/types";
 import { fingerprintScenario } from "../core/fingerprint";
 import { compareRuns } from "../core/comparison";
 import { translate } from "./localize";
+import { redactTargetForDisplay } from "../core/display-privacy";
 
 export interface DashboardState {
   readonly target: string;
+  /** VS Code remote extension host identifier; absent for a local workspace. */
+  readonly remoteName?: string;
   readonly busy: boolean;
   readonly latest?: RunResult;
   readonly history: readonly RunResult[];
@@ -18,12 +21,6 @@ export interface DashboardState {
 }
 const escapeHtml = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
   .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-/** Display-only target; actual validated execution URL remains unchanged. */
-function displayTarget(raw: string): string {
-  const start = [raw.indexOf("?"), raw.indexOf("#")].filter(index => index >= 0);
-  return start.length ? raw.slice(0, Math.min(...start)) + " [query redacted]" : raw;
-}
-
 const numeric = (n: number | undefined, decimals = 2): string =>
   n !== undefined && Number.isFinite(n) ? n.toFixed(decimals) : "—";
 const count = (n: number | undefined): string =>
@@ -249,7 +246,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     editField('maxRequests', 'maxRequests', state.maxRequests ?? 10000, 100, state.maxRequests ?? 10000) +
     editField('maxP95Ms', 'customP95', state.sloMaxP95Ms ?? 0, 0, 120000) +
     '</div><p class="fineprint">' + t('customTargetNote') + ' ' +
-    '<code>' + escapeHtml(displayTarget(state.target)) + '</code></p>' +
+    '<code>' + escapeHtml(redactTargetForDisplay(state.target)) + '</code></p>' +
     '<div class="action-row"><button class="button button-primary" type="submit"' +
     (busy ? ' disabled' : '') + '>' + t('customRun') + '</button>' +
     button('configureTarget', 'configure', 'secondary', busy) +
@@ -283,7 +280,10 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</div></div><div class="endpoint"><span class="eyebrow">' + t('target') +
     '</span><code>' + escapeHtml(displayTarget(state.target)) + '</code><span class="endpoint-hint">' +
     t(state.allowRemoteTargets ? 'remoteAllowed' : 'loopbackDefault') +
-    '</span></div></div>' + (hasEvidence ? '' : guidance) +
+    '</span><span class="host-hint" role="note">' +
+    (state.remoteName ?
+      t('remoteHostHint') + ' (' + escapeHtml(state.remoteName.slice(0, 80)) + ')' :
+      t('localHostHint')) + '</span></div></div>' + (hasEvidence ? '' : guidance) +
     '<div class="section-title"><div><span class="eyebrow">' + t('observability') +
     '</span><h2>' + t('last') + '</h2></div><span class="subtle">' +
     (state.latest ? escapeHtml(dateLabel(state.latest.startedAt, locale)) : t('noRunYet')) +
@@ -369,6 +369,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);line-height:1.5}button{font:inherit}button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}',
     '.shell{max-width:1500px;margin:0 auto;padding:0 42px 52px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0;border-bottom:1px solid var(--border)}.brand{display:flex;gap:14px;align-items:center}.logo{width:46px;height:46px;display:grid;place-items:center;background:rgba(56,203,184,.08);color:var(--accent);border:1px solid rgba(56,203,184,.35);border-radius:13px;font-size:24px;font-weight:800}.eyebrow{color:var(--muted);font-size:10px;font-weight:750;letter-spacing:1.3px;text-transform:uppercase}.green{color:var(--accent)}h1{font-size:22px;letter-spacing:-.6px;margin:2px 0 0;line-height:1.15}.version{font-size:11px;font-weight:500;border:1px solid var(--border);border-radius:40px;padding:3px 8px;color:var(--muted);vertical-align:middle;letter-spacing:0}.state{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent)}.dot.active{background:#e9b765}',
     '.tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);overflow:auto;margin-bottom:24px}.tabs button{padding:18px 23px;color:var(--muted);background:none;border:0;position:relative;white-space:nowrap;font-weight:650;cursor:pointer}.tabs button[aria-selected=true]{color:var(--fg)}.tabs button[aria-selected=true]:after{content:"";position:absolute;bottom:0;left:17px;right:17px;height:2px;background:var(--accent)}.tabs button:hover{color:var(--fg)}',
+    '.host-hint{font-size:11px;line-height:1.5;color:var(--fg);background:color-mix(in srgb,var(--accent) 5%,var(--surface));border-left:2px solid var(--accent);padding:9px 11px;overflow-wrap:anywhere}.host-hint:focus-visible{outline:2px solid var(--focus)}',
     '.notice{border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--surface);border-radius:7px;padding:11px 14px;color:var(--muted);font-size:12px;margin-bottom:24px}.notice[aria-busy=true]{border-left-color:#e9b765}.notice strong{color:var(--fg)}',
     '.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:center;background:linear-gradient(108deg,rgba(56,203,184,.10),transparent 68%),var(--surface);border:1px solid rgba(56,203,184,.25);border-radius:14px;padding:34px}.hero h2{font-size:34px;letter-spacing:-1px;line-height:1.14;margin:12px 0}.hero p{color:var(--muted);font-size:14px;max-width:580px;margin:0 0 22px}.endpoint{background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:23px;display:flex;flex-direction:column;gap:12px;min-width:0}.endpoint code{font:13px var(--vscode-editor-font-family,monospace);word-break:break-all}.endpoint-hint{color:var(--muted);font-size:11px}.action-row{display:flex;flex-wrap:wrap;align-items:center;gap:9px}.button{border:1px solid var(--border);border-radius:7px;min-height:35px;white-space:nowrap;padding:8px 14px;cursor:pointer;font-weight:650}.button:disabled{opacity:.42;cursor:not-allowed}.button-primary{background:var(--vscode-button-background,#147c72);color:var(--vscode-button-foreground,#ffffff);border-color:transparent}.button-primary:hover:not(:disabled){background:var(--vscode-button-hoverBackground,#0f685e)}.button-secondary{background:var(--bg);color:var(--fg)}.button-secondary:hover:not(:disabled){border-color:var(--accent)}.button-danger{background:transparent;color:var(--vscode-errorForeground,#e68680);border-color:rgba(230,134,128,.3)}.button-danger:hover:not(:disabled){background:rgba(230,134,128,.10)}',
     '.section-title{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin:30px 0 17px}.section-title h2{font-size:21px;margin:3px 0;letter-spacing:-.4px}.section-title p{margin:3px 0;color:var(--muted);font-size:12px}.subtle{color:var(--muted);font-size:12px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.metric{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:20px}.metric-label{text-transform:uppercase;letter-spacing:1.15px;color:var(--muted);font-size:10px;font-weight:730}.metric-value{display:block;font-size:29px;letter-spacing:-.8px;font-variant-numeric:tabular-nums;margin:10px 0 6px}.metric-detail{color:var(--muted);font-size:11px}',

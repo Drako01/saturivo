@@ -18,6 +18,7 @@ import { fingerprintScenario } from "./core/fingerprint";
 import { assertLiteralLoopback, discoverLocalCapacity } from "./core/capacity";
 import type { RunResult, Scenario } from "./core/types";
 import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/validation";
+import { redactTargetForDisplay } from "./core/display-privacy";
 import { dashboard, type DashboardState } from "./ui/html";
 import { translate } from "./ui/localize";
 
@@ -111,6 +112,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     void vscode.commands.executeCommand("setContext", "saturivo.busy", this.busy);
     const state: DashboardState = {
       target: this.target(), busy: this.busy, history: this.history,
+      ...(vscode.env.remoteName ? { remoteName: vscode.env.remoteName.slice(0, 80) } : {}),
       message: this.message, ...(this.latest ? { latest: this.latest } : {}),
       allowRemoteTargets: this.allowRemote(),
       durationSeconds: this.config().get<number>("durationSeconds", 10),
@@ -336,7 +338,10 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     if ((vscode.workspace.workspaceFolders?.length ?? 0) > 1 && !sourceRoot) return;
     if (isRemoteTarget(scenario.target)) {
       const agreed = await vscode.window.showWarningMessage(
-        "Saturivo will send load to " + scenario.target + ". Confirm that you own or are authorized to test this service.",
+        "Saturivo will send load to " + redactTargetForDisplay(scenario.target) +
+        ". Confirm that you own or are authorized to test this service." +
+        (vscode.env.remoteName ? " Requests originate in the remote workspace host (" +
+        vscode.env.remoteName.slice(0, 80) + ")." : ""),
         { modal: true }, "Run authorized test"
       );
       if (agreed !== "Run authorized test") return;
@@ -388,7 +393,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     assertLiteralLoopback(target);
     const plannedBudget = Math.min(20_000, requestsLimit * 3);
     const confirmed = await vscode.window.showWarningMessage(
-      this.t("capacityConsent") + " " + target +
+      this.t("capacityConsent") + " " + redactTargetForDisplay(target) +
         " · 10–40 arrivals/s · ≤3 × 10s · ≤" + plannedBudget +
         " " + this.t("capacityRequests"),
       { modal: true }, this.t("capacityAuthorize")
@@ -649,7 +654,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     assertLiteralLoopback(target);
     localPprofEndpoint(origin, "goroutine");
     const approved = await vscode.window.showWarningMessage(
-      this.t("correlateConsent") + " " + target + " / " + origin +
+      this.t("correlateConsent") + " " + redactTargetForDisplay(target) + " / " + origin +
       ". " + this.t("correlateCaution"),
       { modal: true }, this.t("correlateAuthorize")
     );

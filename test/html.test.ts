@@ -271,3 +271,20 @@ test("keyboard accessibility includes skip-navigation, focusable tabs and escape
   assert.match(translate("en", "skipToContent"), /Skip navigation/);
   assert.match(translate("es-AR", "skipToContent"), /Saltar navegación/);
 });
+
+test("remote workspace loopback scope is explicit, localized and escaped", () => {
+  const state = { target: "http://127.0.0.1:8080/api?token=hidden", busy: false,
+    history: [], message: "" };
+  const remote = dashboard({ ...state, remoteName: "ssh-remote" }, "en");
+  assert.match(remote, /Execution host: remote VS Code workspace/);
+  assert.match(remote, /127\.0\.0\.1 points to the remote host/);
+  assert.match(remote, /ssh-remote/);
+  assert(!remote.includes("token=hidden"));
+  const local = dashboard(state, "es");
+  assert.match(local, /Host de ejecución: workspace local/);
+  assert.match(local, /apunta a esta computadora/);
+  assert(!local.includes("token=hidden"));
+  const hostile = dashboard({ ...state, remoteName: '<img src=x onerror=alert(1)>' }, "es");
+  assert(!hostile.includes("<img src=x"));
+  assert(hostile.includes("&lt;img src=x"));
+});

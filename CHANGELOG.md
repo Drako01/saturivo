@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Explicitly identify VS Code remote execution context and localhost scope in the Control Center, bilingual; redact URL queries from authorization modals without changing validated execution target.
+
 - Explicit v1-to-v2 evidence import migration preserves metrics and legacy on-disk history while validating fingerprints, SLO assessments and HTTP status totals; idempotent roundtrip and adversarial tests added.
 
 - Keyboard skip navigation, focusable tab panels and Escape focus recovery in inspector; bilingual checks and real Chromium tab keyboard interaction tests added.

@@ -4,6 +4,11 @@
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
+## Host remoto de VS Code — advertencias y privacidad
+
+- [x] Host real local/remoto explícito en el Centro de Control, ES/EN; aclaración de loopback en el host remoto. Modal de autorización y diagnóstico sin credenciales query expuestas.
+- [ ] Real WSL/SSH/devcontainer/Docker Compose E2E, no sustituible por pruebas unitarias.
+
 ## Migración de evidencias v1 → v2
 
 - [x] Conversión explícita desde diálogo de importación, preservación de métricas e identidad, fingerprint v2 y validación SLO contra datos no confiables; pruebas roundtrip, idempotencia y rechazo de inconsistencias.

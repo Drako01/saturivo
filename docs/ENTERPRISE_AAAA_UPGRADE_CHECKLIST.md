@@ -9,6 +9,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Seguridad de alcance del host remoto — P3/P4 (2026-11-07)
+
+- [x] La UI distingue host VS Code local y remoto (WSL, SSH, Dev Container u otros mediante `vscode.env.remoteName`), con advertencia ES/EN: `127.0.0.1` siempre refiere al host que ejecuta la extensión.
+- [x] Los modales para load remoto, piloto y correlación Go redactan query/fragmentos; solo la ejecución validada recibe el endpoint original. Tests de HTML contra inyección y secretos en el destino.
+- [ ] Pruebas **reales** de instalación y ejecución en entornos WSL/SSH/devcontainer/Compose, incluidos toolchains, permisos y cancelación. Este indicador **no equivale** a soporte remoto verificado.
+
 ## Migración de evidencias JSON v1 → v2 (Fases 1 y 4, 2026-11-07)
 
 - [x] `migrateImportedRun` valida y convierte únicamente durante importación explícita; añade huella de workload verificable, recalcula SLO cuando existe y conserva métricas, identidad, fecha, entorno y advertencias originales.
