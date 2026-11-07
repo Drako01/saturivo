@@ -9,6 +9,7 @@ import { HistoryStore, isStoredRun } from "./core/history";
 import { runK6 } from "./core/k6";
 import { parseScenarioEditorInput } from "./core/scenario-editor";
 import { runWebSocketProbe as executeWebSocketProbe, validateWebSocketTarget, webSocketReport } from "./core/websocket";
+import { readRuntimeSnapshot, type RuntimeKind } from "./core/runtime-adapters";
 import { markdownReport } from "./core/report";
 import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
 import { compareTrialGroups } from "./core/statistics";
@@ -89,6 +90,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       clearHistory: "saturivo.clearHistory", configureSlo: "saturivo.configureSlo",
       goRace: "saturivo.goRace", goBench: "saturivo.goBench",
       websocketProbe: "saturivo.websocketProbe",
+      runtimeProbe: "saturivo.runtimeProbe",
       captureGoProfile: "saturivo.captureGoProfile",
       correlateGo: "saturivo.correlateGo", cancel: "saturivo.cancel",
     };
@@ -221,6 +223,44 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         return { ...common, id: "arrival", name: "Arrival-rate", model: "constant-arrival-rate",
           virtualUsers: Math.min(20, max), arrivalRate: 25 };
     }
+  }
+
+  async runtimeProbe(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const kinds: readonly RuntimeKind[] = ["node", "java", "python"];
+    const runtime = await vscode.window.showQuickPick([...kinds], {
+      title: this.t("runtimeProbeTitle"),
+      placeHolder: this.t("runtimeProbeDescription"),
+    });
+    if (!runtime) return;
+    const entered = await vscode.window.showInputBox({
+      title: this.t("runtimeProbePid"),
+      prompt: this.t("runtimeProbePidHelp"),
+      validateInput: raw => /^[1-9][0-9]{0,6}$/.test(raw) &&
+        Number(raw) <= 4194304 ? undefined : this.t("runtimeProbeInvalidPid"),
+    });
+    if (!entered) return;
+    const pid = Number(entered);
+    const agreed = await vscode.window.showWarningMessage(
+      this.t("runtimeProbeConsent") + " " + runtime + " PID " + pid,
+      { modal: true }, this.t("runtimeProbeConfirm")
+    );
+    if (agreed !== this.t("runtimeProbeConfirm") || this.busy) return;
+    const observed = await readRuntimeSnapshot(runtime, pid);
+    const lines = ["# Saturivo — " + this.t("runtimeProbeTitle"), "",
+      "Runtime: " + runtime, "PID: " + pid, "Status: " + observed.status,
+      ...(observed.status === "SUPPORTED" ? [
+        "Observed RSS: " + observed.rssBytes + " bytes",
+        "Observed OS threads: " + observed.threads,
+        this.t("runtimeProbeCaution"),
+      ] : [this.t("runtimeNotSupported") + ": " + observed.reason]),
+      "", this.t("runtimeProbeNoSecrets")];
+    const document = await vscode.workspace.openTextDocument({
+      content: lines.join("\n"), language: "markdown",
+    });
+    await vscode.window.showTextDocument(document, { preview: false });
+    this.output.appendLine("Runtime adapter " + runtime + " status: " + observed.status);
   }
 
   async websocketProbe(): Promise<void> {
@@ -745,6 +785,7 @@ export function activate(context: vscode.ExtensionContext): void {
     captureGoProfile: () => app.captureProfile(),
     correlateGo: () => app.correlateGo(),
     websocketProbe: () => app.websocketProbe(),
+    runtimeProbe: () => app.runtimeProbe(),
   };
   for (const [key, action] of Object.entries(actions)) {
     context.subscriptions.push(vscode.commands.registerCommand("saturivo." + key, async () => {
