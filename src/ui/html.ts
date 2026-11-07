@@ -113,12 +113,17 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</span><input type="text" name="name" maxlength="80" required value="Custom local load"></label>' +
     '<label class="editor-field"><span>' + t('model') +
     '</span><select name="model"><option value="constant-vus">' + t('scenarioClosed') +
-    '</option><option value="constant-arrival-rate">' + t('scenarioOpen') + '</option></select></label>' +
+    '</option><option value="constant-arrival-rate">' + t('scenarioOpen') +
+    '</option><option value="ramping-vus">' + t('scenarioRamp') + '</option></select></label>' +
     '<label class="editor-field"><span>' + t('customMethod') +
     '</span><select name="method"><option>GET</option><option>HEAD</option></select></label>' +
     editField('durationSeconds', 'duration', state.durationSeconds ?? 10, 5, 120) +
     editField('virtualUsers', 'customVus', Math.min(5, state.maxVirtualUsers ?? 100), 1, state.maxVirtualUsers ?? 100) +
     editField('arrivalRate', 'customArrival', 10, 1, 500) +
+    '<label class="editor-field editor-wide"><span>' + t('customRampStages') +
+    '</span><input type="text" name="stages" maxlength="160" required ' +
+    'value="5:2,5:0" aria-describedby="ramp-hint"><span id="ramp-hint">' +
+    t('customRampHelp') + '</span></label>' +
     editField('maxRequests', 'maxRequests', state.maxRequests ?? 10000, 100, state.maxRequests ?? 10000) +
     editField('maxP95Ms', 'customP95', state.sloMaxP95Ms ?? 0, 0, 120000) +
     '</div><p class="fineprint">' + t('customTargetNote') + ' ' +
@@ -243,14 +248,18 @@ export function dashboard(state: DashboardState, locale: string): string {
     'for(const [key,value] of Object.entries(stored.custom)){const field=custom.elements.namedItem(key);',
     'if((field instanceof HTMLInputElement||field instanceof HTMLSelectElement)&&typeof value==="string")field.value=value;}}',
     'const arrival=custom.elements.namedItem("arrivalRate");',
-    'function toggleArrival(){const model=custom.elements.namedItem("model");',
+    'const stages=custom.elements.namedItem("stages");',
+    'function toggleModels(){const model=custom.elements.namedItem("model");',
     'const open=model instanceof HTMLSelectElement&&model.value==="constant-arrival-rate";',
+    'const ramp=model instanceof HTMLSelectElement&&model.value==="ramping-vus";',
     'if(arrival instanceof HTMLInputElement){arrival.disabled=!open;',
-    'const label=arrival.closest("label");if(label)label.hidden=!open;}}',
-    'toggleArrival();',
+    'const label=arrival.closest("label");if(label)label.hidden=!open;}',
+    'if(stages instanceof HTMLInputElement){stages.disabled=!ramp;',
+    'const label=stages.closest("label");if(label)label.hidden=!ramp;}}',
+    'toggleModels();',
     'function saveCustom(){vscode.setState({...((vscode.getState()||{})),custom:Object.fromEntries(new FormData(custom).entries())});}',
     'custom.addEventListener("input",saveCustom);',
-    'custom.addEventListener("change",()=>{toggleArrival();saveCustom();});',
+    'custom.addEventListener("change",()=>{toggleModels();saveCustom();});',
     'custom.addEventListener("submit",event=>{event.preventDefault();',
     'const payload=Object.fromEntries(new FormData(custom).entries());saveCustom();',
     'vscode.postMessage({action:"runCustom",payload});});}',
