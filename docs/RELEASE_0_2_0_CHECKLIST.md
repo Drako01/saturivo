@@ -15,7 +15,7 @@
 | R03 · Tráfico medido | k6 closed/open/ramp, fases v2, Go/Node/Python, WebSocket, Docker Compose; [CI #42419034596](https://github.com/Drako01/saturivo/actions/runs/42419034596) PASS | Revisar regresiones estadísticas/noise y migración E2E |
 | R04 · Go/IDE | Race/pprof/trace/GC/stack timeline y navegación de race a archivo-línea implementada | Validación CI exacta de source navigation, overhead inducido e IDE E2E |
 | R05 · UX/accesibilidad | Centro de Control editor, formularios/inspector, ES/EN y Chromium keyboard smoke | NVDA/VoiceOver, contraste, zoom 200%, light/dark, flujos host y foco |
-| R06 · Seguridad | Threat model, DNS pinning, SSRF IPv6, read-only, no-follow, quotas, kill-tree, audit VSIX | DNS/proxy/rebinding adversarial, symlinks/procesos hostiles multi-OS, revisión |
+| R06 · Seguridad | Threat model, DNS pinning, SSRF IPv6, no-follow, quotas, kill-tree, audit VSIX; **nuevo: trap real k6 proxy/302 local, CI pendiente** | DNS/proxy/rebinding remoto y procesos hostiles multi-OS, revisión |
 | R07 · Artifact | VSIX ZIP audit, hash SHA-256, manifest exact git HEAD, SBOM/licencias. [CI #42417954563](https://github.com/Drako01/saturivo/actions/runs/42417954563) PASS | Revisar el VSIX final exacto, notices/shipped audit y attestation |
 | R08 · Install/upgrade | VS Code 1.99 Extension Host Linux, VSIX 0.1.0→0.2.0 en Linux CI | E2E de persistencia/roundtrip y plataformas remotas soportadas |
 | R09 · Documentación visual | Render de producción y Chrome `--verify-only` sin crear imágenes | Generar y revisar **cuatro capturas únicamente al final** del PR |

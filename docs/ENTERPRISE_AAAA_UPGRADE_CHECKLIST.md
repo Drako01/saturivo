@@ -85,7 +85,8 @@
 - [x] Auditor estructural VSIX contra ZIP hostil, duplicados/case, symlink, encriptación y límites compresión; 5 tests.
 - [x] Pipeline checkout SHA HEAD del PR (no merge sintético), checksum VSIX, manifest `saturivo.release.json`, licencia/lockfile/SBOM; evidencia [#42417954563](https://github.com/Drako01/saturivo/actions/runs/42417954563) y [#42419034596](https://github.com/Drako01/saturivo/actions/runs/42419034596).
 - [x] Scripts de upgrade de VSIX 0.1.0 → 0.2.0 en VS Code real con CI Linux y política publicación protegida.
-- [ ] Pruebas adversariales en proxy/redirect/rebinding remoto, IPv6 real, Windows/WSL procesos descendientes maliciosos, archivos/quotas con root hostil y resolución DNS según red.
+- [x] **Nuevo, CI PENDING:** fixture k6 real con proxy HTTP(S) heredado malicioso y redirección 302 a un *trap* loopback descartable. Prueba que el proxy no se hereda y que no hay seguimiento de redirecciones; verifica distribución 3xx.
+- [ ] Pruebas adversariales en proxy/redirect/rebinding **remoto**, IPv6 real, Windows/WSL procesos descendientes maliciosos, archivos/quotas con root hostil y resolución DNS según red. El trap loopback no demuestra seguridad frente a redes remotas.
 - [ ] Audit de dependencias **efectivamente shipped**, THIRD_PARTY_NOTICES, vulnerabilidades y provenance attestation; separar WARN legítimos de terceros/dev de errores propios.
 - [ ] VSIX final exacto instalado y actualizado sin pérdida en plataformas soportadas, SHA-256/SBOM/licencias/notices, CI final sin cancelaciones y evidencia manual/automática sobre **mismo SHA**.
 - [ ] Firma de matriz de amenazas, revisión UX/screenshots y **aprobación expresa del propietario por separado** para merge, tag y publicar Marketplace/Open VSX.

@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
+
+- Added a real local k6 adversarial fixture that sets malicious proxy environment variables and a 302 redirect to a trap server; fails if k6 follows the redirect or inherits the proxy. Remote SSRF testing remains a separate release gate.
 - Added evidence-backed Go race source navigation from the central Control Center: choose an observed file/line in QuickPick, open real source in VS Code; rejects symlink traversal outside the original trusted workspace, with ES/EN labels and tests.
 - Consolidated contradictory historical AAAA status lists into one master checklist and compact release tracker; retained traceable CI references and outstanding release gates.
 
