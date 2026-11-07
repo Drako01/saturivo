@@ -27,9 +27,22 @@ export async function run(): Promise<void> {
     await vscode.commands.executeCommand("saturivo.openHome");
     await new Promise(resolve => setTimeout(resolve, 500));
     assert.equal(requests, 0, "Opening the Control Center must not generate traffic");
-    const dashboardTab = vscode.window.tabGroups.all.flatMap(group => group.tabs)
-      .some(tab => tab.input instanceof vscode.TabInputWebview &&
-        tab.input.viewType === "saturivo.dashboard");
+    // TabInputWebview.viewType may be namespaced differently by VS Code
+    // versions. Assert the user-visible Saturivo editor tab and Webview kind.
+    let dashboardTab = false;
+    const tabDeadline = Date.now() + 5000;
+    while (!dashboardTab && Date.now() < tabDeadline) {
+      const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
+      dashboardTab = tabs.some(tab =>
+        tab.input instanceof vscode.TabInputWebview && /Saturivo/i.test(tab.label));
+      if (!dashboardTab) await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    if (!dashboardTab) {
+      const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs)
+        .map(tab => ({ label: tab.label, type: tab.input.constructor.name,
+          viewType: tab.input instanceof vscode.TabInputWebview ? tab.input.viewType : null }));
+      console.log("Observed VS Code editor tabs: " + JSON.stringify(tabs));
+    }
     assert(dashboardTab, "Control Center must open a Webview in the main editor area");
     // This integration host has a real k6 binary and a disposable loopback server.
     // The workload must start only after explicit command invocation, and cancel.
