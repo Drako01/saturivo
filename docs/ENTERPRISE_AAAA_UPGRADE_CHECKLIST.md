@@ -24,10 +24,10 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 | P1 escenario v2 editable | PARTIAL | Editor GET/HEAD para modelos closed/open; faltan edición avanzada de rampas, warm-up/cool-down explícitos y migraciones exhaustivas |
 | P1 fingerprint y métricas comparables | PARTIAL | Scenario SHA y metadata CPU/Node/k6; faltan Git/entorno completo, target/achieved arrival y estado de carga |
 | P1 3×3/regresión/capacidad | PARTIAL | Fixture real de repetición existente; faltan piloto UI E2E, límites por escenario y cuantificación robusta de variabilidad |
-| P2 carreras Go y pprof | PARTIAL | Race/source links y CPU/heap/goroutine/mutex/block existentes; traza Go añadida, pendiente CI |
+| P2 carreras Go y pprof | PARTIAL | Race/source links y perfiles CPU/heap/goroutine/mutex/block/trace; fixture nueva de contención y crecimiento, CI del SHA pendiente |
 | P2 before/during/after | PARTIAL | 3 capturas goroutine y advertencia de overhead; faltan correlación mutex/block/GC/traces con evidencia de fixtures controladas |
 | P3 HTTP multilenguaje | PARTIAL | Fixture real Go + Node + Python añadida al CI; sin PASS hasta corrida final |
-| P3 gRPC/WebSocket y adapters | NOT RUN | Un protocolo adicional con fixture E2E y contrato de capacidades de Node/Java/Python |
+| P3 WebSocket y adapters | PARTIAL | Probe WebSocket loopback con fixture k6 real en CI; falta resultado del SHA final, adaptación general gRPC y contrato de runtimes Node/Java/Python |
 | P3 WSL/SSH/devcontainer/multi-root | NOT RUN | Selección explícita de host/workspace y ejecución probada, sin descargas ocultas |
 | P4 Control Center principal y UI ES/EN | PARTIAL | Editor central, 4 tabs, escenario form, baseline selector, métricas y capturas; falta revisión WCAG/teclado/E2E |
 | P4 historial/exportación/retención | PARTIAL | JSON/MD/SARIF, importación y borrado; falta QA de reimport, reglas de retención y redacción |
@@ -46,6 +46,8 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 - Selección manual de ejecución base y comparaciones estadísticas solamente para grupos apropiados.
 - Capturas Go de trace, además de goroutine/CPU/heap/mutex/block; perfiles locales con tamaño y timeout.
 - Fixture real con mismo workload HTTP k6 en Go, Node y Python; validación integrada a CI.
+- Probe WebSocket solo loopback (1 VU/5s/100 sesiones), reporte de handshake y duración de sesión, con fixture RFC6455 real y ejecución manual desde Control Center.
+- Fixture Go de contención de mutex y crecimiento acotado de goroutines para verificar señales observables sin afirmar causalidad.
 - Inventario de licencias de dependencias de producción/desarrollo y evidencia de release.
 - Manifest público sin private:true, preservando barreras de tag protegido/entornos/manual release.
 - [Threat model](THREAT_MODEL.md) con riesgos residuales documentados.
