@@ -11,7 +11,7 @@ function metric(root: Record<string, unknown>, key: string): Record<string, unkn
   return object(object(root[key]).values);
 }
 
-export function readK6Summary(raw: unknown): Metrics {
+export function readK6Summary(raw: unknown, targetArrivalRate?: number): Metrics {
   const metrics = object(object(raw).metrics);
   const durations = metric(metrics, "http_req_duration");
   const requests = metric(metrics, "http_reqs");
@@ -30,5 +30,18 @@ export function readK6Summary(raw: unknown): Metrics {
     p95Ms: p95,
     p99Ms: finite(durations["p(99)"]),
     droppedIterations: finite(dropped.count),
+    ...(targetArrivalRate !== undefined ? {
+      targetArrivalRate, achievedArrivalRate: finite(requests.rate),
+    } : {}),
+    ...(metrics.saturivo_status_2xx !== undefined ? {
+      statusDistribution: {
+        "1xx": finite(metric(metrics, "saturivo_status_1xx").count),
+        "2xx": finite(metric(metrics, "saturivo_status_2xx").count),
+        "3xx": finite(metric(metrics, "saturivo_status_3xx").count),
+        "4xx": finite(metric(metrics, "saturivo_status_4xx").count),
+        "5xx": finite(metric(metrics, "saturivo_status_5xx").count),
+        unknown: finite(metric(metrics, "saturivo_status_unknown").count),
+      },
+    } : {}),
   };
 }
