@@ -147,6 +147,11 @@
         "command": "saturivo.clearProfiles",
         "title": "%command.clearProfiles%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.runRamp",
+        "title": "%command.ramp%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {

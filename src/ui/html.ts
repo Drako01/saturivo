@@ -22,7 +22,7 @@ export function dashboard(state: DashboardState, locale: string): string {
   const actions = [
     ["configureTarget", "configure", false], ["configureSlo", "configureSlo", state.busy],
     ["runSmoke", "smoke", state.busy], ["runStress", "stress", state.busy],
-    ["runArrival", "arrival", state.busy], ["capacityPilot", "capacityPilot", state.busy],
+    ["runArrival", "arrival", state.busy], ["runRamp", "ramp", state.busy], ["capacityPilot", "capacityPilot", state.busy],
     ["compare", "compare", state.busy],
     ["export", "export", !state.latest],
     ["exportJson", "exportJson", !state.latest],

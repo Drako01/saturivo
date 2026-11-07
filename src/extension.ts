@@ -16,7 +16,7 @@ import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/va
 import { dashboard, type DashboardState } from "./ui/html";
 import { translate } from "./ui/localize";
 
-type Preset = "smoke" | "stress" | "arrival";
+type Preset = "smoke" | "stress" | "arrival" | "ramp";
 
 class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
@@ -52,6 +52,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       const commands: Record<string, string> = {
         configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
         runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
+        runRamp: "saturivo.runRamp",
         capacityPilot: "saturivo.capacityPilot",
         compare: "saturivo.compare", export: "saturivo.export",
         exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
@@ -138,6 +139,16 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       case "stress":
         return { ...common, id: "stress", name: "Bounded stress", model: "constant-vus",
           virtualUsers: Math.min(20, max) };
+      case "ramp":
+        return { ...common, id: "ramp", name: "Ramp · 5/10/5 seconds",
+          workloadVersion: 2, model: "ramping-vus", durationSeconds: 20,
+          virtualUsers: Math.min(10, max),
+          stages: [
+            { durationSeconds: 5, targetVus: Math.min(2, max) },
+            { durationSeconds: 10, targetVus: Math.min(10, max) },
+            { durationSeconds: 5, targetVus: 0 },
+          ],
+        };
       case "arrival":
         return { ...common, id: "arrival", name: "Arrival-rate", model: "constant-arrival-rate",
           virtualUsers: Math.min(20, max), arrivalRate: 25 };
@@ -515,6 +526,7 @@ export function activate(context: vscode.ExtensionContext): void {
     runSmoke: () => app.runPreset("smoke"),
     runStress: () => app.runPreset("stress"),
     runArrival: () => app.runPreset("arrival"),
+    runRamp: () => app.runPreset("ramp"),
     capacityPilot: () => app.runCapacityPilot(),
     cancel: () => app.cancel(),
     compare: () => app.compare(),

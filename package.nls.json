@@ -25,5 +25,6 @@
   "command.clearHistory": "Delete Local Run History",
   "command.capacity": "Run Bounded Local Capacity Pilot",
   "command.importJson": "Import Saved Run JSON",
-  "command.clearProfiles": "Delete Captured Go Profiles"
+  "command.clearProfiles": "Delete Captured Go Profiles",
+  "command.ramp": "Run Bounded VU Ramp"
 }

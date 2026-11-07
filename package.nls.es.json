@@ -25,5 +25,6 @@
   "command.clearHistory": "Eliminar historial local de ejecuciones",
   "command.capacity": "Ejecutar piloto acotado de capacidad local",
   "command.importJson": "Importar ejecución JSON",
-  "command.clearProfiles": "Eliminar perfiles Go capturados"
+  "command.clearProfiles": "Eliminar perfiles Go capturados",
+  "command.ramp": "Ejecutar rampa acotada de usuarios virtuales"
 }
