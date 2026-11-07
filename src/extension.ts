@@ -47,6 +47,18 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private maxVus(): number { return this.config().get<number>("maxVirtualUsers", 100); }
   private allowRemote(): boolean { return this.config().get<boolean>("allowRemoteTargets", false); }
   private historyRetention(): number { return this.config().get<number>("historyRetention", 100); }
+  /** Multi-root source identity must be selected, never guessed from the first folder. */
+  private async chooseLoadWorkspace(): Promise<string | undefined> {
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    if (folders.length === 0) return undefined;
+    if (folders.length === 1) return folders[0]?.uri.fsPath;
+    const selected = await vscode.window.showQuickPick(
+      folders.map(folder => ({ label: folder.name, description: folder.uri.fsPath,
+        value: folder.uri.fsPath })),
+      { title: this.t("chooseLoadFolder"), placeHolder: this.t("chooseLoadFolder") }
+    );
+    return selected?.value;
+  }
 
   /**
    * The Activity Bar remains a stable launcher. The actual dashboard lives in an
@@ -277,6 +289,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
       maxRequests: this.config().get<number>("maxRequests", 10000) };
     const scenario = validateScenario(input, policy);
+    const sourceRoot = await this.chooseLoadWorkspace();
+    if ((vscode.workspace.workspaceFolders?.length ?? 0) > 1 && !sourceRoot) return;
     if (isRemoteTarget(scenario.target)) {
       const agreed = await vscode.window.showWarningMessage(
         "Saturivo will send load to " + scenario.target + ". Confirm that you own or are authorized to test this service.",
@@ -291,7 +305,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     try {
       const run = await runK6(
         scenario, policy, this.config().get<string>("k6Path", "k6"),
-        this.storageDir, this.controller.signal
+        this.storageDir, this.controller.signal, sourceRoot
       );
       await this.store.save(run);
       await this.loadHistory();
