@@ -17,7 +17,7 @@ Status legend: [x] implemented; [ ] pending. PR #1 was merged into main. Enterpr
 ## M1 — Reproducible load engineering
 
 - [ ] User-defined scenarios, ramps, warm-up, cooldown and scenario versioning.
-- [ ] Comparison matched by runtime, CPU model, Go toolchain, git SHA, host load and configuration.
+- [ ] Full environment fingerprint with runtime, CPU model, Go toolchain, git SHA and host load; **workload SHA-256 only** implemented on Phase 0 branch (awaiting CI).
 - [ ] Repeated trials, bootstrap confidence intervals, statistical uncertainty and stable baselines.
 - [ ] Capacity discovery with abort-on-SLO-violation, bounded growth, confirmed saturation region.
 - [ ] Backpressure, rate limiting, response status distribution and coordinated-omission awareness.

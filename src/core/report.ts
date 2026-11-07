@@ -1,4 +1,5 @@
 import type { Comparison, RunResult } from "./types";
+import { fingerprintScenario } from "./fingerprint";
 
 function safe(value: string): string {
   return value.replace(/[|\\r\\n]/g, " ").replace(/[<>]/g, "");
@@ -15,6 +16,7 @@ export function markdownReport(run: RunResult, comparison?: Comparison): string 
     "- Start: " + safe(run.startedAt),
     "- Engine: k6",
     "- Scenario: " + safe(run.scenario.name),
+    "- Scenario SHA-256: `" + fingerprintScenario(run.scenario) + "`",
     "- Target: " + safe(run.scenario.target),
     "- Model: " + run.scenario.model,
     "- VUs: " + run.scenario.virtualUsers,
