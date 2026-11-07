@@ -93,3 +93,51 @@ test("Go timeline records the wall time of a slow during-load sample without cla
     assert.match(goCorrelationMarkdown(result), /separate control experiment/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test("optional GC captures correlate three phases without claiming causality", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-gc-timeline-"));
+  try {
+    const sequence: string[] = [];
+    const result = await captureGoLoadTimeline(async phase => {
+      sequence.push("profile:" + phase);
+      const localPath = join(dir, phase + ".txt");
+      await writeFile(localPath, "goroutine 1 [running]:\n");
+      return { kind: "goroutine" as const, localPath, bytes: 25,
+        capturedAt: "2026-11-07T09:00:00Z" };
+    }, async () => fixture, new AbortController().signal, undefined, async phase => {
+      sequence.push("gc:" + phase);
+      const n = phase === "before" ? 1 : phase === "during" ? 2 : 3;
+      return { status: "SUPPORTED" as const, metrics: {
+        numGc: n, totalAllocBytes: n * 1000,
+        heapAllocBytes: n * 500, pauseTotalNs: n * 1_000_000,
+      } };
+    });
+    assert.deepEqual(sequence, [
+      "profile:before", "gc:before", "profile:during", "gc:during",
+      "profile:after", "gc:after",
+    ]);
+    const report = goCorrelationMarkdown(result);
+    assert.match(report, /Optional Go GC and allocation counters/);
+    assert.match(report, /2 GC cycles; 2000 allocated bytes/);
+    assert.match(report, /whole process, observational/);
+    assert.match(report, /do not establish a causal link/);
+    assert(!report.includes(dir));
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("absent GC exposure is marked NOT_SUPPORTED and never represented as zero", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-gc-unsupported-"));
+  try {
+    const result = await captureGoLoadTimeline(async phase => {
+      const localPath = join(dir, phase + ".txt");
+      await writeFile(localPath, "goroutine 1 [running]:\n");
+      return { kind: "goroutine" as const, localPath, bytes: 25,
+        capturedAt: "2026-11-07T09:00:00Z" };
+    }, async () => fixture, new AbortController().signal, undefined,
+    async () => ({ status: "NOT_SUPPORTED" as const, reason: "Endpoint unavailable" }));
+    const report = goCorrelationMarkdown(result);
+    assert.match(report, /NOT_SUPPORTED/);
+    assert.match(report, /INCONCLUSIVE/);
+    assert(!report.includes("0 GC cycles"));
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});

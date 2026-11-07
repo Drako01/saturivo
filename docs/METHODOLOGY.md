@@ -35,3 +35,17 @@ opt-in and explicit authorization confirmation. Profile capture is even
 stricter: it requires a literal local loopback HTTP IP and rejects redirects.
 This is defense-in-depth, not a general approval to test a third party.
 
+
+## Optional Go GC and allocation observations (Phase 2)
+
+If the owner explicitly authorizes a local Go timeline, Saturivo may query
+`/debug/vars` on the **same literal-loopback Go pprof origin** during before/during/after
+sampling. Only four standard Go expvar `memstats` numeric counters are used:
+`NumGC`, `TotalAlloc`, `HeapAlloc`, and `PauseTotalNs`. Other application expvar
+keys, code, paths, or secrets are never included in the derived report. A missing,
+oversized or invalid endpoint produces `NOT_SUPPORTED`, never fabricated zeroes.
+
+Counter deltas are monotonic, process-wide **observations**. They may include other
+application activity and cannot prove GC caused a latency change, nor substitute for
+a controlled with/without-profiling overhead experiment. The GC read uses an explicit
+local HTTP GET, bounded by 64 KiB and 3 seconds, no redirects and no proxies.

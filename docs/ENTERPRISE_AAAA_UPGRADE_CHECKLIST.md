@@ -8,6 +8,14 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+
+## Go GC/allocations opcional (Fase 2, 2026-11-07)
+
+- [x] Lectura local **opt-in**, acotada y sin proxy/redirect de `/debug/vars`, únicamente origen pprof con IP loopback literal y Workspace Trust. `memstats.NumGC`, `TotalAlloc`, `HeapAlloc`, `PauseTotalNs` son los únicos valores aceptados; nunca exportar todas las variables expvar.
+- [x] Capturas GC before/during/after integradas al flujo de correlación Go del Control Center con consentimiento actualizado ES/EN; reporte exporta contadores observados y deltas monotónicos, marca `NOT_SUPPORTED` si no existe endpoint y no afirma causalidad.
+- [x] Tests parser, rechazo de URL no autorizada/redirect, GC funcional con servidor local, timeline con fixture sintética y fixture **Go real** (`expvar`).
+- [ ] Validación CI exacta de este commit, medición del **overhead inducido** con ensayo controlado, correlación estadística de GC/locks/latencia y source navigation en IDE. Los cambios acumulados pueden incluir tráfico ajeno al workload; no representan root cause.
+
 ## Medición del tiempo de recolección Go — fase 2 (2026-11-07)
 
 - [x] Tiempo monotónico por snapshot before/during/after, latencia de recolección durante la carga e inclusión en el reporte con evidencia cuantitativa. Tests para muestra lenta y preservación de advertencias no causales.

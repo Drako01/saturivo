@@ -2,6 +2,9 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Integrated optional local Go expvar GC/allocation observations into the before/during/after load timeline, with strictly allowlisted counters, bilingual consent, noncausal reporting and real Go fixture verification; CI of exact commit pending.
+
+
 - Go timeline now records per-snapshot monotonic collection wall time and discloses during-load sampling duration without misrepresenting it as causal profiling overhead. Targeted fixture included (exact-commit CI pending).
 
 

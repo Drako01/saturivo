@@ -1,4 +1,5 @@
 import { performance } from "node:perf_hooks";
+import type { GoGcObservation } from "./go-gc";
 import type { CapturedGoProfile } from "./go-profiler";
 import { readGoroutineSnapshot, type GoroutineSnapshot } from "./go-profile-analysis";
 import type { RunResult } from "./types";
@@ -11,6 +12,8 @@ export interface ProfilePoint {
   readonly profile: CapturedGoProfile;
   /** Monotonic elapsed time to collect and parse one snapshot; not induced CPU overhead. */
   readonly collectionWallMs: number;
+  /** Optional allowlisted GC counters, or an explicit unsupported reason. */
+  readonly gc?: GoGcObservation;
 }
 export interface GoCorrelation {
   readonly run: RunResult;
@@ -26,7 +29,8 @@ export async function captureGoLoadTimeline(
   capture: (phase: TimelinePhase, signal: AbortSignal) => Promise<CapturedGoProfile>,
   executeLoad: (signal: AbortSignal) => Promise<RunResult>,
   signal: AbortSignal,
-  onProgress?: (phase: TimelinePhase) => void
+  onProgress?: (phase: TimelinePhase) => void,
+  captureGc?: (phase: TimelinePhase, signal: AbortSignal) => Promise<GoGcObservation>
 ): Promise<GoCorrelation> {
   requireActive(signal);
   const point = async (phase: TimelinePhase): Promise<ProfilePoint> => {
@@ -37,8 +41,11 @@ export async function captureGoLoadTimeline(
     if (profile.kind !== "goroutine") throw new Error("Only goroutine stack snapshots are comparable");
     const snapshot = await readGoroutineSnapshot(profile.localPath);
     requireActive(signal);
+    const gc = captureGc ? await captureGc(phase, signal) : undefined;
+    requireActive(signal);
     const collectionWallMs = Math.max(0, performance.now() - wallStart);
-    return { phase, profile, observedAt: profile.capturedAt, snapshot, collectionWallMs };
+    return { phase, profile, observedAt: profile.capturedAt, snapshot, collectionWallMs,
+      ...(gc ? { gc } : {}) };
   };
   const before = await point("before");
   // Load starts AFTER before snapshot; the during snapshot is sampled while
@@ -77,6 +84,7 @@ export async function captureGoLoadTimeline(
       "Profiling adds overhead and can affect measured P95 and throughput.",
       "Snapshot collection wall time is measured, but not the performance overhead induced in the target. A separate control experiment is required.",
       "Goroutine growth is not proof of a leak or a causal bottleneck.",
+      "GC counters, when supported, include all concurrent application activity; changes do not establish a causal link to load or latency.",
     ],
   };
 }
@@ -87,6 +95,27 @@ export function goCorrelationMarkdown(result: GoCorrelation): string {
   const rows = result.points.map(p => "| " + p.phase + " | " + safe(p.observedAt) +
     " | " + p.snapshot.observedStacks + " | " + p.profile.bytes +
     " | " + p.collectionWallMs.toFixed(2) + " |").join("\n");
+  const gcRows = result.points.map(point => {
+    const gc = point.gc;
+    if (gc?.status !== "SUPPORTED") return "| " + point.phase +
+      " | " + (gc?.status === "NOT_SUPPORTED" ? "NOT_SUPPORTED" : "NOT_COLLECTED") +
+      " | — | — | — |";
+    return "| " + point.phase + " | " + gc.metrics.numGc + " | " +
+      gc.metrics.totalAllocBytes + " | " + gc.metrics.heapAllocBytes + " | " +
+      (gc.metrics.pauseTotalNs / 1_000_000).toFixed(3) + " |";
+  }).join("\n");
+  const first = result.points[0].gc, last = result.points[2].gc;
+  const comparable = first?.status === "SUPPORTED" && last?.status === "SUPPORTED" &&
+    last.metrics.numGc >= first.metrics.numGc &&
+    last.metrics.totalAllocBytes >= first.metrics.totalAllocBytes &&
+    last.metrics.pauseTotalNs >= first.metrics.pauseTotalNs;
+  const gcDelta = comparable
+    ? "Observed before→after changes: " +
+      (last.metrics.numGc - first.metrics.numGc) + " GC cycles; " +
+      (last.metrics.totalAllocBytes - first.metrics.totalAllocBytes) + " allocated bytes; " +
+      ((last.metrics.pauseTotalNs - first.metrics.pauseTotalNs) / 1_000_000).toFixed(3) +
+      " ms cumulative GC pause (whole process, observational)."
+    : "GC deltas INCONCLUSIVE/NOT_SUPPORTED: both endpoints must expose monotonic counters.";
   return [
     "# Saturivo — Go load-correlated runtime observations", "",
     "Scenario: " + safe(result.run.scenario.name),
@@ -99,6 +128,9 @@ export function goCorrelationMarkdown(result: GoCorrelation): string {
       " ms wall time (not a causal estimate of profiling overhead).", "",
     "Observed before→after change: " + (result.observedDelta >= 0 ? "+" : "") + result.observedDelta,
     "Observed during-load count: " + during.snapshot.observedStacks, "",
+    "## Optional Go GC and allocation counters",
+    "| Phase | GC cycles | Total allocated bytes | Heap bytes | Cumulative GC pause (ms) |",
+    "|---|---:|---:|---:|---:|", gcRows, "", gcDelta, "",
     "## Important limitations", ...result.warnings.map(w => "- " + w), "",
     "Captured profile file paths stay in extension-private storage and are not included in this report.",
     "This is a timing correlation; it does not establish causation.",

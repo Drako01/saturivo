@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	_ "expvar"
 	"net"
 	"net/http"
 	_ "net/http/pprof"

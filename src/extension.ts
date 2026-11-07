@@ -4,6 +4,7 @@ import { runGo, type GoTask } from "./core/go";
 import { captureGoProfile, localPprofEndpoint, type GoProfileKind } from "./core/go-profiler";
 import { analyzeGoroutineStacks, summarizeGoPprof } from "./core/go-profile-analysis";
 import { captureGoLoadTimeline, goCorrelationMarkdown } from "./core/go-correlation";
+import { readGoGcMetrics } from "./core/go-gc";
 import { readFile, rm } from "node:fs/promises";
 import { HistoryStore, isStoredRun } from "./core/history";
 import { runK6 } from "./core/k6";
@@ -671,7 +672,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         phase => {
           this.message = this.t("correlateRunning") + ": " + phase;
           this.refresh();
-        }
+        },
+        async (_phase, signal) => readGoGcMetrics(origin, signal)
       );
       await this.store.save(evidence.run);
       await this.loadHistory();
