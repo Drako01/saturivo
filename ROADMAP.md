@@ -19,7 +19,7 @@ Status legend: [x] implemented; [ ] pending. PR #1 was merged into main. Enterpr
 - [ ] User-defined scenarios, ramps, warm-up, cooldown and scenario versioning.
 - [ ] Full environment fingerprint with runtime, CPU model, Go toolchain, git SHA and host load; **workload SHA-256 only** implemented on Phase 0 branch (awaiting CI).
 - [ ] Repeated trials, bootstrap confidence intervals, statistical uncertainty and stable baselines.
-- [ ] Capacity discovery with abort-on-SLO-violation, bounded growth, confirmed saturation region.
+- [x] Piloto acotado de capacidad (up to 3 stages, literal loopback, P95 SLO, early abort); [ ] descubrimiento completo con saturación confirmada y ensayos repetidos.
 - [ ] Backpressure, rate limiting, response status distribution and coordinated-omission awareness.
 - [ ] Live progress, timeout/no-progress kill, expanded result provenance and cancellation test.
 
@@ -51,3 +51,7 @@ Status legend: [x] implemented; [ ] pending. PR #1 was merged into main. Enterpr
 ## Enterprise AAAA follow-up
 
 Execution phases and quantifiable acceptance gates are documented in [Enterprise AAAA Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). The plan is NOT implementation evidence.
+
+## Estado verificado del PR #4 (2026-11-07)
+
+Se completaron en CI sobre `a819a894`: TypeScript/unit/manifest Linux/Windows/macOS, fixture real k6, VSIX instalado en VS Code 1.99 Linux, race/pprof Go real, SBOM CycloneDX. Los avances de SLO, fingerprint, perfiles Go, historial limitado y exportadores están implementados, pero **la fase AAAA completa no se considera cerrada**. Matriz precisa y próximos gates en [docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md).

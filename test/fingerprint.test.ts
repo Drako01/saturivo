@@ -36,3 +36,14 @@ test("legacy reports remain comparable, mismatched stored fingerprint is inconcl
   assert.equal(compareRuns(oldRun, run(scenario, "f".repeat(64))).status, "inconclusive");
   assert.match(markdownReport(oldRun), new RegExp(fingerprintScenario(scenario)));
 });
+
+test("v2 ramp stages participate in the stable workload fingerprint", () => {
+  const ramp: Scenario = {
+    ...scenario, model: "ramping-vus", workloadVersion: 2, durationSeconds: 20,
+    stages: [{ durationSeconds: 10, targetVus: 3 }, { durationSeconds: 10, targetVus: 0 }],
+  };
+  assert.notEqual(fingerprintScenario(ramp), fingerprintScenario({
+    ...ramp, stages: [{ durationSeconds: 10, targetVus: 4 }, { durationSeconds: 10, targetVus: 0 }],
+  }));
+  assert.equal(fingerprintScenario(ramp), fingerprintScenario({ ...ramp, id: "other", name: "Other" }));
+});

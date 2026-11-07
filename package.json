@@ -107,6 +107,51 @@
         "command": "saturivo.goBench",
         "title": "%command.bench%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.captureGoProfile",
+        "title": "%command.profile%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.configureSlo",
+        "title": "%command.slo%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.exportJson",
+        "title": "%command.json%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.exportSarif",
+        "title": "%command.sarif%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.clearHistory",
+        "title": "%command.clearHistory%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.capacityPilot",
+        "title": "%command.capacity%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.importJson",
+        "title": "%command.importJson%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.clearProfiles",
+        "title": "%command.clearProfiles%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.runRamp",
+        "title": "%command.ramp%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {
@@ -173,6 +218,25 @@
           "maximum": 100,
           "default": 100,
           "description": "%setting.vus%"
+        },
+        "saturivo.goProfilerOrigin": {
+          "type": "string",
+          "default": "http://127.0.0.1:6060/",
+          "description": "%setting.goProfilerOrigin%"
+        },
+        "saturivo.sloMaxP95Ms": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 120000,
+          "default": 0,
+          "description": "%setting.sloP95%"
+        },
+        "saturivo.maxRequests": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 100000,
+          "default": 10000,
+          "description": "%setting.maxRequests%"
         }
       }
     }
@@ -182,15 +246,24 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.cjs",
     "smoke:manifest": "node scripts/verify-manifest.cjs",
-    "verify": "npm run typecheck && npm run test && npm run smoke:manifest",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
-    "vscode:prepublish": "npm run build"
+    "vscode:prepublish": "npm run build",
+    "test:integration:k6": "node scripts/k6-smoke.cjs",
+    "test:integration:vscode": "node scripts/run-vscode-host.cjs",
+    "rulesets:check": "node scripts/rulesets.mjs --check",
+    "rulesets:status": "node scripts/rulesets.mjs --status",
+    "test:integration:regression": "node scripts/k6-regression.cjs",
+    "audit:vsix": "node scripts/audit-vsix.cjs saturivo.vsix",
+    "checksum:vsix": "node scripts/vsix-checksum.cjs write saturivo.vsix && node scripts/vsix-checksum.cjs check saturivo.vsix",
+    "verify:release": "node scripts/release-gate.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
     "@types/vscode": "^1.99.0",
     "@vscode/vsce": "^3.2.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "@vscode/test-electron": "^3.1.0"
   },
   "icon": "media/saturivo-icon.png"
 }

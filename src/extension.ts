@@ -1,15 +1,22 @@
 import * as vscode from "vscode";
 import { compareRuns } from "./core/comparison";
 import { runGo, type GoTask } from "./core/go";
-import { HistoryStore } from "./core/history";
+import { captureGoProfile, localPprofEndpoint, type GoProfileKind } from "./core/go-profiler";
+import { analyzeGoroutineStacks, summarizeGoPprof } from "./core/go-profile-analysis";
+import { readFile, rm } from "node:fs/promises";
+import { HistoryStore, isStoredRun } from "./core/history";
 import { runK6 } from "./core/k6";
 import { markdownReport } from "./core/report";
+import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
+import { compareTrialGroups } from "./core/statistics";
+import { fingerprintScenario } from "./core/fingerprint";
+import { assertLiteralLoopback, discoverLocalCapacity } from "./core/capacity";
 import type { RunResult, Scenario } from "./core/types";
 import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/validation";
 import { dashboard, type DashboardState } from "./ui/html";
 import { translate } from "./ui/localize";
 
-type Preset = "smoke" | "stress" | "arrival";
+type Preset = "smoke" | "stress" | "arrival" | "ramp";
 
 class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
@@ -18,8 +25,10 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private message = "";
   private latest: RunResult | undefined;
   private history: RunResult[] = [];
+  private raceFindings: GoRaceFinding[] = [];
   private readonly store: HistoryStore;
   private readonly output = vscode.window.createOutputChannel("Saturivo");
+  private readonly raceDiagnostics = vscode.languages.createDiagnosticCollection("saturivo");
   private readonly storageDir: string;
 
   constructor(private readonly context: vscode.ExtensionContext) {
@@ -43,8 +52,15 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       const commands: Record<string, string> = {
         configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
         runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
+        runRamp: "saturivo.runRamp",
+        capacityPilot: "saturivo.capacityPilot",
         compare: "saturivo.compare", export: "saturivo.export",
-        goRace: "saturivo.goRace", goBench: "saturivo.goBench", cancel: "saturivo.cancel",
+        exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
+        importJson: "saturivo.importJson", clearProfiles: "saturivo.clearProfiles",
+        clearHistory: "saturivo.clearHistory",
+        configureSlo: "saturivo.configureSlo",
+        goRace: "saturivo.goRace", goBench: "saturivo.goBench",
+        captureGoProfile: "saturivo.captureGoProfile", cancel: "saturivo.cancel",
       };
       if (typeof message.action !== "string") return;
       const command = commands[message.action];
@@ -95,16 +111,44 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     this.refresh();
   }
 
+  async configureSlo(): Promise<void> {
+    const value = await vscode.window.showInputBox({
+      title: this.t("configureSlo"),
+      prompt: this.t("sloPrompt"),
+      value: String(this.config().get<number>("sloMaxP95Ms", 0)),
+      validateInput: input => {
+        const parsed = Number(input);
+        return Number.isFinite(parsed) && (parsed === 0 || parsed >= 1 && parsed <= 120_000) ?
+          undefined : "P95 SLO must be 0 (disabled) or 1–120000 ms";
+      },
+    });
+    if (value === undefined) return;
+    await this.config().update("sloMaxP95Ms", Number(value), vscode.ConfigurationTarget.Workspace);
+    this.refresh();
+  }
+
   private scenario(preset: Preset): Scenario {
     const max = this.maxVus();
     const duration = this.config().get<number>("durationSeconds", 10);
-    const common = { target: this.target(), method: "GET" as const, durationSeconds: duration };
+    const maxP95Ms = this.config().get<number>("sloMaxP95Ms", 0);
+    const common = { target: this.target(), method: "GET" as const, durationSeconds: duration,
+      ...(maxP95Ms > 0 ? { slo: { maxP95Ms } } : {}) };
     switch (preset) {
       case "smoke":
         return { ...common, id: "smoke", name: "Smoke", model: "constant-vus", virtualUsers: 1 };
       case "stress":
         return { ...common, id: "stress", name: "Bounded stress", model: "constant-vus",
           virtualUsers: Math.min(20, max) };
+      case "ramp":
+        return { ...common, id: "ramp", name: "Ramp · 5/10/5 seconds",
+          workloadVersion: 2, model: "ramping-vus", durationSeconds: 20,
+          virtualUsers: Math.min(10, max),
+          stages: [
+            { durationSeconds: 5, targetVus: Math.min(2, max) },
+            { durationSeconds: 10, targetVus: Math.min(10, max) },
+            { durationSeconds: 5, targetVus: 0 },
+          ],
+        };
       case "arrival":
         return { ...common, id: "arrival", name: "Arrival-rate", model: "constant-arrival-rate",
           virtualUsers: Math.min(20, max), arrivalRate: 25 };
@@ -114,7 +158,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   async runPreset(preset: Preset): Promise<void> {
     if (this.busy) { void vscode.window.showWarningMessage("Saturivo: another task is already running."); return; }
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
-    const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus() };
+    const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
+      maxRequests: this.config().get<number>("maxRequests", 10000) };
     const scenario = validateScenario(this.scenario(preset), policy);
     if (isRemoteTarget(scenario.target)) {
       const agreed = await vscode.window.showWarningMessage(
@@ -152,6 +197,71 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     }
   }
 
+  async runCapacityPilot(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const maxP95Ms = this.config().get<number>("sloMaxP95Ms", 0);
+    if (!Number.isFinite(maxP95Ms) || maxP95Ms < 1) {
+      void vscode.window.showWarningMessage(this.t("capacityRequiresSlo"));
+      return;
+    }
+    const requestsLimit = this.config().get<number>("maxRequests", 10000);
+    const policy = {
+      allowRemoteTargets: false,
+      maxVirtualUsers: this.maxVus(),
+      maxRequests: requestsLimit,
+    };
+    const target = this.target();
+    assertLiteralLoopback(target);
+    const plannedBudget = Math.min(20_000, requestsLimit * 3);
+    const confirmed = await vscode.window.showWarningMessage(
+      this.t("capacityConsent") + " " + target +
+        " · 10–40 arrivals/s · ≤3 × 10s · ≤" + plannedBudget +
+        " " + this.t("capacityRequests"),
+      { modal: true }, this.t("capacityAuthorize")
+    );
+    if (confirmed !== this.t("capacityAuthorize") || this.busy) return;
+    this.busy = true;
+    this.controller = new AbortController();
+    this.message = this.t("capacityRunning");
+    this.refresh();
+    try {
+      const result = await discoverLocalCapacity({
+        target, durationSeconds: 10, virtualUsers: Math.min(20, this.maxVus()),
+        startRate: 10, maxRate: 40, maxSteps: 3,
+        maxRequestsPerStep: Math.min(5000, requestsLimit),
+        totalRequestBudget: plannedBudget,
+        slo: { maxP95Ms, maxErrorPercent: 1 },
+      }, policy, async (scenario, signal) => {
+        const run = await runK6(
+          scenario, policy, this.config().get<string>("k6Path", "k6"),
+          this.storageDir, signal
+        );
+        await this.store.save(run);
+        await this.loadHistory();
+        this.latest = run;
+        return run;
+      }, this.controller.signal, (rate, step) => {
+        this.message = this.t("capacityRunning") + " " + step + "/3 · " + rate + " arrivals/s";
+        this.refresh();
+      });
+      this.output.appendLine("Saturivo local capacity pilot: " + JSON.stringify(result, null, 2));
+      this.message = this.t("capacityObserved") + ": " +
+        (result.highestPassingArrivalRate === null ?
+          this.t("capacityNone") : String(result.highestPassingArrivalRate) + " arrivals/s") +
+        " · " + result.stopReason + ". " + this.t("capacityCaution");
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      this.output.appendLine("Saturivo capacity pilot: " + this.message);
+      if (this.message !== "Cancelled") void vscode.window.showErrorMessage(
+        "Saturivo: " + this.message);
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
+    }
+  }
+
   cancel(): void { this.controller?.abort(); }
 
   async compare(): Promise<void> {
@@ -162,7 +272,13 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     const baseline = items.slice(1).find(item => item.scenario.id === latest.scenario.id);
     if (!baseline) { void vscode.window.showInformationMessage("Saturivo: no matching baseline scenario."); return; }
     const result = compareRuns(baseline, latest);
-    const report = markdownReport(latest, result);
+    // When six compatible independent runs exist, compare the latest three
+    // with the previous three, without sharing measurements between groups.
+    const matching = items.filter(item =>
+      fingerprintScenario(item.scenario) === fingerprintScenario(latest.scenario));
+    const trials = matching.length >= 6 ?
+      compareTrialGroups(matching.slice(3, 6), matching.slice(0, 3)) : undefined;
+    const report = markdownReport(latest, result, trials);
     const document = await vscode.workspace.openTextDocument({ content: report, language: "markdown" });
     await vscode.window.showTextDocument(document, { preview: false });
     this.message = "Comparison: " + result.status;
@@ -181,6 +297,79 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     void vscode.window.showInformationMessage("Saturivo: report exported.");
   }
 
+  async exportJson(): Promise<void> {
+    if (!this.latest) { void vscode.window.showInformationMessage("Saturivo: run a test first."); return; }
+    const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.joinPath(folder, "saturivo-run.json"),
+      filters: { JSON: ["json"] }, saveLabel: "Export JSON evidence",
+    });
+    if (!uri) return;
+    await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(this.latest, null, 2), "utf8"));
+  }
+
+  async importJson(): Promise<void> {
+    if (this.busy) return;
+    const selected = await vscode.window.showOpenDialog({
+      canSelectMany: false, canSelectFolders: false, canSelectFiles: true,
+      openLabel: this.t("importJson"), filters: { JSON: ["json"] },
+    });
+    const uri = selected?.[0];
+    if (!uri) return;
+    const metadata = await vscode.workspace.fs.stat(uri);
+    if (metadata.size <= 0 || metadata.size > 100_000) throw new Error(this.t("importInvalid"));
+    let candidate: unknown;
+    try { candidate = JSON.parse(Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf8")); }
+    catch { throw new Error(this.t("importInvalid")); }
+    if (!isStoredRun(candidate)) throw new Error(this.t("importInvalid"));
+    await this.store.save(candidate);
+    await this.loadHistory();
+    this.message = this.t("importSuccess");
+    this.refresh();
+  }
+
+  async clearProfiles(): Promise<void> {
+    if (this.busy) return;
+    const confirmation = await vscode.window.showWarningMessage(
+      this.t("clearProfilesWarning"), { modal: true }, this.t("clearProfilesConfirm")
+    );
+    if (confirmation !== this.t("clearProfilesConfirm")) return;
+    await rm(vscode.Uri.joinPath(vscode.Uri.file(this.storageDir), "go-profiles").fsPath,
+      { recursive: true, force: true });
+    this.message = this.t("clearProfilesSuccess");
+    this.refresh();
+  }
+
+  async exportRaceSarif(): Promise<void> {
+    if (!this.raceFindings.length) {
+      void vscode.window.showInformationMessage("Saturivo: run Go race detection and obtain findings first.");
+      return;
+    }
+    const folder = vscode.workspace.workspaceFolders?.[0]?.uri ?? this.context.globalStorageUri;
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.joinPath(folder, "saturivo-race.sarif"),
+      filters: { SARIF: ["sarif"], JSON: ["json"] },
+      saveLabel: "Export verified Go race findings",
+    });
+    if (!uri) return;
+    const { raceFindingsToSarif } = await import("./core/sarif");
+    await vscode.workspace.fs.writeFile(uri, Buffer.from(
+      JSON.stringify(raceFindingsToSarif(this.raceFindings), null, 2), "utf8"));
+  }
+
+  async clearHistory(): Promise<void> {
+    if (this.busy) return;
+    const choice = await vscode.window.showWarningMessage(
+      this.t("historyClearWarning"), { modal: true }, this.t("historyClearConfirm")
+    );
+    if (choice !== this.t("historyClearConfirm")) return;
+    const deleted = await this.store.clear();
+    this.history = [];
+    this.latest = undefined;
+    this.message = this.t("historyCleared") + " (" + deleted + ")";
+    this.refresh();
+  }
+
   private folder(): string | undefined {
     const active = vscode.window.activeTextEditor?.document.uri;
     if (active) {
@@ -193,7 +382,17 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   async runGoTask(task: GoTask): Promise<void> {
     if (this.busy) return;
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
-    const folder = this.folder();
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    let folder: string | undefined;
+    if (folders.length === 1) folder = folders[0]?.uri.fsPath;
+    else if (folders.length > 1) {
+      const selected = await vscode.window.showQuickPick(
+        folders.map(item => ({ label: item.name, description: item.uri.fsPath, value: item.uri.fsPath })),
+        { placeHolder: this.t("chooseGoFolder"), title: this.t("chooseGoFolder") }
+      );
+      folder = selected?.value;
+      if (!folder) return;
+    }
     if (!folder) throw new Error("Open a folder containing a Go project first.");
     const response = await vscode.window.showWarningMessage(
       "Saturivo will execute Go " + task + " tests in " + folder +
@@ -208,6 +407,26 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     try {
       const result = await runGo(task, folder, this.controller.signal);
       this.output.appendLine("Go " + task + " exited: " + result.exitCode);
+      if (task === "race") {
+        this.raceDiagnostics.clear();
+        const findings = parseGoRaceOutput(result.output, folder);
+        this.raceFindings = findings;
+        const grouped = new Map<string, vscode.Diagnostic[]>();
+        for (const finding of findings) {
+          const location = new vscode.Range(finding.line - 1, 0, finding.line - 1, 0);
+          const diagnostic = new vscode.Diagnostic(location, finding.description,
+            vscode.DiagnosticSeverity.Warning);
+          diagnostic.source = "Saturivo · go test -race";
+          diagnostic.code = "GO_RACE_EVIDENCE";
+          const previous = grouped.get(finding.file) ?? [];
+          previous.push(diagnostic);
+          grouped.set(finding.file, previous);
+        }
+        for (const [file, diagnostics] of grouped) {
+          this.raceDiagnostics.set(vscode.Uri.file(file), diagnostics);
+        }
+        if (findings.length) this.output.appendLine("Go race findings with source locations: " + findings.length);
+      }
       this.output.appendLine(result.output);
       this.message = "Go " + task + ": exit code " + result.exitCode;
       const doc = await vscode.workspace.openTextDocument({
@@ -225,7 +444,74 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     }
   }
 
-  dispose(): void { this.cancel(); this.output.dispose(); }
+  async captureProfile(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const kinds: readonly GoProfileKind[] = ["goroutine", "cpu", "heap", "mutex", "block"];
+    const selection = await vscode.window.showQuickPick(kinds, {
+      title: this.t("profile"),
+      placeHolder: this.t("profileChoose"),
+    });
+    if (!selection || !kinds.includes(selection as GoProfileKind)) return;
+    const kind = selection as GoProfileKind;
+    const origin = this.config().get<string>("goProfilerOrigin", "http://127.0.0.1:6060/");
+    localPprofEndpoint(origin, kind);
+    const accepted = await vscode.window.showWarningMessage(
+      this.t("profileConsent") + " " + origin + " (" + selection + ").",
+      { modal: true }, this.t("profileAuthorize")
+    );
+    if (accepted !== this.t("profileAuthorize")) return;
+    this.busy = true;
+    this.controller = new AbortController();
+    this.message = this.t("profileRunning");
+    this.refresh();
+    try {
+      const evidence = await captureGoProfile(origin, kind, this.storageDir, this.controller.signal);
+      this.output.appendLine("Go pprof " + evidence.kind + ": " + evidence.localPath +
+        " (" + evidence.bytes + " bytes)");
+      this.message = this.t("profileSaved") + " (" + evidence.bytes + " bytes)";
+      if (kind === "goroutine") {
+        const snapshotText = await readFile(evidence.localPath, "utf8");
+        const snapshot = analyzeGoroutineStacks(snapshotText);
+        const summary = [
+          "Go goroutine snapshot · observed stacks: " + snapshot.observedStacks,
+          ...Object.entries(snapshot.states).map(([state, count]) => state + ": " + count),
+          "",
+          "Snapshot alone is not evidence of a goroutine leak.",
+          "",
+          snapshotText,
+        ].join("\n");
+        const document = await vscode.workspace.openTextDocument({
+          content: summary, language: "plaintext",
+        });
+        await vscode.window.showTextDocument(document, { preview: false });
+      } else {
+        try {
+          const workspace = this.folder() ?? this.storageDir;
+          const top = await summarizeGoPprof(evidence.localPath, workspace, this.controller.signal);
+          const document = await vscode.workspace.openTextDocument({
+            content: "Saturivo · Go " + kind + " profile\n" +
+              "Saved locally: " + evidence.localPath + "\n\n" + top,
+            language: "plaintext",
+          });
+          await vscode.window.showTextDocument(document, { preview: false });
+        } catch (error) {
+          this.output.appendLine("Profile saved but pprof summary unavailable: " + String(error));
+          void vscode.window.showWarningMessage(this.t("profileSaved") + " — " + evidence.localPath +
+            " (Go tool pprof unavailable)");
+        }
+      }
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      if (this.message !== "Cancelled") void vscode.window.showErrorMessage("Saturivo: " + this.message);
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
+    }
+  }
+
+  dispose(): void { this.cancel(); this.output.dispose(); this.raceDiagnostics.dispose(); }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -236,14 +522,23 @@ export function activate(context: vscode.ExtensionContext): void {
   const actions: Record<string, () => Promise<void> | void> = {
     openHome: () => app.openHome(),
     configureTarget: () => app.configureTarget(),
+    configureSlo: () => app.configureSlo(),
     runSmoke: () => app.runPreset("smoke"),
     runStress: () => app.runPreset("stress"),
     runArrival: () => app.runPreset("arrival"),
+    runRamp: () => app.runPreset("ramp"),
+    capacityPilot: () => app.runCapacityPilot(),
     cancel: () => app.cancel(),
     compare: () => app.compare(),
     export: () => app.exportReport(),
+    exportJson: () => app.exportJson(),
+    importJson: () => app.importJson(),
+    clearProfiles: () => app.clearProfiles(),
+    exportSarif: () => app.exportRaceSarif(),
+    clearHistory: () => app.clearHistory(),
     goRace: () => app.runGoTask("race"),
     goBench: () => app.runGoTask("benchmark"),
+    captureGoProfile: () => app.captureProfile(),
   };
   for (const [key, action] of Object.entries(actions)) {
     context.subscriptions.push(vscode.commands.registerCommand("saturivo." + key, async () => {

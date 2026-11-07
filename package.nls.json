@@ -14,5 +14,17 @@
   "setting.remote": "Permit non-loopback URLs; each remote test also requires explicit confirmation.",
   "setting.k6Path": "Path to locally installed Grafana k6 executable.",
   "setting.duration": "Duration per test in seconds (5–120).",
-  "setting.vus": "Hard ceiling on concurrent virtual users (1–100)."
+  "setting.vus": "Hard ceiling on concurrent virtual users (1–100).",
+  "command.profile": "Capture Go Runtime Profile",
+  "setting.goProfilerOrigin": "Local Go net/http/pprof origin (literal 127.0.0.1 or [::1]). Profiles are never collected automatically.",
+  "command.slo": "Configure P95 Service Level Objective",
+  "setting.sloP95": "Optional maximum P95 latency in milliseconds; 0 disables SLO evaluation.",
+  "setting.maxRequests": "Hard request budget per local test. Does not certify capacity (100–100000).",
+  "command.json": "Export Run as JSON",
+  "command.sarif": "Export Verified Go Race Evidence as SARIF",
+  "command.clearHistory": "Delete Local Run History",
+  "command.capacity": "Run Bounded Local Capacity Pilot",
+  "command.importJson": "Import Saved Run JSON",
+  "command.clearProfiles": "Delete Captured Go Profiles",
+  "command.ramp": "Run Bounded VU Ramp"
 }

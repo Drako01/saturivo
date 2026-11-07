@@ -1,0 +1,32 @@
+name: "Feature request / Nueva funcionalidad"
+description: "Propose a measurable, safe enhancement"
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem / Necesidad"
+      description: "Describe the developer problem, not only the proposed implementation."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: "Measurable acceptance criteria / Criterios verificables"
+      description: "How would we prove the feature is correct and safe?"
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: "Suggested approach, alternatives, risks"
+      description: "Include security, consent, workload budgets, compatibility and ES/EN accessibility when relevant."
+    validations:
+      required: false
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: "Scope confirmation"
+      options:
+        - label: "The proposal does not require unauthorized load testing or sending proprietary project data."
+          required: true
