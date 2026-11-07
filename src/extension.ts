@@ -325,17 +325,32 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
 
   async compare(): Promise<void> {
     const items = await this.store.list(40);
-    if (items.length < 2) { void vscode.window.showInformationMessage("Saturivo: at least two runs are required."); return; }
+    if (items.length < 2) {
+      void vscode.window.showInformationMessage(this.t("compareRequiresTwo"));
+      return;
+    }
     const latest = items[0];
     if (!latest) return;
-    const baseline = items.slice(1).find(item => item.scenario.id === latest.scenario.id);
-    if (!baseline) { void vscode.window.showInformationMessage("Saturivo: no matching baseline scenario."); return; }
+    const candidates = items.slice(1).map(run => ({
+      label: run.scenario.name + " · " + new Date(run.startedAt).toLocaleString(),
+      description: "P95 " + run.metrics.p95Ms.toFixed(2) + " ms",
+      detail: fingerprintScenario(run.scenario) === fingerprintScenario(latest.scenario)
+        ? this.t("compatibleBaseline") : this.t("incompatibleBaseline"),
+      run,
+    }));
+    const selection = await vscode.window.showQuickPick(candidates, {
+      title: this.t("chooseBaseline"), placeHolder: this.t("chooseBaselineHelp"),
+      matchOnDescription: true, matchOnDetail: true,
+    });
+    if (!selection) return;
+    const baseline = selection.run;
     const result = compareRuns(baseline, latest);
-    // When six compatible independent runs exist, compare the latest three
-    // with the previous three, without sharing measurements between groups.
+    // Statistical evidence is only shown for the latest non-overlapping 3+3
+    // groups when the selected baseline belongs to the previous group.
     const matching = items.filter(item =>
       fingerprintScenario(item.scenario) === fingerprintScenario(latest.scenario));
-    const trials = matching.length >= 6 ?
+    const trials = matching.length >= 6 &&
+      matching.slice(3, 6).some(item => item.id === baseline.id) ?
       compareTrialGroups(matching.slice(3, 6), matching.slice(0, 3)) : undefined;
     const report = markdownReport(latest, result, trials);
     const document = await vscode.workspace.openTextDocument({ content: report, language: "markdown" });
