@@ -7,6 +7,7 @@ import { captureGoLoadTimeline, goCorrelationMarkdown } from "./core/go-correlat
 import { readFile, rm } from "node:fs/promises";
 import { HistoryStore, isStoredRun } from "./core/history";
 import { runK6 } from "./core/k6";
+import { parseScenarioEditorInput } from "./core/scenario-editor";
 import { markdownReport } from "./core/report";
 import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
 import { compareTrialGroups } from "./core/statistics";
@@ -63,7 +64,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
 
   private onDashboardMessage(raw: unknown): void {
     if (!raw || typeof raw !== "object") return;
-    const message = raw as { action?: unknown };
+    const message = raw as { action?: unknown; payload?: unknown };
     const commands: Readonly<Record<string, string>> = {
       configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
       runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
@@ -76,6 +77,13 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       captureGoProfile: "saturivo.captureGoProfile",
       correlateGo: "saturivo.correlateGo", cancel: "saturivo.cancel",
     };
+    if (message.action === "runCustom") {
+      void this.runCustom(message.payload).catch(error => {
+        void vscode.window.showErrorMessage("Saturivo: " +
+          (error instanceof Error ? error.message : String(error)));
+      });
+      return;
+    }
     if (typeof message.action !== "string") return;
     const command = commands[message.action];
     if (command) void vscode.commands.executeCommand(command);
@@ -194,11 +202,24 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   async runPreset(preset: Preset): Promise<void> {
+    await this.executeScenario(this.scenario(preset));
+  }
+
+  private async runCustom(raw: unknown): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
+      maxRequests: this.config().get<number>("maxRequests", 10000) };
+    const scenario = parseScenarioEditorInput(raw, this.target(), policy);
+    await this.executeScenario(scenario);
+  }
+
+  private async executeScenario(input: Scenario): Promise<void> {
     if (this.busy) { void vscode.window.showWarningMessage("Saturivo: another task is already running."); return; }
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
       maxRequests: this.config().get<number>("maxRequests", 10000) };
-    const scenario = validateScenario(this.scenario(preset), policy);
+    const scenario = validateScenario(input, policy);
     if (isRemoteTarget(scenario.target)) {
       const agreed = await vscode.window.showWarningMessage(
         "Saturivo will send load to " + scenario.target + ". Confirm that you own or are authorized to test this service.",
