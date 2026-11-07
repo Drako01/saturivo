@@ -40,3 +40,26 @@ jobs:
           name: saturivo-preview-vsix
           path: saturivo.vsix
           if-no-files-found: error
+
+  integration-k6:
+    name: Local k6 integration (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Compile once for the integration fixture
+        run: npm run build
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: '1.8.2'
+      - name: Verify real k6 against disposable loopback fixture
+        run: npm run test:integration:k6
+        env:
+          K6_NO_USAGE_REPORT: 'true'
