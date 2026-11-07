@@ -1,68 +1,31 @@
-# Saturivo — Estado de implementación
+# Saturivo 0.2.0 — Estado verificable (2026-11-07)
 
-Actualizado: **2026-11-07**. Base: PR #4 fusionado. Evolución 0.2.0 (sin etiqueta Preview): [PR #5](https://github.com/Drako01/saturivo/pull/5), rama `feat/enterprise-aaaa-v0.1.1`. El repositorio GitHub **es público**; el campo `private: true` fue eliminado del manifest. La publicación de una extensión requiere tag protegido, aprobaciones de entornos y autorización separada del propietario.
+**Repositorio:** [Drako01/saturivo](https://github.com/Drako01/saturivo) · **PR #5 Draft** · rama `feat/enterprise-aaaa-v0.1.1` · versión candidata **0.2.0 sin Preview**. El repositorio público no autoriza publicar la extensión.
 
-## Estado ejecutivo
+## Evidencias por commit
 
-**Versionado del PR #5:** objetivo `0.2.0`, extensión instalada sin etiqueta Marketplace Preview. El nombre legado de rama `feat/enterprise-aaaa-v0.1.1` se conserva para mantener PR, enlaces y CI. Este cambio de presentación **no cierra** los gates Enterprise AAAA ni autoriza publicar.
-
-El producto dispone de una base funcional con pruebas locales de carga k6, métricas P95/P99/RPS, objetivos P95 opcionales, historiado de ejecuciones, comparación heurística y comparación experimental 3-vs-3, además de comandos de Go race/bench, capturas locales pprof, diagnósticos de carreras y exportación Markdown/JSON/SARIF.
-
-Se agregaron en PR #5 un Centro de Control en pestaña central con capturas, editor HTTP v2, selección de baseline, traza Go local, matriz k6 HTTP Go/Node/Python, inventario de licencias y un modelo de amenazas. **El nivel Enterprise AAAA no está alcanzado**: siguen pendientes capacidades y validaciones de las fases 1–5. [Checklist con evidencia](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md) y [plan maestro](docs/ENTERPRISE_AAAA_MASTER_PLAN.md).
-
-El PR #5 incorpora además un rediseño UX orientado a la experiencia del desarrollador: flujo guiado, Scenario Studio con vista previa dinámica, presets personalizables sin carga automática, tabla accesible de mediciones y validación Chromium. Se suman retención de historial, cuota para perfiles Go y verificación DNS para endpoints remotos. Estos cambios requieren evidencia del SHA final y revisión visual/a11y manual; **el PR permanece Draft**.
-
-## Evidencia observada
-
-| Check | Resultado | Evidencia |
+| Gate | Resultado | Evidencia |
 |---|---|---|
-| TypeScript, tests, manifiesto | **PASS** Linux/Windows/macOS | [CI #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010) |
-| Smoke real k6 y arrival rate | **PASS** | [CI #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010) |
-| VSIX instalado en VS Code 1.99 (Linux) | **PASS** | [CI #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010) |
-| Go -race/pprof con fixture real | **PASS** | [CI #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010) |
-| SBOM CycloneDX | **PASS**, generado como artefacto | [CI #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010) |
-| Threat model, editor v2, trace Go y HTTP cross-language | **PARTIAL / CI SHA actual pendiente** | [Checklist](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md) y [amenazas](docs/THREAT_MODEL.md) |
+| TS estricto, tests/manifiesto Linux/Windows/macOS | PASS | [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667), SHA `0d73879` |
+| Extension Host VS Code 1.99 Linux, ejecución/cancelación k6 real | PASS | Mismo CI `0d73879` |
+| VSIX 0.1.0→0.2.0 instalado por CLI y migración/reload/borrado de historial v1/v2 a nivel almacenamiento, tres OS | PASS | Mismo CI `0d73879` |
+| HTTP Go/Node/Python, WebSocket, Docker Compose, k6 3×3 y 64 controles de ruido sintético | PASS | Mismo CI `0d73879` |
+| Go race/pprof/trace/GC, overhead real controlado, Windows kill-tree y proxy/redirect local adversarial | PASS para fixtures declarados | Mismo CI `0d73879` |
+| Control Center central, ES/EN en host, teclado/foco, CSS forced-colors y Chromium | PASS para pruebas automatizadas | Mismo CI `0d73879` |
+| SBOM/licencias/notices, inventario shipped, SHA-256/manifest | PASS automatizado | Mismo CI `0d73879` |
+| Cuatro capturas del renderer real con datos sintéticos | Generadas | [Commit `6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f), [run #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) |
+| CI del SHA final posterior a capturas y documentación | PENDING | No reutilizar resultados anteriores |
 
-La matriz anterior corresponde al commit histórico `a819a894`; además, [CI #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) pasó 7/7 sobre el SHA `cbd3724` del PR #5. Todo cambio posterior exige CI de su propio SHA; no se hereda un PASS.
+## Bloqueantes de aceptación
 
-## Load Engineering: ventanas medidas (P1)
+- **BLOCKED:** E2E de import/export/delete/reload y navegación Go desde diálogos de VS Code instalado. Los tests Chromium y storage-level no sustituyen diálogos nativos.
+- **BLOCKED:** pruebas reales WSL2, Remote-SSH y Dev Containers con host explícito, toolchains y limpieza de procesos. [Comandos y evidencias](docs/REMOTE_VALIDATION.md).
+- **BLOCKED:** NVDA/VoiceOver, zoom 200% real, contraste light/dark y gestión del foco con lector de pantalla.
+- **BLOCKED:** DNS/rebinding/proxy remoto, procesos adversariales WSL, attestation externa de provenance, revisión legal de licencias/vulnerabilidades y firma del threat model.
+- **BLOCKED:** revisión visual humana de las cuatro capturas y aprobación independiente del responsable para merge, Git tag y publicación.
 
-La fase de carga incorpora ventanas opcionales de calentamiento y enfriamiento para escenarios v2 con etiquetado k6, cálculo separado de métricas y SLO sobre la ventana central y presupuesto global; hashes históricos compatibles. **Estado: código y pruebas añadidas, integración k6 real y CI del nuevo SHA pendientes.**
+**Diferido por YAGNI (no incluido):** gRPC/ghz, profilers específicos de Node/Java/Python, Vegeta/Fortio e IA BYO. Las observaciones Go no demuestran causalidad, ausencia de races ni capacidad sostenible en producción.
 
-## Control Center: investigación de ejecuciones (P4)
+**Estado de release: NO APROBADO.** PR #5 sigue Draft; sin merge, tag, GitHub Release, Marketplace ni Open VSX.
 
-El PR #5 incorpora inspector de ejecuciones integrado en el historial, sin abrir paneles externos: datos registrados, SLO, fingerprint, advertencias, selección persistente y ES/EN. **Estado: código implementado; CI del nuevo SHA, pruebas visuales y a11y manual pendientes.** Las cuatro capturas se regeneran recién al finalizar todas las fases.
-
-## Avance en seguridad e integridad del candidato 0.2.0
-
-El PR #5 incorporó verificaciones de integridad de evidencias v2, independencia de comparaciones y manejo de métricas incompletas; CI [#42412224059](https://github.com/Drako01/saturivo/actions/runs/42412224059) verificó 7/7 el commit `b54f902`. Se añadieron privacidad de exportaciones y cancelación defensiva durante correlación Go; **la versión completa aún no está aprobada** y cada bloque posterior requiere su propio SHA y CI.
-
-## Bloqueantes principales
-
-- Matriz avanzada de seguridad, DNS/SSRF, lifecycle, límites de recursos y tratamiento de secretos.
-- Completar correlación de perfiles Go (trace/mutex/block/GC), warm-up, fixtures adversariales y fingerprints de entorno.
-- Adaptadores runtime/protocolo y compatibilidad multi-root/remote donde corresponda.
-- Auditoría UX de contraste, teclado, zoom, lectores, modo claro/oscuro y capturas finales; gate de upgrade VSIX sobre artefacto exacto.
-- Auditoría de dependencias del paquete exacto, revisión de licencias, install/upgrade multiplataforma y aprobación del owner.
-
-## Regla de ingeniería
-
-No marcar funciones como completas por figurar en el plan. Evidencia medible, implementación sin regresión, higiene del repositorio, seguridad y validación por impacto. No repetir suites pesadas si los archivos no cambiaron, salvo gate final de release.
-
-## Gobernanza del repositorio público
-
-- [x] CODEOWNERS, CODE_OF_CONDUCT, CONTRIBUTING, SUPPORT, SECURITY y plantillas de Issues/PR preparados en PR #4 (comprobación CI del último SHA pendiente).
-- [x] Definiciones de rulesets versionadas a partir de las políticas activas de Probato PR / Indizivo / Orquestivo.
-- [x] Reglas activas en GitHub: **SÍ**, confirmadas por lectura de GitHub API el 2026-11-07: [Protect main](https://github.com/Drako01/saturivo/rules/26766004) y [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025). Configuraciones comparadas con Orquestivo.
-- [ ] `rulesets:status` autenticado después de aplicar las dos políticas.
-
-Ver [docs/RULESETS.md](docs/RULESETS.md).
-
-## Descubrimiento de capacidad local (piloto)
-
-- [x] Motor de exploración creciente con SLO P95, límites de VUs/tiempo/solicitudes y corte ante fallo o datos inconclusos.
-- [x] Acción manual ES/EN en Control Center, consentimiento y telemetría solo en output local.
-- [ ] Fixture real específico de varios escalones con latencia inyectada y validación de límites/abortos.
-- [ ] Descubrimiento estadísticamente defendible e instrumentos de profiling correlacionados.
-
-La medición es local y específica del escenario; **no es capacidad certificada de producción**. Validación CI del último commit pendiente.
+Fuente de verdad: [checklist de seis fases](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md), [release tracker](docs/RELEASE_0_2_0_CHECKLIST.md), [Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md) y [threat model](docs/THREAT_MODEL.md).
