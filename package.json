@@ -262,7 +262,8 @@
     "checksum:vsix": "node scripts/vsix-checksum.cjs write saturivo.vsix && node scripts/vsix-checksum.cjs check saturivo.vsix",
     "verify:release": "node scripts/release-gate.cjs",
     "test:release-manifest": "node --test test/release-artifact.test.cjs",
-    "screenshots:readme": "node scripts/capture-readme.cjs"
+    "screenshots:readme": "node scripts/capture-readme.cjs",
+    "test:integration:runtimes": "node scripts/runtime-matrix.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
