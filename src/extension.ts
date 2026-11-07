@@ -19,7 +19,7 @@ import { translate } from "./ui/localize";
 type Preset = "smoke" | "stress" | "arrival" | "ramp";
 
 class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
-  private panel?: vscode.WebviewPanel;
+  private panel: vscode.WebviewPanel | undefined;
   private launcher?: vscode.WebviewView;
   private controller: AbortController | undefined;
   private busy = false;
@@ -125,11 +125,6 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       this.latest = this.history[0];
       this.refresh();
     } catch (error) { this.output.appendLine("History read failed: " + String(error)); }
-  }
-
-  async openHome(): Promise<void> {
-    await vscode.commands.executeCommand("workbench.view.extension.saturivo");
-    this.refresh();
   }
 
   async configureTarget(): Promise<void> {
