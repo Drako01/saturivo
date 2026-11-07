@@ -1,0 +1,18 @@
+{
+  "command.home": "Abrir centro de control",
+  "command.target": "Configurar destino",
+  "command.smoke": "Ejecutar prueba rápida",
+  "command.stress": "Ejecutar prueba de estrés limitada",
+  "command.arrival": "Ejecutar prueba de tasa de llegadas",
+  "command.cancel": "Cancelar prueba activa",
+  "command.compare": "Comparar ejecuciones recientes",
+  "command.export": "Exportar informe Markdown",
+  "command.race": "Ejecutar detector de carreras de Go",
+  "command.bench": "Ejecutar benchmarks de Go",
+  "view.control": "Centro de control",
+  "setting.target": "URL local que se probará. No se envían solicitudes hasta ejecutar un comando.",
+  "setting.remote": "Permite URL no locales; cada prueba remota también requiere confirmación explícita.",
+  "setting.k6Path": "Ruta al ejecutable local de Grafana k6.",
+  "setting.duration": "Duración de cada prueba en segundos (5–120).",
+  "setting.vus": "Límite máximo de usuarios virtuales concurrentes (1–100)."
+}

@@ -1,0 +1,12 @@
+**/.git/**
+**/.github/**
+node_modules/**
+src/**
+test/**
+scripts/**
+docs/**
+*.vsix
+*.vsix.sha256
+tsconfig.json
+.gitignore
+.vscodeignore

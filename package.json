@@ -1,0 +1,195 @@
+{
+  "name": "saturivo",
+  "displayName": "Saturivo",
+  "description": "Evidence-based load, concurrency and performance diagnostics for local APIs and Go services.",
+  "version": "0.1.0",
+  "publisher": "armotusitio",
+  "author": {
+    "name": "Alejandro Daniel Di Stefano",
+    "url": "https://armotusitio.com.ar"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Drako01/saturivo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Drako01/saturivo/issues"
+  },
+  "homepage": "https://armotusitio.com.ar",
+  "private": true,
+  "preview": true,
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "categories": [
+    "Testing",
+    "Debuggers",
+    "Other"
+  ],
+  "keywords": [
+    "go",
+    "golang",
+    "concurrency",
+    "load testing",
+    "k6",
+    "performance",
+    "latency",
+    "p95",
+    "p99",
+    "stress testing",
+    "benchmark",
+    "race detector"
+  ],
+  "main": "./out/src/extension.js",
+  "activationEvents": [
+    "onView:saturivo.control"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    },
+    "virtualWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "saturivo.openHome",
+        "title": "%command.home%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.configureTarget",
+        "title": "%command.target%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.runSmoke",
+        "title": "%command.smoke%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.runStress",
+        "title": "%command.stress%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.runArrival",
+        "title": "%command.arrival%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.cancel",
+        "title": "%command.cancel%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.compare",
+        "title": "%command.compare%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.export",
+        "title": "%command.export%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.goRace",
+        "title": "%command.race%",
+        "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.goBench",
+        "title": "%command.bench%",
+        "category": "Saturivo"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "saturivo",
+          "title": "Saturivo",
+          "icon": "media/activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "saturivo": [
+        {
+          "id": "saturivo.control",
+          "name": "%view.control%",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "saturivo.openHome",
+          "when": "view == saturivo.control",
+          "group": "navigation@1"
+        },
+        {
+          "command": "saturivo.cancel",
+          "when": "view == saturivo.control && saturivo.busy",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Saturivo",
+      "properties": {
+        "saturivo.target": {
+          "type": "string",
+          "default": "http://127.0.0.1:8080/",
+          "description": "%setting.target%"
+        },
+        "saturivo.allowRemoteTargets": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "%setting.remote%"
+        },
+        "saturivo.k6Path": {
+          "type": "string",
+          "default": "k6",
+          "description": "%setting.k6Path%"
+        },
+        "saturivo.durationSeconds": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 120,
+          "default": 10,
+          "description": "%setting.duration%"
+        },
+        "saturivo.maxVirtualUsers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 100,
+          "description": "%setting.vus%"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node scripts/run-tests.cjs",
+    "smoke:manifest": "node scripts/verify-manifest.cjs",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest",
+    "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
+    "vscode:prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/vscode": "^1.99.0",
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "~5.8.3"
+  }
+}

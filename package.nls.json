@@ -1,0 +1,18 @@
+{
+  "command.home": "Open Control Center",
+  "command.target": "Configure Target",
+  "command.smoke": "Run Smoke Test",
+  "command.stress": "Run Bounded Stress Test",
+  "command.arrival": "Run Arrival-Rate Test",
+  "command.cancel": "Cancel Active Test",
+  "command.compare": "Compare Recent Runs",
+  "command.export": "Export Markdown Report",
+  "command.race": "Run Go Race Detector",
+  "command.bench": "Run Go Benchmarks",
+  "view.control": "Control Center",
+  "setting.target": "Local URL to test. No requests are sent until you run a command.",
+  "setting.remote": "Permit non-loopback URLs; each remote test also requires explicit confirmation.",
+  "setting.k6Path": "Path to locally installed Grafana k6 executable.",
+  "setting.duration": "Duration per test in seconds (5–120).",
+  "setting.vus": "Hard ceiling on concurrent virtual users (1–100)."
+}
