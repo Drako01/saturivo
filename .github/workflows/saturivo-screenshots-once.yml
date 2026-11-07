@@ -8,7 +8,10 @@ permissions:
   contents: read
 jobs:
   capture:
-    if: github.repository == 'Drako01/saturivo' && github.ref == 'refs/heads/feat/enterprise-aaaa-v0.1.1' && github.event.head_commit.message == 'ci(ux): one-shot capture of final 0.2.0 README views'
+    if: >-
+      github.repository == 'Drako01/saturivo' &&
+      github.ref == 'refs/heads/feat/enterprise-aaaa-v0.1.1' &&
+      github.event.head_commit.message == 'ci(ux): one-shot capture of final 0.2.0 README views'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
