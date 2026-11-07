@@ -134,6 +134,17 @@ const english: Dictionary = {
   websocketRunning: "WebSocket probe in progress",
   websocketComplete: "WebSocket evidence collected; inspect the report for limitations.",
   websocketRun: "Probe WebSocket",
+  runtimeProbeTitle: "Runtime process snapshot",
+  runtimeProbeDescription: "Read-only local Node, Java or Python process RSS/threads on Linux. Unavailable adapters say NOT SUPPORTED.",
+  runtimeProbePid: "Local process ID",
+  runtimeProbePidHelp: "Enter a local PID you are authorized to inspect",
+  runtimeProbeInvalidPid: "Enter a valid positive process ID",
+  runtimeProbeConsent: "Inspect local runtime process metrics for",
+  runtimeProbeConfirm: "Inspect process",
+  runtimeProbeCaution: "An OS-level snapshot, not language-specific heap or CPU profiling.",
+  runtimeProbeNoSecrets: "No environment variables, command-line arguments or source code are read.",
+  runtimeNotSupported: "NOT SUPPORTED",
+  runtimeProbeRun: "Inspect local PID",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -269,6 +280,17 @@ const spanish: Dictionary = {
   websocketRunning: "Prueba WebSocket en curso",
   websocketComplete: "Se obtuvo evidencia WebSocket; revisá el informe y sus límites.",
   websocketRun: "Probar WebSocket",
+  runtimeProbeTitle: "Información de proceso runtime",
+  runtimeProbeDescription: "Lectura local de RSS e hilos de Node, Java o Python en Linux; capacidades ausentes: NO SOPORTADO.",
+  runtimeProbePid: "ID de proceso local",
+  runtimeProbePidHelp: "Ingresá el PID local que estás autorizado a inspeccionar",
+  runtimeProbeInvalidPid: "Ingresá un identificador de proceso válido y positivo",
+  runtimeProbeConsent: "Autorizar lectura de métricas del proceso",
+  runtimeProbeConfirm: "Inspeccionar proceso",
+  runtimeProbeCaution: "Muestra del sistema operativo; no es profiling de heap o CPU específico del lenguaje.",
+  runtimeProbeNoSecrets: "No se leen variables de entorno, argumentos de línea de comandos ni código fuente.",
+  runtimeNotSupported: "NO SOPORTADO",
+  runtimeProbeRun: "Inspeccionar PID",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;
