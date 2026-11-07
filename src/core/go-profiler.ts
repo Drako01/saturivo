@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { isIP } from "node:net";
 
-export type GoProfileKind = "cpu" | "heap" | "goroutine" | "mutex" | "block";
+export type GoProfileKind = "cpu" | "heap" | "goroutine" | "mutex" | "block" | "trace";
 export interface CapturedGoProfile {
   readonly kind: GoProfileKind;
   readonly localPath: string;
@@ -17,6 +17,7 @@ const paths: Record<GoProfileKind, string> = {
   goroutine: "/debug/pprof/goroutine?debug=2",
   mutex: "/debug/pprof/mutex",
   block: "/debug/pprof/block",
+  trace: "/debug/pprof/trace?seconds=5",
 };
 
 /** Profiling is restricted to literal loopback hosts regardless of load-test permissions. */
@@ -81,7 +82,7 @@ export async function captureGoProfile(
   const id = randomUUID();
   const directory = join(storeDir, "go-profiles");
   await mkdir(directory, { recursive: true, mode: 0o700 });
-  const suffix = kind === "goroutine" ? "txt" : "pprof";
+  const suffix = kind === "goroutine" ? "txt" : kind === "trace" ? "trace" : "pprof";
   const localPath = join(directory, id + "-" + kind + "." + suffix);
   await writeFile(localPath, data, { mode: 0o600, flag: "wx" });
   return { kind, localPath, bytes: data.byteLength, capturedAt: new Date().toISOString() };
