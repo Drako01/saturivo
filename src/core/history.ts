@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rename, lstat, stat, writeFile, unlink } from "node:fs/promises";
+import { mkdir, readdir, rename, lstat, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { RunResult, Scenario, Metrics, SloDefinition } from "./types";
@@ -6,6 +6,7 @@ import { fingerprintScenario } from "./fingerprint";
 import { assessSlo } from "./slo";
 import { assertAllowedTarget } from "./validation";
 import { assertValidSlo } from "./slo";
+import { readBoundedRegularTextFile } from "./bounded-file";
 
 const MAX_REPORT_BYTES = 100_000;
 const ownedName = /^[0-9]{8,20}-[0-9a-f-]{8,80}\.json$/i;
@@ -190,8 +191,8 @@ export class HistoryStore {
     const runs: RunResult[] = [];
     for (const name of filenames) {
       try {
-        if ((await stat(join(this.directory, name))).size > MAX_REPORT_BYTES) continue;
-        const value: unknown = JSON.parse(await readFile(join(this.directory, name), "utf8"));
+        const value: unknown = JSON.parse(
+          await readBoundedRegularTextFile(join(this.directory, name), MAX_REPORT_BYTES));
         if (isStoredRun(value)) runs.push(value);
         if (runs.length >= limit) break;
       } catch { /* Corrupt, interrupted or hostile files do not crash the extension. */ }

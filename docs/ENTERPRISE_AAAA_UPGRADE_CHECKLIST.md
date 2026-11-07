@@ -8,6 +8,11 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Lecturas seguras por descriptor — historial y Go (2026-11-07)
+
+- [x] Apertura con descriptor estable, identidad y enlace único; límite de bytes durante lectura y rechazo de hardlinks/symlinks.
+- [ ] Evidencia CI SHA exacto y validación hostil Windows/WSL antes de completar fase 5.
+
 ## Seguridad IPv6 — prefijos de transición y normalización (2026-11-07)
 
 - [x] Código y pruebas focalizadas para IPv6 canónico/no canónico, IPv4-mapped, 6to4, Teredo, documentación y 6bone; DNS mixto falla cerrado.

@@ -59,3 +59,9 @@ Record the exact commit, job URL, runtime versions, scenario fingerprint, approv
 - Normalize IPv6 before classification so leading-zero documentation addresses cannot bypass checks.
 - Fail closed on 6to4 (2002::/16), Teredo/ORCHID special use (2001::/23), documentation (2001:db8::/32) and deprecated 6bone (3ffe::/16). Mixed public/private DNS remains rejected rather than silently selecting a public answer.
 - Coverage: deterministic unit tests with literal IPv6 URLs and injected DNS answers. **Pending:** exact-commit CI and manual proxy/redirect/rebinding matrix; this does not claim comprehensive SSRF elimination.
+
+## File descriptor hardening (2026-11-07)
+
+- History JSON and Go goroutine text are read through a single verified file descriptor (POSIX O_NOFOLLOW, pre/post identity check and nlink=1); symlinks/hardlinks are rejected. Byte limits are enforced **while** reading, even if files grow after stat.
+- Unit tests: normal UTF-8, oversized files, symbolic/hard links, and valid external evidence cannot enter HistoryStore through a hardlink. **Status:** implementation in PR #5; exact-commit CI and Windows reparse-point adversarial QA remain open.
+- Residual: Windows identity checks are defense-in-depth but not equivalent to a kernel-enforced no-follow open; no generalized untrusted-file-system claim.
