@@ -116,6 +116,11 @@ const english: Dictionary = {
   customVus: "Concurrent virtual users", customArrival: "Arrivals per second (open loop)",
   customP95: "Maximum P95 (ms; 0 disables)", customTargetNote: "Active authorized target:",
   customRun: "Run custom scenario",
+  chooseBaseline: "Select baseline run",
+  chooseBaselineHelp: "Compare the latest run to an explicitly selected previous run",
+  compareRequiresTwo: "Saturivo: at least two runs are required.",
+  compatibleBaseline: "Matching workload fingerprint",
+  incompatibleBaseline: "Different workload: the comparison may be inconclusive",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -233,6 +238,11 @@ const spanish: Dictionary = {
   customVus: "Usuarios virtuales concurrentes", customArrival: "Llegadas por segundo (ciclo abierto)",
   customP95: "P95 máximo (ms; 0 desactiva)", customTargetNote: "Destino autorizado activo:",
   customRun: "Ejecutar escenario propio",
+  chooseBaseline: "Seleccionar ejecución base",
+  chooseBaselineHelp: "Compará la última ejecución con una ejecución anterior seleccionada",
+  compareRequiresTwo: "Saturivo: necesitás al menos dos ejecuciones.",
+  compatibleBaseline: "Misma huella del escenario",
+  incompatibleBaseline: "Otro escenario: la comparación puede ser inconclusa",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;
