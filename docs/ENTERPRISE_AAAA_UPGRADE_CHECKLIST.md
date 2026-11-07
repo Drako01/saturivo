@@ -11,12 +11,12 @@
 
 | Fase | Implementado | Pendientes de aceptación | Estado |
 |---|---|---|---|
-| **0 · Base de release** | Lockfile/CI 3 OS, k6 real, Extension Host/Linux, iconos y SBOM | QA de VSIX final instalado en todos los entornos y capturas | PARTIAL |
-| **1 · Ingeniería de carga** | k6 closed/open/ramp, ventanas independientes, fingerprints, 3×3/SLO, migración JSON | E2E importación/variación y pruebas estadísticas de ruido | PARTIAL |
-| **2 · Concurrencia Go** | Race, pprof/trace, GC, snapshots, navigation a fuentes (nuevo) | CI de navegación, ensayo controlado de overhead, evidencia causal prudente | PARTIAL |
-| **3 · Adaptadores/protocolos** | HTTP Go/Node/Python, WebSocket, procfs, Docker Compose real | WSL/SSH/devcontainer, diagnósticos específicos por entorno | PARTIAL |
-| **4 · UX/UI y evidencias** | Control Center central, estudio visual, inspector, historial, ES/EN, keyboard Chromium | Accesibilidad manual, flujos E2E, cuatro capturas definitivas | PARTIAL |
-| **5 · Seguridad/release** | SSRF DNS/IPv6, kill-tree, cuotas, no-follow, auditor VSIX, SHA/SBOM | Matriz adversarial multiplataforma, notices, sign-off de artefacto y responsable | PARTIAL |
+| **0 · Base de release** | CI 7/7, upgrade CLI VSIX y persistencia v1/v2 en los tres OS, cuatro capturas | Diálogos E2E y revisión visual | PARTIAL |
+| **1 · Ingeniería de carga** | k6 real, escenarios v2, fingerprint, 3×3 y 64 ensayos sintéticos de ruido | Variación de red real e importación UI E2E | PARTIAL |
+| **2 · Concurrencia Go** | Race, pprof/trace, GC, muestras y overhead medido con JSON | Navegación real en IDE y más toolchains Go | PARTIAL |
+| **3 · Adaptadores/protocolos** | HTTP Go/Node/Python, WS, Compose, host y multi-root explícitos | WSL/SSH/Dev Containers reales | BLOCKED |
+| **4 · UX/UI y evidencias** | Control Center central, ES/EN, foco, Chromium y cuatro capturas nuevas | NVDA/VoiceOver, zoom 200%, contraste y diálogos E2E | PARTIAL |
+| **5 · Seguridad/release** | SSRF/proxy/redirect local, tree-kill Windows, SBOM/notices, shipped audit | DNS remoto, WSL adversarial, attestation y firma | PARTIAL |
 
 ## Fase 0 · Base de calidad y release
 
@@ -27,8 +27,10 @@
 - [x] **B05 (base)** Limitaciones y abortos de requests/VUs/duración, rechazo de URL/métodos inseguros y árbol de procesos en unit tests.
 - [x] **B06 (assets)** Ícono original PNG/transparencia, ícono monocromático Activity Bar y renderizador real para evidencias README.
 - [x] **B07** Jobs Linux/Windows/macOS + Go + k6 + Chrome + Extension Host. Evidencia: [CI #42420415145](https://github.com/Drako01/saturivo/actions/runs/42420415145) 7/7 PASS en `e8f8efa` (capturas SKIPPED).
-- [ ] **B03/B04 release** VSIX exacto y upgrade persistente en Windows/macOS; abrir-importar-exportar-borrar-reload usando UI real con datos v1/v2.
-- [ ] **B06 final** Rehacer y revisar **solo al final** las cuatro capturas `overview/load/history/diagnostics`; después de eso ejecutar CI del nuevo commit.
+- [x] **B03/B04 CLI/storage:** VSIX 0.1.0→0.2.0 instalado y datos v1/v2 migrados/releídos/eliminados en Windows/macOS/Linux. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS en SHA `0d73879`.
+- [ ] **B03/B04 nativo:** falta usar diálogo real de abrir/importar/exportar/eliminar/reload en IDE instalado.
+- [x] **B06 imágenes:** cuatro PNG del renderer real, con datos sintéticos, generadas al terminar código/UX; commit [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f) y [captura #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) PASS.
+- [ ] **B06 sign-off:** inspección visual humana y CI en SHA definitivo posterior a imágenes/docs.
 
 ## Fase 1 · Motor reproducible de carga
 
@@ -40,7 +42,8 @@
 - [x] Piloto local SLO bounded con interrupción temprana; **no** afirma capacidad sostenible de producción.
 - [x] Migración **explícita** de evidencia JSON v1 → v2, idempotencia, hashes/SLO recalculados, rechazo de datos contradictorios y preservación de historial v1 existente.
 - [ ] E2E real del diálogo de importación/exportación v1/v2 y preservación de datos tras actualización VSIX.
-- [ ] **CI PENDING:** 64 comparaciones 3×3 con ruido sintético determinista ±25 ms y latencia inyectada +60 ms; umbrales explícitos de falsos hallazgos/sensibilidad. Variabilidad de host/red real sigue pendiente.
+- [x] **Ruido sintético:** 64 comparaciones 3×3 con ruido determinista ±25 ms e inyección de latencia +60 ms y límites de falsa regresión/sensibilidad; [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS.
+- [ ] Repetibilidad/variabilidad en redes y hosts reales, con resultados INCONCLUSIVE cuando corresponda.
 
 ## Fase 2 · Go concurrency intelligence
 
@@ -50,7 +53,8 @@
 - [x] Contadores `expvar` Go GC/allocations/pausa en las tres fases con allowlist y `NOT_SUPPORTED` cuando no se exponen; correlación observacional, **nunca atribución causal**.
 - [x] Fixtures Go de race real, goroutine-growth controlado y contención mutex; [CI #42419034596](https://github.com/Drako01/saturivo/actions/runs/42419034596).
 - [x] **CI #42420415145 (`e8f8efa`):** comando `saturivo.navigateRace` desde Control Center → QuickPick de archivo y línea verificados → apertura nativa en editor; realpath y rechazo symlink fuera del workspace; test y manifest ES/EN.
-- [ ] **CI PENDING:** experimento real `scripts/go-overhead.cjs` agregado: 3 controles + 3 ventanas perfiladas ABBAAB con P95/RPS y variabilidad; exporta JSON a CI. Requiere revisar sus mediciones, más plataformas y limitaciones de causalidad.
+- [x] **Overhead Go controlado:** 3 ventanas control + 3 perfiladas ABBAAB (360 requests y 12 capturas); artefacto JSON P95/RPS/MAD en [CI #42421573031](https://github.com/Drako01/saturivo/actions/runs/42421573031), también [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS. Es observacional, no causal.
+- [ ] Más toolchains Go/OS y navegación real a archivos desde Extension Host.
 - [ ] Correlación reproducible de bloqueos/GC/mutex/throughput-latencia y navegación de evidencia pprof/trace al origen cuando sea técnicamente sustentable.
 - [ ] Matriz de toolchains Go/OS y verificación de hallazgos en IDE con archivo real, no solo parsing.
 
@@ -73,8 +77,10 @@
 - [x] UI y comandos bilingües ES/EN, CSP por nonce, HTML escapado, `aria-live`, tabs con Arrow/Home/End, skip navigation y Escape para volver al inspector. Chromium verificado sin crear capturas.
 - [x] Configuración de retención 1–1000 e historial/capturas Go con eliminación explícita.
 - [ ] E2E VS Code instalado para navegación de origen, selección de baseline, importar/exportar/borrar y autorizar múltiples acciones.
-- [ ] Auditoría contrastes claros/oscuros, zoom 200%, teclado solo, NVDA/VoiceOver y foco tras render asíncrono; capturas de evidencia de errores/empty además de layouts.
-- [ ] **Solo después de terminar implementación y UX:** regenerar 4 capturas reales desde renderer actual, revisar README ES/EN y estado de publicación, verificar CI después del commit de imágenes.
+- [x] **UX automatizada:** foco preservado entre renders, ES/EN host, CSS forced-colors/responsive, teclado/acciones de historial en Chromium; [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS.
+- [ ] **UX manual BLOCKED:** zoom 200%, temas, contraste, NVDA/VoiceOver, foco en diálogos reales y estados error/empty.
+- [x] **Cuatro capturas README generadas** al cerrar código/UX: [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f); [captura #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) PASS. Workflow temporal eliminado.
+- [ ] Revisión visual humana y CI final post-capturas.
 - [ ] BYO AI opt-in es **opcional** y no debe promocionarse ni introducirse sin justificación, redacción y consentimiento.
 
 ## Fase 5 · Seguridad y sign-off de 0.2.0
@@ -84,17 +90,19 @@
 - [x] Abort/timeout, output bounded, árbol procesos POSIX/Windows con pruebas dirigidas, cuotas temporales y goroutines/pprof, archivo por descriptor estable + no-follow y rechazo de hardlink.
 - [x] Auditor estructural VSIX contra ZIP hostil, duplicados/case, symlink, encriptación y límites compresión; 5 tests.
 - [x] Pipeline checkout SHA HEAD del PR (no merge sintético), checksum VSIX, manifest `saturivo.release.json`, licencia/lockfile/SBOM; evidencia [#42417954563](https://github.com/Drako01/saturivo/actions/runs/42417954563) y [#42419034596](https://github.com/Drako01/saturivo/actions/runs/42419034596).
-- [x] Scripts de upgrade de VSIX 0.1.0 → 0.2.0 en VS Code real con CI Linux y política publicación protegida.
+- [x] Upgrade real CLI 0.1.0→0.2.0 y migración/lectura de historial v1/v2 en Windows/macOS/Linux; [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS. No implica prueba de diálogos del IDE.
 - [x] **CI #42420415145 (`e8f8efa`):** fixture k6 real con proxy HTTP(S) heredado malicioso y redirección 302 a un *trap* loopback descartable. Prueba que el proxy no se hereda y que no hay seguimiento de redirecciones; verifica distribución 3xx.
 - [ ] Pruebas adversariales en proxy/redirect/rebinding **remoto**, IPv6 real, Windows/WSL procesos descendientes maliciosos, archivos/quotas con root hostil y resolución DNS según red. El trap loopback no demuestra seguridad frente a redes remotas.
-- [ ] **CI PENDING:** `THIRD_PARTY_NOTICES.md` agregado como archivo obligatorio del VSIX; diferencia herramientas externas/dev de shipped. Falta audit de dependencias efectivamente distribuidas, licencias, vulnerabilidades y attestation de provenance; WARN tercero/dev separados de errores propios.
+- [x] `THIRD_PARTY_NOTICES.md` exigido en VSIX e inventario shipped de rutas y `require()` estáticos, licencias/SBOM/SHA/manifest; [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS.
+- [ ] Revisión manual legal/vulnerabilidades, attestation externa y firma del artefacto final.
 - [ ] VSIX final exacto instalado y actualizado sin pérdida en plataformas soportadas, SHA-256/SBOM/licencias/notices, CI final sin cancelaciones y evidencia manual/automática sobre **mismo SHA**.
 - [ ] Firma de matriz de amenazas, revisión UX/screenshots y **aprobación expresa del propietario por separado** para merge, tag y publicar Marketplace/Open VSX.
 
 ## Evidencias y reglas de continuidad
 
-- **Último verde observado al continuar:** [CI #42420415145](https://github.com/Drako01/saturivo/actions/runs/42420415145), SHA `e8f8efa7fb255d125b05188f8aca26403c462f2b`: 7 jobs PASS, screenshots SKIPPED intencionalmente.
-- **Nuevo código posterior al verde:** Go overhead controlado con artifact JSON, 64 probes de ruido, notices obligatorios en VSIX. Estado CI del HEAD nuevo: **PENDING** hasta verificación exacta.
-- **Gates BLOCKED/parciales:** E2E real de diálogos/importaciones, persistencia tras upgrade en varios host, accesibilidad NVDA/VoiceOver/200%, WSL/SSH/Dev Containers, matrix adversarial Windows/WSL/DNS remoto y provenance externo.
-- **Capturas README:** no regeneradas; siguen reservadas para después de finalizar implementación y UX. Sin merge/tags/publicación.
-
+- **CI pre-capturas:** [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667), SHA `0d73879b63204010f4cccaef329cd611c0e9b48f`: **7/7 PASS** (Linux/Windows/macOS, upgrade, k6/Go/Compose/WebSocket, Chrome, seguridad y shipped inventory). Screenshot job normal omitido por diseño.
+- **Capturas:** cuatro PNG únicamente en commit [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f) y [captura #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) SUCCESS. El workflow one-shot fue retirado en commit `b8deb87`.
+- **CI SHA final:** pendiente sobre el nuevo HEAD tras imágenes/documentación; no extrapolar PASS desde otro commit.
+- **BLOCKED:** diálogos/import-export/delete E2E en VS Code instalado, WSL/SSH/devcontainer, NVDA/VoiceOver/zoom 200%, DNS/proxy/rebinding remoto, WSL procesos, attestation y sign-off de seguridad/owner.
+- **YAGNI:** gRPC/ghz, profilers externos Node/Java/Python e IA BYO fuera de 0.2.0, no anunciados como funcionalidad.
+- **Gobernanza:** PR #5 Draft, sin merge, tags, GitHub Release, Marketplace ni Open VSX.
