@@ -55,3 +55,18 @@ test("UTF-8 output budget is enforced in bytes, not JavaScript characters", asyn
   assert.equal(result.truncated, true);
   assert(Buffer.byteLength(result.stdout, "utf8") <= 1024);
 });
+
+test("invalid subprocess budgets cannot spawn arbitrary commands", async () => {
+  for (const bad of [0, 999, 600001, Number.NaN]) {
+    await assert.rejects(runBoundedProcess({
+      binary: process.execPath, args: ["-e", "process.exit(3)"],
+      cwd: tmpdir(), timeoutMs: bad, maxOutputBytes: 1024,
+      signal: new AbortController().signal,
+    }), /Invalid subprocess timeout/);
+  }
+  await assert.rejects(runBoundedProcess({
+    binary: process.execPath, args: ["-e", "process.exit(3)"],
+    cwd: tmpdir(), timeoutMs: 5000, maxOutputBytes: 1000001,
+    signal: new AbortController().signal,
+  }), /Invalid output budget/);
+});

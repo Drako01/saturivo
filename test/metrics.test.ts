@@ -44,3 +44,13 @@ test("v2 ramping scenario renders bounded k6 stages", () => {
   assert.match(source, /"target":0/);
   assert.match(source, /"duration":"10s"/);
 });
+
+test("localhost is pinned to a loopback address instead of DNS or manipulated hosts-file entry", () => {
+  const scenario: Scenario = {
+    id: "local", name: "Local DNS pin", target: "http://localhost:8080/health",
+    model: "constant-vus", method: "GET", durationSeconds: 10, virtualUsers: 1,
+  };
+  const generated = renderK6Script(scenario, "/tmp/local-summary.json");
+  assert.match(generated, /"hosts":\{"localhost":"127\.0\.0\.1","localhost\.":"127\.0\.0\.1"\}/);
+  assert.match(generated, /redirects: 0/);
+});

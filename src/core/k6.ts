@@ -26,7 +26,10 @@ export function renderK6Script(scenario: Scenario, output: string): string {
     summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
     discardResponseBodies: true,
     noConnectionReuse: false,
-    userAgent: "Saturivo/0.1.0",
+    userAgent: "Saturivo/0.1.1",
+    // Explicit local host pinning prevents malicious host-file / DNS changes.
+    hosts: ["localhost", "localhost."].includes(new URL(scenario.target).hostname.toLowerCase())
+      ? { localhost: "127.0.0.1", "localhost.": "127.0.0.1" } : {},
   };
   return [
     'import http from "k6/http";',

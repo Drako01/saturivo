@@ -23,3 +23,15 @@ The current v0.1.0 heuristic flags a regression for P95 worse by both >10% and >
 ## Safe performance practice
 
 Use a disposable local server, isolated database, realistic but synthetic datasets and known resource limits. Prefer a dedicated load generator to avoid self-interference. Document runtime versions and machine load. Never use high-volume traffic against third-party systems without authorization.
+
+## SSRF / DNS / redirects
+
+For a loopback target given as `localhost`, the generated k6 workload
+pins the name to `127.0.0.1` and never uses DNS results from a
+possibly modified hosts file. Literal `127/8` and `::1` targets need
+no DNS resolution. URLs with credentials or fragments are forbidden,
+redirects are disabled, and remote targets require both application-level
+opt-in and explicit authorization confirmation. Profile capture is even
+stricter: it requires a literal local loopback HTTP IP and rejects redirects.
+This is defense-in-depth, not a general approval to test a third party.
+
