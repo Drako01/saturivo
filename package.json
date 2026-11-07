@@ -195,6 +195,13 @@
           "maximum": 120000,
           "default": 0,
           "description": "%setting.sloP95%"
+        },
+        "saturivo.maxRequests": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 100000,
+          "default": 10000,
+          "description": "%setting.maxRequests%"
         }
       }
     }

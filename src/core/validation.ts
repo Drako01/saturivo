@@ -5,6 +5,7 @@ import { assertValidSlo } from "./slo";
 export interface TargetPolicy {
   readonly allowRemoteTargets: boolean;
   readonly maxVirtualUsers: number;
+  readonly maxRequests?: number;
 }
 
 export function isLoopbackHost(hostname: string): boolean {
@@ -38,9 +39,16 @@ export function validateScenario(input: Scenario, policy: TargetPolicy): Scenari
     (!Number.isInteger(input.arrivalRate) || (input.arrivalRate ?? 0) < 1 || (input.arrivalRate ?? 0) > 500)) {
     throw new Error("Arrival rate must be between 1 and 500 iterations/s");
   }
+  const maxRequests = input.maxRequests ?? policy.maxRequests ?? 10000;
+  if (!Number.isInteger(maxRequests) || maxRequests < 100 || maxRequests > 100000) {
+    throw new Error("Maximum requests must be 100–100000");
+  }
+  if (policy.maxRequests !== undefined && maxRequests > policy.maxRequests) {
+    throw new Error("Scenario exceeds configured request budget");
+  }
   if (input.slo) assertValidSlo(input.slo);
   if (!input.id || !input.name || input.name.length > 80) throw new Error("Invalid scenario identity");
-  return input;
+  return { ...input, maxRequests };
 }
 
 export function isRemoteTarget(raw: string): boolean {

@@ -25,6 +25,10 @@ test("safe target defaults", () => {
 });
 test("strict bounded workloads", () => {
   assert.equal(validateScenario(scenario, policy).virtualUsers, 5);
+  assert.equal(validateScenario(scenario, policy).maxRequests, 10000);
+  assert.throws(() => validateScenario({ ...scenario, maxRequests: 100001 }, policy), /Maximum requests/);
+  assert.throws(() => validateScenario({ ...scenario, maxRequests: 500 },
+    { ...policy, maxRequests: 200 }), /request budget/);
   assert.throws(() => validateScenario({ ...scenario, virtualUsers: 31 }, policy), /ceiling/);
   assert.throws(() => validateScenario({ ...scenario, durationSeconds: 1000 }, policy), /Duration/);
   assert.throws(() => validateScenario({ ...scenario, method: "POST" as "GET" }, policy), /GET/);

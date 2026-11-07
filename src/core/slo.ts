@@ -16,7 +16,8 @@ export function assertValidSlo(slo: SloDefinition): void {
 }
 
 /** Result classification is not a confidence interval or proof of production capacity. */
-export function assessSlo(metrics: Metrics, slo?: SloDefinition): SloAssessment {
+export function assessSlo(metrics: Metrics, slo?: SloDefinition,
+  requestBudgetReached = false): SloAssessment {
   if (!slo) return { status: "not-configured", violations: [] };
   assertValidSlo(slo);
   const violations: string[] = [];
@@ -35,12 +36,12 @@ export function assessSlo(metrics: Metrics, slo?: SloDefinition): SloAssessment 
       " req/s is lower than " + slo.minThroughputRps + " req/s");
   }
   if (violations.length) return { status: "fail", violations };
-  if (metrics.requests < 100 || metrics.droppedIterations > 0) {
+  if (metrics.requests < 100 || metrics.droppedIterations > 0 || requestBudgetReached) {
     return {
       status: "inconclusive",
-      violations: metrics.requests < 100 ?
-        ["Fewer than 100 requests; insufficient evidence"] :
-        ["Load generator dropped iterations; requested arrival rate was not met"],
+      violations: requestBudgetReached ? ["Request budget reached; throughput is capped"] :
+        metrics.requests < 100 ? ["Fewer than 100 requests; insufficient evidence"] :
+          ["Load generator dropped iterations; requested arrival rate was not met"],
     };
   }
   return { status: "pass", violations: [] };

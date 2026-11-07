@@ -27,4 +27,6 @@ test("safe generated k6 script supports both load models", () => {
   assert.match(open, /constant-arrival-rate/);
   assert.match(open, /"p\(99\)"/);
   assert.match(open, /redirects: 0/);
+  assert.match(open, /iterationInTest/);
+  assert.match(open, /sleep\(1\)/);
 });

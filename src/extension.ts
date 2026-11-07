@@ -139,7 +139,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   async runPreset(preset: Preset): Promise<void> {
     if (this.busy) { void vscode.window.showWarningMessage("Saturivo: another task is already running."); return; }
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
-    const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus() };
+    const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
+      maxRequests: this.config().get<number>("maxRequests", 10000) };
     const scenario = validateScenario(this.scenario(preset), policy);
     if (isRemoteTarget(scenario.target)) {
       const agreed = await vscode.window.showWarningMessage(

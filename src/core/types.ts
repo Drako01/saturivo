@@ -22,6 +22,7 @@ export interface Scenario {
   readonly durationSeconds: number;
   readonly virtualUsers: number;
   readonly arrivalRate?: number;
+  readonly maxRequests?: number;
   readonly slo?: SloDefinition;
 }
 

@@ -24,8 +24,11 @@ export function renderK6Script(scenario: Scenario, output: string): string {
   };
   return [
     'import http from "k6/http";',
+    'import exec from "k6/execution";',
+    'import { sleep } from "k6";',
     "export const options = " + JSON.stringify(options) + ";",
     "export default function () {",
+    "  if (exec.scenario.iterationInTest >= " + String(scenario.maxRequests ?? 10000) + ") { sleep(1); return; }",
     "  http.request(" + JSON.stringify(scenario.method) + ", " + JSON.stringify(scenario.target) +
       ', null, { redirects: 0, timeout: "10s" });',
     "}",
@@ -85,10 +88,12 @@ export async function runK6(
     const warnings: string[] = [];
     if (metrics.droppedIterations > 0) warnings.push("Dropped iterations: the configured arrival rate was not fully achieved.");
     if (metrics.requests < 100) warnings.push("Small sample size: avoid drawing strong conclusions.");
+    const budgetReached = metrics.requests >= (safeScenario.maxRequests ?? 10000);
+    if (budgetReached) warnings.push("Request budget reached: observed throughput is capped, not sustainable capacity.");
     return {
       schemaVersion: 1, id, startedAt, endedAt: new Date().toISOString(),
       engine: "k6", scenario: safeScenario, scenarioHash: fingerprintScenario(safeScenario), metrics,
-      sloAssessment: assessSlo(metrics, safeScenario.slo),
+      sloAssessment: assessSlo(metrics, safeScenario.slo, budgetReached),
       environment: { platform: process.platform, arch: process.arch,
         node: process.version, cpuCount: cpus().length,
         cpuModel: cpus()[0]?.model ?? "unknown", totalMemoryBytes: totalmem(), k6Version },
