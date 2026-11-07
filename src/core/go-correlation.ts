@@ -38,6 +38,9 @@ export async function captureGoLoadTimeline(
   // Load starts AFTER before snapshot; the during snapshot is sampled while
   // the load is pending. It is observation, not a proof of the causal source.
   const load = executeLoad(signal);
+  // The load may fail before the during-snapshot finishes. Attach a rejection
+  // observer immediately, then await the original promise for correct errors.
+  void load.catch(() => undefined);
   let during: ProfilePoint;
   let result: RunResult;
   try {
