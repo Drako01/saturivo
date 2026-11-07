@@ -56,12 +56,30 @@ export function isStoredRun(value: unknown): value is RunResult {
         "p95Ms", "p99Ms", "droppedIterations"].every(key => finite(m[key])) ||
       !Number.isInteger(m.requests) || (m.failedRate as number) > 1 ||
       !Number.isInteger(m.droppedIterations)) return false;
+  if (m.targetArrivalRate !== undefined && (!Number.isInteger(m.targetArrivalRate) ||
+      (m.targetArrivalRate as number) < 1 || (m.targetArrivalRate as number) > 500)) return false;
+  if (m.achievedArrivalRate !== undefined && !finite(m.achievedArrivalRate)) return false;
+  if (m.statusDistribution !== undefined) {
+    if (!object(m.statusDistribution)) return false;
+    const buckets = ["1xx", "2xx", "3xx", "4xx", "5xx", "unknown"] as const;
+    if (Object.keys(m.statusDistribution).some(key => !buckets.includes(key as typeof buckets[number])) ||
+        !buckets.every(key => {
+          const value = (m.statusDistribution as Record<string, unknown>)[key];
+          return Number.isInteger(value) && (value as number) >= 0;
+        })) return false;
+  }
   if (!object(e) || !shortString(e.platform, 100) || !shortString(e.arch, 100) ||
       !shortString(e.node, 100) || !Number.isInteger(e.cpuCount) ||
       (e.cpuCount as number) < 1 || (e.cpuCount as number) > 4096) return false;
   if (e.cpuModel !== undefined && !shortString(e.cpuModel, 256)) return false;
   if (e.k6Version !== undefined && !shortString(e.k6Version, 160)) return false;
   if (e.totalMemoryBytes !== undefined && !finite(e.totalMemoryBytes)) return false;
+  for (const key of ["loadHostFingerprint", "environmentHash"] as const) {
+    if (e[key] !== undefined && (typeof e[key] !== "string" ||
+        !/^[a-f0-9]{64}$/.test(e[key] as string))) return false;
+  }
+  if (e.gitSha !== undefined && (typeof e.gitSha !== "string" ||
+      !/^[a-f0-9]{40,64}$/.test(e.gitSha))) return false;
   if (!Array.isArray(value.warnings) || value.warnings.length > 40 ||
       !value.warnings.every(w => typeof w === "string" && w.length <= 4096)) return false;
   if (value.sloAssessment !== undefined) {
