@@ -51,3 +51,7 @@ Status legend: [x] implemented; [ ] pending. PR #1 was merged into main. Enterpr
 ## Enterprise AAAA follow-up
 
 Execution phases and quantifiable acceptance gates are documented in [Enterprise AAAA Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). The plan is NOT implementation evidence.
+
+## Estado verificado del PR #4 (2026-11-07)
+
+Se completaron en CI sobre `a819a894`: TypeScript/unit/manifest Linux/Windows/macOS, fixture real k6, VSIX instalado en VS Code 1.99 Linux, race/pprof Go real, SBOM CycloneDX. Los avances de SLO, fingerprint, perfiles Go, historial limitado y exportadores están implementados, pero **la fase AAAA completa no se considera cerrada**. Matriz precisa y próximos gates en [docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md).

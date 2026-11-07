@@ -1,83 +1,231 @@
 <p align="center">
-  <img src="media/saturivo-icon.png" alt="Saturivo — Load &amp; Concurrency Inspector by ArmoTuSitio" width="160" />
+  <img src="media/saturivo-icon.png" alt="Saturivo — Load & Concurrency Inspector" width="144">
 </p>
 
 <h1 align="center">Saturivo</h1>
-
 <p align="center"><strong>Find the limits. Fix the bottlenecks.</strong></p>
+<p align="center">
+  Local-first load testing and evidence-driven concurrency diagnostics inside Visual Studio Code.
+</p>
+<p align="center">
+  <strong>by <a href="https://armotusitio.com.ar">ArmoTuSitio</a></strong>
+</p>
 
+<p align="center">
+  <a href="#why-saturivo">Overview</a> ·
+  <a href="#capabilities">Capabilities</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#go-diagnostics">Go diagnostics</a> ·
+  <a href="#security--privacy">Security</a> ·
+  <a href="docs/README_ES.md">Español</a>
+</p>
 
-**Load & Concurrency Inspector — by ArmoTuSitio**
+---
 
-> Private pre-release • v0.1.0 • Development status is documented in `STATUS.md`.
+> **Private preview · Version 0.1.0 (unreleased).** This branch is an Enterprise AAAA development candidate, **not a certified or published release**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
 
-Saturivo is a VS Code extension for **evidence-first local performance engineering**. It connects bounded k6 load experiments to repeatable results, comparison against a baseline, and explicit Go test commands. It does **not** claim automatic root-cause analysis or production capacity certification.
+## Why Saturivo?
 
-## Funcionalidades (ES)
+Load generators can tell you *that* latency increased. Saturivo helps keep the evidence needed to investigate *what changed*: the workload, latency distribution, failure rate, server-side Go behavior, and baseline.
 
-- Centro de Control al hacer clic en el ícono de la barra lateral.
-- Ejecución manual de pruebas de carga con **k6**: rápida (1 VU), estrés limitado (hasta 20 VUs), tasa de llegadas (25 iteraciones/s, hasta 20 VUs).
-- Duración configurable entre 5 y 120 segundos; límite global máximo 100 VUs. Sin ejecución automática.
-- Métricas HTTP: solicitudes, RPS, tasa de errores, latencia promedio/P50/P95/P99 e iteraciones descartadas.
-- Historial persistido localmente y comparación descriptiva contra una ejecución anterior del mismo escenario.
-- Exportación Markdown y comandos explícitos de Go (`go test -race ./...`, `go test -run ^$ -bench . -benchmem ./...`).
-- Interfaz ES/EN, validación de Workspace Trust y política de destinos de loopback de forma predeterminada.
+Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, selected **Go tooling**, and locally stored measurements in one developer workflow.
 
-## Features (EN)
+| Question | What Saturivo provides |
+|---|---|
+| Is my API behaving well under controlled traffic? | Manual, bounded HTTP load scenarios with P50/P95/P99, requests/sec, error rate and dropped iterations |
+| Did my change degrade performance? | Scenario fingerprints, local history, descriptive comparisons and optional repeated-trial P95 uncertainty |
+| Are goroutines or locks involved? | Opt-in Go pprof capture, observed goroutine states and `go tool pprof` output |
+| Does my code exhibit an observed data race? | `go test -race`, source-linked VS Code diagnostics and SARIF export |
+| Can I reproduce and share the measurement? | Stored JSON evidence, Markdown reports and explicit workload/environment metadata |
 
-- One-click Control Center in the VS Code Activity Bar.
-- Explicit, bounded k6 smoke / stress / open-loop arrival-rate presets.
-- Local run history, Markdown reports, and baseline regression heuristics.
-- Optional Go race detection and benchmark execution after confirmation.
-- Safe-by-default local targets, ES/EN UI, CSP-protected webview.
+## Capabilities
 
-## Requirements
+| Area | Included in the current PR #4 candidate | Important boundary |
+|---|---|---|
+| **Load testing** | k6 smoke, bounded constant-VU stress and constant-arrival-rate presets | HTTP(S) GET/HEAD only; local target by default |
+| **Metrics & SLOs** | RPS, failures, P50/P95/P99, dropped iterations; configurable P95 SLO | Single-run status is not a statistical confidence guarantee |
+| **Comparisons** | Workload SHA-256, local history, baseline heuristics, 3-vs-3 P95 bootstrap analysis when enough runs exist | Incompatible environments, insufficient samples and noise can yield **INCONCLUSIVE** |
+| **Go concurrency** | Race detector, benchmark commands, CPU/heap/goroutine/mutex/block pprof capture and local summaries | Tests only inspect executed paths; no automated root-cause proof |
+| **Evidence** | Markdown/JSON export; SARIF for observed Go race findings | Profiling files and reports may contain sensitive project information |
+| **Developer experience** | Activity Bar Control Center, ES/EN interface, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
 
-- VS Code **1.99+**, Node **22+** for development, and [Grafana k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installed locally and available in `PATH` (or configured in `saturivo.k6Path`).
-- For Go-specific commands: a local Go toolchain and a trusted Go project folder.
-- Supported initial protocol: **HTTP(S) GET and HEAD**. No POST/PUT/PATCH/DELETE load generation in v0.1.0.
+**Planned, not shipped:** automatic capacity discovery, dynamic scenario editor/ramp profiles, correlated pre/during/post traces, gRPC/WebSocket adapters, Node/Java/Python runtime profiling, comprehensive remote development support and optional opt-in AI. See the [roadmap](ROADMAP.md) rather than assuming these features exist.
 
-## Run locally
+## Quick start
 
-```bash
+### Prerequisites
+
+- **Visual Studio Code 1.99+** (development and integration baseline).
+- **Grafana k6** installed and available on your `PATH`. See the [official installation guide](https://grafana.com/docs/k6/latest/set-up/install-k6/).
+- **Go** (optional) for race detection, benchmarks and `pprof` analysis.
+- **Node.js 22+** and npm for building this extension from source.
+- Access to this private repository while the product remains in pre-release.
+
+### Build and install the preview
+
+~~~bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
+git switch feat/enterprise-aaaa-runtime-evidence
 npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
-```
+~~~
 
-Press **F5** in VS Code to open an Extension Development Host, or install the generated `saturivo.vsix` with **Extensions: Install from VSIX**.
+Open VS Code → **Extensions: Install from VSIX…** → select `saturivo.vsix`. To debug the extension instead, open the repository in VS Code and press **F5** to launch an Extension Development Host.
 
-Open a folder containing your API. Start the API on `http://127.0.0.1:8080/`. Click the Saturivo icon and choose **Configure Target**, then run **Smoke**, **Stress** or **Arrival Rate**. Nothing runs just by opening the extension.
+### First measurement in five steps
 
-### Settings
+1. Start a **disposable, authorized local API** (for example, `http://127.0.0.1:8080/health`).
+2. Click the **Saturivo** Activity Bar icon. The Control Center opens; **opening the view never starts traffic**.
+3. Choose **Configure Target**. Set the explicit local endpoint.
+4. Run **Smoke** (1 virtual user), **Bounded Stress** (up to 20 VUs) or **Arrival Rate** (25 attempted iterations/sec, bounded by available VUs). Each operation is user-initiated and can be cancelled.
+5. Inspect **P95/P99, RPS, failures, dropped iterations and run history**. Repeat comparable scenarios, choose **Compare Runs** and export the evidence.
 
-| Setting | Default | Purpose |
+For more reproducible before/after analysis, keep hardware, runtime, target configuration and scenario identical across runs. A scenario SHA-256 identifies the workload; it is **not** a substitute for matching every environmental factor.
+
+## Configuration
+
+Use **Settings → Extensions → Saturivo** or `settings.json`:
+
+~~~json
+{
+  "saturivo.target": "http://127.0.0.1:8080/health",
+  "saturivo.k6Path": "k6",
+  "saturivo.durationSeconds": 10,
+  "saturivo.maxVirtualUsers": 100,
+  "saturivo.maxRequests": 10000,
+  "saturivo.sloMaxP95Ms": 250,
+  "saturivo.allowRemoteTargets": false,
+  "saturivo.goProfilerOrigin": "http://127.0.0.1:6060/"
+}
+~~~
+
+| Setting | Default | Behavior |
 |---|---|---|
-| `saturivo.target` | `http://127.0.0.1:8080/` | The API endpoint (HTTP/S) |
-| `saturivo.allowRemoteTargets` | `false` | Must be enabled for non-loopback targets, with another confirmation each run |
-| `saturivo.k6Path` | `k6` | Executable name or path |
-| `saturivo.durationSeconds` | `10` | Duration: 5–120 seconds |
-| `saturivo.maxVirtualUsers` | `100` | Hard ceiling: 1–100 VUs |
+| `saturivo.target` | `http://127.0.0.1:8080/` | HTTP(S) target. Prefer a disposable local endpoint |
+| `saturivo.k6Path` | `k6` | Executable resolved from `PATH` or an explicit path |
+| `saturivo.durationSeconds` | `10` | 5–120 seconds |
+| `saturivo.maxVirtualUsers` | `100` | Hard ceiling, 1–100; built-in stress presets use up to 20 |
+| `saturivo.maxRequests` | `10000` | Hard request budget, 100–100000; capacity interpretation becomes inconclusive if hit |
+| `saturivo.sloMaxP95Ms` | `0` | Optional P95 objective; 0 disables the objective |
+| `saturivo.allowRemoteTargets` | `false` | Remote traffic is disabled unless explicitly enabled and confirmed for each run |
+| `saturivo.goProfilerOrigin` | `http://127.0.0.1:6060/` | Local literal-loopback `net/http/pprof` endpoint; profiling always opt-in |
 
-**Caution:** A remote test can impact real services even when bounded. Only test services you own or have permission to test. Do not put secrets in target URLs or commit exported reports containing sensitive information.
+### Interpreting the results
 
-## Verification
+- **P95 / P99** describe measured request latencies, not an unconditional production SLO guarantee.
+- **RPS** is achieved HTTP throughput for the measured workload.
+- **Dropped iterations** indicate a failure to sustain the requested arrival rate; do not confuse them with server-side errors.
+- **PASS / FAIL / INCONCLUSIVE** evaluate configured objectives and evidence quality. A request budget hit or insufficient sample count can make a result inconclusive.
+- **Repeated trials**: after at least three compatible runs per group, Saturivo can estimate uncertainty for the change in median run-level P95 using a deterministic bootstrap. This is useful evidence, not a causality proof.
 
-```bash
+See [Performance measurement methodology](docs/METHODOLOGY.md).
+
+## Go diagnostics
+
+Saturivo uses the **local Go toolchain** and runtime evidence, not AI guesses.
+
+**Data races.** Choose **Go Race Detector** to run `go test -race ./...` after explicit confirmation. Observed race locations appear in **Problems** and can be exported as SARIF. No findings means *no race was observed in exercised paths*, not that the program is race-free.
+
+**Benchmarks.** Choose **Go Benchmarks** to execute `go test -run ^$ -bench . -benchmem ./...`. Running project tests can execute arbitrary project code; Saturivo always asks first.
+
+**Runtime profiling.** Expose `net/http/pprof` **only on a local loopback listener** for an explicitly authorized development service. In Saturivo, set the origin, select **Capture Go Profile**, choose CPU, heap, goroutine, mutex or block, and confirm. Captured artifacts are saved locally. Binary profiles can be summarized with `go tool pprof`; goroutine stack snapshots show observed states but **do not certify leaks**.
+
+> **Privacy note:** pprof dumps, stack traces, diagnostic paths and exported run metadata may reveal internal code or system information. Do not publish them without review and redaction.
+
+## Security & privacy
+
+Saturivo is built **local-first and permission-first**:
+
+- No implicit load generation or background profiling.
+- Local/loopback HTTP targets by default; remote load requires an explicit setting **and** per-run confirmation.
+- HTTP load supports read-only methods, redirects are disabled and test duration, VUs and request counts are bounded.
+- Bounded subprocess output, cancellation, deadlines and process termination; no shell expansion for external tool arguments.
+- Go profiling is restricted to literal loopback origins, without credentials or redirects, and with time/size limits.
+- Untrusted/virtual workspaces are not supported; the Control Center Webview has a Content Security Policy.
+- No built-in telemetry, automatic cloud upload, AI data transfer or marketplace publication workflow.
+
+**Never stress a third-party or production service without explicit authorization.** Even bounded load can impact a local database or downstream systems; use synthetic data and isolated dependencies.
+
+Read the [security policy](SECURITY.md) and [privacy policy](PRIVACY.md).
+
+## Architecture
+
+~~~text
+Visual Studio Code / Control Center (ES/EN)
+            |
+       explicit action + consent
+            |
+  target validation / workload bounds
+            |
+   +--------+--------------------+
+   |                             |
+Grafana k6 runner            Go toolchain / pprof
+   |                             |
+HTTP metrics / SLO       Race findings / profiles
+   |                             |
+   +-----------+-----------------+
+               |
+      local evidence & history
+               |
+      compare / JSON / MD / SARIF
+~~~
+
+- `src/extension.ts` — VS Code lifecycle, commands, consent and diagnostics
+- `src/ui/` — Webview Control Center and translations
+- `src/core/` — validated scenarios, bounded execution, k6/Go adapters, statistics and evidence formats
+- `test/` and `scripts/` — deterministic unit tests, isolated local k6/Go fixtures and real VS Code host checks
+
+Design decisions and limitations are in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Engineering quality
+
+The private PR #4 candidate was verified on commit `a819a894` in [GitHub Actions run #42397266010](https://github.com/Drako01/saturivo/actions/runs/42397266010):
+
+| Validation | Observed result |
+|---|---|
+| TypeScript strict checks and unit tests on Linux, Windows, macOS | **PASS** |
+| Disposable loopback service under real k6 load | **PASS** |
+| Packaged VSIX installation and real VS Code 1.99 Extension Host (Linux) | **PASS** |
+| Real Go race and pprof fixture (Linux) | **PASS** |
+| Preview VSIX and CycloneDX SBOM artifact generation | **PASS** |
+
+These are **commit-specific CI results**, not release certification. Additional threat modeling, language/protocol adapters, broader VS Code host coverage and final release validation remain pending.
+
+Development commands:
+
+~~~bash
+npm ci --ignore-scripts
 npm run typecheck
 npm test
-npm run smoke:manifest   # after npm run build
 npm run verify
-```
+npm run package:vsix
+# Requires k6 and a local fixture; CI sets it up explicitly:
+npm run test:integration:k6
+# Requires a VS Code download / GUI-capable environment:
+npm run test:integration:vscode
+~~~
 
-CI verifies Linux, Windows and macOS and builds a preview VSIX on Linux. No automatic Marketplace/Open VSX publication is configured.
+No Marketplace or Open VSX package has been published. The repository remains private until an explicit release decision.
 
-## Architecture and evidence
+## Project documents
 
-See `ARCHITECTURE.md`, `docs/METHODOLOGY.md`, `docs/ACCEPTANCE_CRITERIA.md`, `docs/ENTERPRISE_AAAA_MASTER_PLAN.md`, `ROADMAP.md`, `STATUS.md`, `SECURITY.md` and `PRIVACY.md`.
+| Document | Purpose |
+|---|---|
+| [Enterprise AAAA Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md) | Architecture, delivery phases and measurable Definition of Done |
+| [Enterprise AAAA Checklist](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md) | Verified evidence, current blockers and next gates |
+| [Status](STATUS.md) / [Roadmap](ROADMAP.md) | Current implementation vs. planned features |
+| [Architecture](ARCHITECTURE.md) | Components, boundaries and current technical limitations |
+| [Methodology](docs/METHODOLOGY.md) | Load models, comparison, measurement caveats |
+| [Acceptance criteria](docs/ACCEPTANCE_CRITERIA.md) | Measurable test and release gates |
+| [Security](SECURITY.md) / [Privacy](PRIVACY.md) | Threat boundaries, sensitive evidence and safeguards |
+| [Contributing](CONTRIBUTING.md) / [Changelog](CHANGELOG.md) | Development standards and change history |
 
-**Disclaimer:** the preliminary comparison rule uses heuristic thresholds, not repeated-trial statistical inference. Saturivo v0.1.0 is a foundational MVP, not an Enterprise AAAA-complete product.
+---
 
-Developed by Alejandro Daniel Di Stefano · [ArmoTuSitio](https://armotusitio.com.ar) · MIT License.
+<p align="center">
+  <strong>Saturivo</strong> · Engineering evidence over guesswork<br>
+  Developed by <strong>Alejandro Daniel Di Stefano</strong> — <a href="https://armotusitio.com.ar">ArmoTuSitio</a><br>
+  <a href="LICENSE">MIT License</a> · <a href="docs/README_ES.md">Documentación en español</a>
+</p>
