@@ -1,7 +1,9 @@
-import { mkdir, readdir, readFile, rename, stat, writeFile, unlink } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, lstat, stat, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import type { RunResult } from "./types";
+import type { RunResult, SloDefinition } from "./types";
+import { assertAllowedTarget } from "./validation";
+import { assertValidSlo } from "./slo";
 
 const MAX_REPORT_BYTES = 100_000;
 const ownedName = /^[0-9]{8,20}-[0-9a-f-]{8,80}\.json$/i;
@@ -19,6 +21,7 @@ export function isStoredRun(value: unknown): value is RunResult {
       !shortString(value.startedAt, 40) || !shortString(value.endedAt, 40) ||
       !Number.isFinite(Date.parse(value.startedAt)) ||
       !Number.isFinite(Date.parse(value.endedAt)) ||
+      Date.parse(value.endedAt) < Date.parse(value.startedAt) ||
       value.engine !== "k6") return false;
   const s = value.scenario, m = value.metrics, e = value.environment;
   if (!object(s) || !shortString(s.id, 80) || !shortString(s.name, 80) ||
@@ -28,6 +31,16 @@ export function isStoredRun(value: unknown): value is RunResult {
       (s.durationSeconds as number) > 120 ||
       !Number.isInteger(s.virtualUsers) || (s.virtualUsers as number) < 1 ||
       (s.virtualUsers as number) > 100) return false;
+  try { assertAllowedTarget(s.target as string, { allowRemoteTargets: true, maxVirtualUsers: 100 }); }
+  catch { return false; }
+  if (s.workloadVersion !== undefined && s.workloadVersion !== 2) return false;
+  if (s.maxRequests !== undefined && (!Number.isInteger(s.maxRequests) ||
+      (s.maxRequests as number) < 100 || (s.maxRequests as number) > 100000)) return false;
+  if (s.slo !== undefined) {
+    if (!object(s.slo)) return false;
+    try { assertValidSlo(s.slo as SloDefinition); } catch { return false; }
+  }
+  if (s.model !== "ramping-vus" && s.stages !== undefined) return false;
   if (s.model === "constant-arrival-rate" && (!Number.isInteger(s.arrivalRate) ||
       (s.arrivalRate as number) < 1 || (s.arrivalRate as number) > 500)) return false;
   if (s.model === "ramping-vus" && (s.workloadVersion !== 2 ||
@@ -37,6 +50,7 @@ export function isStoredRun(value: unknown): value is RunResult {
         (st.targetVus as number) >= 0 && (st.targetVus as number) <= (s.virtualUsers as number)) ||
       s.stages.reduce((sum: number, st: { durationSeconds: number }) =>
         sum + st.durationSeconds, 0) !== s.durationSeconds)) return false;
+  if (s.model !== "constant-arrival-rate" && s.arrivalRate !== undefined) return false;
   if (!object(m) ||
       !["requests", "requestsPerSecond", "failedRate", "avgMs", "p50Ms",
         "p95Ms", "p99Ms", "droppedIterations"].every(key => finite(m[key])) ||
@@ -45,8 +59,18 @@ export function isStoredRun(value: unknown): value is RunResult {
   if (!object(e) || !shortString(e.platform, 100) || !shortString(e.arch, 100) ||
       !shortString(e.node, 100) || !Number.isInteger(e.cpuCount) ||
       (e.cpuCount as number) < 1 || (e.cpuCount as number) > 4096) return false;
+  if (e.cpuModel !== undefined && !shortString(e.cpuModel, 256)) return false;
+  if (e.k6Version !== undefined && !shortString(e.k6Version, 160)) return false;
+  if (e.totalMemoryBytes !== undefined && !finite(e.totalMemoryBytes)) return false;
   if (!Array.isArray(value.warnings) || value.warnings.length > 40 ||
       !value.warnings.every(w => typeof w === "string" && w.length <= 4096)) return false;
+  if (value.sloAssessment !== undefined) {
+    const assessment = value.sloAssessment;
+    if (!object(assessment) ||
+        !["pass", "fail", "inconclusive", "not-configured"].includes(String(assessment.status)) ||
+        !Array.isArray(assessment.violations) || assessment.violations.length > 30 ||
+        !assessment.violations.every(v => typeof v === "string" && v.length <= 500)) return false;
+  }
   if (value.scenarioHash !== undefined && (typeof value.scenarioHash !== "string" ||
       !/^[a-f0-9]{64}$/.test(value.scenarioHash))) return false;
   return true;
@@ -54,7 +78,18 @@ export function isStoredRun(value: unknown): value is RunResult {
 
 export class HistoryStore {
   private readonly directory: string;
-  constructor(baseDir: string) { this.directory = join(baseDir, "runs"); }
+  private retention: number;
+  constructor(baseDir: string, retention = 100) {
+    this.directory = join(baseDir, "runs");
+    this.retention = this.validRetention(retention);
+  }
+  private validRetention(keep: number): number {
+    if (!Number.isInteger(keep) || keep < 1 || keep > 1000) {
+      throw new Error("Invalid history retention");
+    }
+    return keep;
+  }
+  setRetention(keep: number): void { this.retention = this.validRetention(keep); }
 
   async save(run: RunResult): Promise<void> {
     if (!isStoredRun(run)) throw new Error("Invalid run evidence; refusing to save it");
@@ -71,17 +106,24 @@ export class HistoryStore {
     } finally {
       await unlink(temporary).catch(() => undefined);
     }
-    await this.prune(100);
+    await this.prune(this.retention);
   }
 
   private async ownedFiles(): Promise<string[]> {
     await mkdir(this.directory, { recursive: true });
-    return (await readdir(this.directory))
+    const filenames = (await readdir(this.directory))
       .filter(name => ownedName.test(name)).sort().reverse();
+    const files: string[] = [];
+    for (const name of filenames) {
+      try {
+        if ((await lstat(join(this.directory, name))).isFile()) files.push(name);
+      } catch { /* Ignore files removed during a concurrent scan. */ }
+    }
+    return files;
   }
 
   async prune(keep: number): Promise<number> {
-    if (!Number.isInteger(keep) || keep < 1 || keep > 1000) throw new Error("Invalid history retention");
+    this.validRetention(keep);
     const files = await this.ownedFiles();
     let deleted = 0;
     for (const name of files.slice(keep)) {
