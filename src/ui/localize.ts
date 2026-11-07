@@ -123,6 +123,14 @@ const english: Dictionary = {
   incompatibleBaseline: "Different workload: the comparison may be inconclusive",
   traceSaved: "Go runtime trace saved locally:",
   traceCaution: "Trace files can contain sensitive data and are not analyzed automatically. Inspect with an appropriate Go toolchain.",
+  websocketTitle: "WebSocket local probe",
+  websocketDescription: "Optional 5-second, 1-VU, 100-session loopback-only WebSocket handshake and message probe. Not HTTP latency.",
+  websocketPrompt: "Enter a disposable ws:// loopback endpoint. Remote targets are not supported.",
+  websocketConsent: "Authorize a controlled local WebSocket probe against",
+  websocketAuthorize: "Run local probe",
+  websocketRunning: "WebSocket probe in progress",
+  websocketComplete: "WebSocket evidence collected; inspect the report for limitations.",
+  websocketRun: "Probe WebSocket",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -247,6 +255,14 @@ const spanish: Dictionary = {
   incompatibleBaseline: "Otro escenario: la comparación puede ser inconclusa",
   traceSaved: "Traza del runtime Go guardada localmente:",
   traceCaution: "Las trazas pueden contener datos sensibles y no se analizan automáticamente. Revisalas con una herramienta Go compatible.",
+  websocketTitle: "Prueba WebSocket local",
+  websocketDescription: "Prueba opcional de 5 segundos, 1 VU y 100 sesiones como máximo sobre loopback. No mide latencia HTTP.",
+  websocketPrompt: "Ingresá un endpoint ws:// local y descartable. No se admiten destinos remotos.",
+  websocketConsent: "Autorizar prueba WebSocket local controlada contra",
+  websocketAuthorize: "Ejecutar prueba local",
+  websocketRunning: "Prueba WebSocket en curso",
+  websocketComplete: "Se obtuvo evidencia WebSocket; revisá el informe y sus límites.",
+  websocketRun: "Probar WebSocket",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;
