@@ -47,6 +47,9 @@ test("v2 ramp stages are strictly bounded and consistent", () => {
   assert.throws(() => validateScenario({ ...ramp, durationSeconds: 25 }, policy), /sum to scenario/);
   assert.throws(() => validateScenario({ ...ramp, stages: [{ durationSeconds: 5, targetVus: 100 }] }, policy),
     /2–8 stages/);
-  assert.throws(() => validateScenario({ ...ramp, workloadVersion: undefined }, policy), /version 2/);
-  assert.throws(() => validateScenario({ ...scenario, stages: ramp.stages }, policy), /ramping-vus model/);
+  const { workloadVersion: _ignoredVersion, ...rampWithoutVersion } = ramp;
+  assert.throws(() => validateScenario(rampWithoutVersion, policy), /version 2/);
+  assert.throws(() => validateScenario({ ...scenario, stages: [
+    { durationSeconds: 5, targetVus: 2 }, { durationSeconds: 5, targetVus: 0 },
+  ] }, policy), /ramping-vus model/);
 });
