@@ -152,6 +152,11 @@
         "command": "saturivo.runRamp",
         "title": "%command.ramp%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.correlateGo",
+        "title": "%command.correlateGo%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {

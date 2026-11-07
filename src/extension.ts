@@ -3,6 +3,7 @@ import { compareRuns } from "./core/comparison";
 import { runGo, type GoTask } from "./core/go";
 import { captureGoProfile, localPprofEndpoint, type GoProfileKind } from "./core/go-profiler";
 import { analyzeGoroutineStacks, summarizeGoPprof } from "./core/go-profile-analysis";
+import { captureGoLoadTimeline, goCorrelationMarkdown } from "./core/go-correlation";
 import { readFile, rm } from "node:fs/promises";
 import { HistoryStore, isStoredRun } from "./core/history";
 import { runK6 } from "./core/k6";
@@ -72,7 +73,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       importJson: "saturivo.importJson", clearProfiles: "saturivo.clearProfiles",
       clearHistory: "saturivo.clearHistory", configureSlo: "saturivo.configureSlo",
       goRace: "saturivo.goRace", goBench: "saturivo.goBench",
-      captureGoProfile: "saturivo.captureGoProfile", cancel: "saturivo.cancel",
+      captureGoProfile: "saturivo.captureGoProfile",
+      correlateGo: "saturivo.correlateGo", cancel: "saturivo.cancel",
     };
     if (typeof message.action !== "string") return;
     const command = commands[message.action];
@@ -480,6 +482,58 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     }
   }
 
+  async correlateGo(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const origin = this.config().get<string>("goProfilerOrigin", "http://127.0.0.1:6060/");
+    const target = this.target();
+    assertLiteralLoopback(target);
+    localPprofEndpoint(origin, "goroutine");
+    const approved = await vscode.window.showWarningMessage(
+      this.t("correlateConsent") + " " + target + " / " + origin +
+      ". " + this.t("correlateCaution"),
+      { modal: true }, this.t("correlateAuthorize")
+    );
+    if (approved !== this.t("correlateAuthorize") || this.busy) return;
+    const policy = {
+      allowRemoteTargets: false, maxVirtualUsers: this.maxVus(),
+      maxRequests: this.config().get<number>("maxRequests", 10000),
+    };
+    const scenario = validateScenario(this.scenario("smoke"), policy);
+    this.busy = true;
+    this.controller = new AbortController();
+    this.message = this.t("correlateRunning");
+    this.refresh();
+    try {
+      const evidence = await captureGoLoadTimeline(
+        async (_phase, signal) => captureGoProfile(origin, "goroutine", this.storageDir, signal),
+        async signal => runK6(scenario, policy,
+          this.config().get<string>("k6Path", "k6"), this.storageDir, signal),
+        this.controller.signal,
+        phase => {
+          this.message = this.t("correlateRunning") + ": " + phase;
+          this.refresh();
+        }
+      );
+      await this.store.save(evidence.run);
+      await this.loadHistory();
+      const document = await vscode.workspace.openTextDocument({
+        content: goCorrelationMarkdown(evidence), language: "markdown",
+      });
+      await vscode.window.showTextDocument(document, { preview: false });
+      this.message = this.t("correlateComplete");
+      this.output.appendLine("Go correlation: " + this.message);
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      this.output.appendLine("Go correlation: " + this.message);
+      if (this.message !== "Cancelled") void vscode.window.showErrorMessage("Saturivo: " + this.message);
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
+    }
+  }
+
   async captureProfile(): Promise<void> {
     if (this.busy) return;
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
@@ -575,6 +629,7 @@ export function activate(context: vscode.ExtensionContext): void {
     goRace: () => app.runGoTask("race"),
     goBench: () => app.runGoTask("benchmark"),
     captureGoProfile: () => app.captureProfile(),
+    correlateGo: () => app.correlateGo(),
   };
   for (const [key, action] of Object.entries(actions)) {
     context.subscriptions.push(vscode.commands.registerCommand("saturivo." + key, async () => {

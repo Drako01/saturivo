@@ -11,7 +11,7 @@ export async function run(): Promise<void> {
   for (const command of [
     "saturivo.openHome", "saturivo.runSmoke", "saturivo.cancel",
     "saturivo.goRace", "saturivo.captureGoProfile", "saturivo.configureSlo",
-    "saturivo.capacityPilot", "saturivo.runRamp", "saturivo.importJson", "saturivo.clearProfiles",
+    "saturivo.capacityPilot", "saturivo.correlateGo", "saturivo.runRamp", "saturivo.importJson", "saturivo.clearProfiles",
   ]) assert(commands.includes(command), "Expected command registered: " + command);
 
   let requests = 0;

@@ -179,6 +179,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</p></div></div><div class="diagnostics">' +
     diagTool('{ }', 'race', 'raceHelp', 'goRace', 'runDetector', 'exportSarif', 'exportSarif') +
     diagTool('◈', 'profile', 'profileHelp', 'captureGoProfile', 'capture', 'clearProfiles', 'clearProfiles') +
+    diagTool('↔', 'correlateGo', 'correlateGoHelp', 'correlateGo', 'correlateGoRun') +
     diagTool('↗', 'benchmark', 'benchHelp', 'goBench', 'runBench') +
     '</div><div class="panel safety"><h3>' + t('safetyTitle') +
     '</h3><p>' + t('safety') + ' ' + t('help') + '</p></div></section>';

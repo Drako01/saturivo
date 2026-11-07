@@ -102,6 +102,14 @@ const english: Dictionary = {
   "safetyTitle": "Safe by design",
   "localFirst": "LOCAL-FIRST · NO TELEMETRY",
   "footerDisclaimer": "Observed measurements are not production capacity guarantees.",
+  "correlateGo": "Go load timeline",
+  "correlateGoHelp": "Capture goroutine stacks before, during and after a bounded local k6 run. Results are observational.",
+  "correlateGoRun": "Capture timeline",
+  "correlateConsent": "Capture sensitive Go runtime stacks and run a controlled local workload against",
+  "correlateAuthorize": "Run timeline",
+  "correlateCaution": "Only use an authorized disposable service; profiling affects latency.",
+  "correlateRunning": "Go timeline in progress",
+  "correlateComplete": "Three snapshots recorded; open the report to inspect limitations.",
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
@@ -205,6 +213,14 @@ const spanish: Dictionary = {
   "safetyTitle": "Seguridad por diseño",
   "localFirst": "LOCAL-FIRST · SIN TELEMETRÍA",
   "footerDisclaimer": "Las mediciones observadas no garantizan capacidad de producción.",
+  "correlateGo": "Correlación temporal Go",
+  "correlateGoHelp": "Capturá stacks de goroutines antes, durante y después de una prueba k6 local acotada. La evidencia es observacional.",
+  "correlateGoRun": "Capturar secuencia",
+  "correlateConsent": "Capturar stacks sensibles de Go y ejecutar una carga local controlada contra",
+  "correlateAuthorize": "Ejecutar correlación",
+  "correlateCaution": "Usá servicios descartables autorizados; el profiling altera la latencia.",
+  "correlateRunning": "Correlación Go en curso",
+  "correlateComplete": "Tres snapshots registrados; consultá el informe y sus limitaciones.",
 };
 export function translate(locale: string, key: string): string {
   const dictionary = locale.toLowerCase().startsWith("es") ? spanish : english;
