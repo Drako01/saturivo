@@ -37,7 +37,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
 
   constructor(private readonly context: vscode.ExtensionContext) {
     this.storageDir = context.storageUri?.fsPath ?? context.globalStorageUri.fsPath;
-    this.store = new HistoryStore(this.storageDir);
+    this.store = new HistoryStore(this.storageDir, this.historyRetention());
     void this.loadHistory();
   }
 
@@ -46,6 +46,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private target(): string { return this.config().get<string>("target", "http://127.0.0.1:8080/"); }
   private maxVus(): number { return this.config().get<number>("maxVirtualUsers", 100); }
   private allowRemote(): boolean { return this.config().get<boolean>("allowRemoteTargets", false); }
+  private historyRetention(): number { return this.config().get<number>("historyRetention", 100); }
 
   /**
    * The Activity Bar remains a stable launcher. The actual dashboard lives in an
@@ -105,7 +106,14 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     if (this.panel) this.panel.webview.html = dashboard(state, vscode.env.language);
   }
 
-  configurationChanged(): void { this.refresh(); }
+  configurationChanged(): void {
+    try {
+      this.store.setRetention(this.historyRetention());
+      void this.store.prune(this.historyRetention()).then(() => this.loadHistory())
+        .catch(error => this.output.appendLine("History retention: " + String(error)));
+    } catch (error) { this.output.appendLine("Invalid history retention: " + String(error)); }
+    this.refresh();
+  }
 
   async openHome(): Promise<void> {
     if (this.panel) {
