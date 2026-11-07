@@ -9,6 +9,13 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Bloque verificable — Provenance del VSIX y resumen k6 (2026-11-07)
+
+- [x] Los jobs `verify`, `k6`, `extension-host`, `Go` y `ui-browser` hacen checkout del **commit HEAD real del PR**, evitando etiquetar un VSIX compilado desde el merge sintético como si fuese el SHA fuente.
+- [x] El job de empaquetado genera y valida `saturivo.release.json` (version, SHA-256 del VSIX, commit git comprobado, identidad de extensión), lo archiva junto al VSIX y su checksum.
+- [x] Lectura de resumen k6 por descriptor con rechazo de symlink/hardlink, identidad comprobada y límite en bytes durante la lectura.
+- [ ] Validar CI del SHA nuevo y revisar artefactos archivados. **No es attestation criptográfica externa**; falta release sign-off y matriz de instalación/upgrade en plataformas remotas.
+
 ## Clasificación conservadora de regresiones — fase 1 (2026-11-07)
 
 - [x] Comparación individual y bootstrap 3×3 comparten validación de calidad de evidencias: `INCONCLUSIVE` cuando el presupuesto global de solicitudes se agotó, hubo iteraciones descartadas o el SLO de la ejecución no es concluyente.

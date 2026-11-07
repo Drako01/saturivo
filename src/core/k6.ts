@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { cpus, totalmem, hostname } from "node:os";
 import { join } from "node:path";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { readBoundedRegularTextFile } from "./bounded-file";
 import type { RunResult, Scenario } from "./types";
 import { readK6Summary } from "./metrics";
 import { runBoundedProcess } from "./process";
@@ -156,9 +157,10 @@ export async function runK6(
       throw new Error("k6 exited with status " + processResult.exitCode + ": " +
         processResult.stderr.slice(-3000));
     }
-    if ((await stat(summary)).size > 4_000_000) throw new Error("Summary exceeds the size limit");
-    const summaryText = await readFile(summary, "utf8");
-    if (Buffer.byteLength(summaryText) > 4_000_000) throw new Error("Summary exceeds the size limit");
+    // The k6 child writes this path. Read via a non-following, identity-checked
+    // descriptor so a replaced symlink or growing file cannot disclose
+    // unrelated workspace data through the report parser.
+    const summaryText = await readBoundedRegularTextFile(summary, 4_000_000);
     const warmup = safeScenario.warmupSeconds ?? 0;
     const cooldown = safeScenario.cooldownSeconds ?? 0;
     const measuredSeconds = warmup || cooldown ? safeScenario.durationSeconds - warmup - cooldown : undefined;

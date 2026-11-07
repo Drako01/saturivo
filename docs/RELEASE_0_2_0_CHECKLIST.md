@@ -4,6 +4,12 @@
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
+## Evidencia del artefacto VSIX exacto
+
+- [x] CI usa checkout del HEAD del PR (no merge sintético), audita `saturivo.vsix`, verifica `saturivo.vsix.sha256` y genera `saturivo.release.json` vinculado al git SHA y versión 0.2.0.
+- [x] Test de manipulación de manifest y checksum existente ejecutado en el job de empaquetado.
+- [ ] Confirmar ejecución del commit, inspeccionar ZIP y archivo manifest del artefacto real, install/upgrade con datos persistidos, aprobación de maintainer.
+
 ## Auditoría VSIX estructural — gate de release 0.2.0
 
 - [x] Detección de entradas duplicadas/case-colliding, rutas peligrosas, symlinks, ZIP cifrado, ZIP64/multipart, metadata local/central inconsistente y compresión excesiva.

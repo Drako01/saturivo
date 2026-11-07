@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Bound the CI-built VSIX to immutable PR HEAD, SHA-256 and release manifest and archived all three pieces; constrained k6 summary reads to no-follow, verified bounded file descriptors.
+
 - Comparisons now return INCONCLUSIVE when capped request budgets, dropped iterations or inconclusive run SLOs make throughput/latency evidence unsuitable for regression claims; shared unit-tested quality guard for two-run and 3×3 bootstrap comparisons.
 
 - Hardened VSIX ZIP central/local header audit against duplicate paths, symlink entries, encrypted archives, ZIP bombs, and unsupported metadata; added five adversarial tests to the multi-OS verification gate (exact commit CI pending).
