@@ -117,3 +117,29 @@ test("runtime process probe requires user action and is disabled during load", (
     history: [], message: "" }, "es-AR");
   assert.match(running, /data-action="runtimeProbe" disabled/);
 });
+
+test("accessible trend data and comparison preview use only observed runs", () => {
+  const scenario = {
+    id: "smoke", name: "Smoke", target: "http://127.0.0.1/",
+    method: "GET" as const, model: "constant-vus" as const,
+    durationSeconds: 10, virtualUsers: 1,
+  };
+  const makeRun = (id: string, p95Ms: number, startedAt: string) => ({
+    schemaVersion: 2 as const, id, startedAt, endedAt: "2026-11-07T10:01:00Z",
+    engine: "k6" as const, scenario,
+    metrics: { requests: 200, requestsPerSecond: 20, failedRate: 0,
+      avgMs: 10, p50Ms: 8, p95Ms, p99Ms: p95Ms + 5, droppedIterations: 0 },
+    environment: {platform: "linux", arch: "x64", node: "v22", cpuCount: 4},
+    warnings: [],
+  });
+  const recent = makeRun("22222222-2222-4222-8222-222222222222", 60, "2026-11-07T10:00:20Z");
+  const older = makeRun("11111111-1111-4111-8111-111111111111", 40, "2026-11-07T10:00:00Z");
+  const markup = dashboard({ target: "http://127.0.0.1/", busy: false,
+    latest: recent, history: [recent, older], message: "" }, "es-AR");
+  assert.match(markup, /<details class="chart-data">/);
+  assert.match(markup, /<th scope="col">Fecha de ejecución/);
+  assert.match(markup, /Vista previa de comparación/);
+  assert.match(markup, /50\.00%/);
+  assert.match(markup, /no es evidencia estadística/);
+  assert(!markup.includes("NaN"));
+});
