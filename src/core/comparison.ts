@@ -18,6 +18,10 @@ export function compareRuns(baseline: RunResult, candidate: RunResult): Comparis
     baseline.environment.arch !== candidate.environment.arch ||
     baseline.environment.node !== candidate.environment.node ||
     baseline.environment.cpuCount !== candidate.environment.cpuCount) reasons.push("Execution environment differs");
+  if (baseline.environment.environmentHash && candidate.environment.environmentHash &&
+      baseline.environment.environmentHash !== candidate.environment.environmentHash) {
+    reasons.push("Load-generator environment fingerprint differs");
+  }
   if (baseline.metrics.requests < 100 || candidate.metrics.requests < 100) reasons.push("Fewer than 100 requests in at least one run");
   const deltaP95Percent = percent(baseline.metrics.p95Ms, candidate.metrics.p95Ms);
   const deltaRpsPercent = percent(baseline.metrics.requestsPerSecond, candidate.metrics.requestsPerSecond);
