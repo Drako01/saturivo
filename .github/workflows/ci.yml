@@ -180,6 +180,10 @@ jobs:
         run: npm run test:integration:websocket
         env:
           K6_NO_USAGE_REPORT: 'true'
+      - name: Verify Docker Compose real Go service with k6 (offline scratch image)
+        run: npm run test:integration:compose
+        env:
+          K6_NO_USAGE_REPORT: 'true'
 
   ui-browser:
     name: Control Center browser interactions (no screenshots)

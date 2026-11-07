@@ -9,6 +9,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Docker Compose real — P3 (2026-11-07)
+
+- [x] Fixture HTTP Go estática con `CGO_ENABLED=0` y Dockerfile `FROM scratch` generado: no descarga imágenes ni paquetes de contenedor, corre como UID no root 65532.
+- [x] Integración `docker compose up --build` en runner Ubuntu, puerto aleatorio vinculado únicamente a `127.0.0.1`, health y contador real de requests, carga k6 acotada 5s y cierre `down --volumes --rmi local` en `finally`.
+- [ ] Requiere CI del SHA exacto para marcar **Docker Compose PASS**. WSL, SSH, Dev Containers y cancelación hostil multiplataforma siguen fuera de este fixture.
+
 ## Seguridad de alcance del host remoto — P3/P4 (2026-11-07)
 
 - [x] La UI distingue host VS Code local y remoto (WSL, SSH, Dev Container u otros mediante `vscode.env.remoteName`), con advertencia ES/EN: `127.0.0.1` siempre refiere al host que ejecuta la extensión.

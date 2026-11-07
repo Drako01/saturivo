@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Added real Docker Compose + statically linked Go loopback fixture with bounded k6 workload and cleanup to Linux CI, without container registry downloads; exact SHA pending verification.
+
 - Explicitly identify VS Code remote execution context and localhost scope in the Control Center, bilingual; redact URL queries from authorization modals without changing validated execution target.
 
 - Explicit v1-to-v2 evidence import migration preserves metrics and legacy on-disk history while validating fingerprints, SLO assessments and HTTP status totals; idempotent roundtrip and adversarial tests added.

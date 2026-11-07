@@ -293,7 +293,8 @@
     "test:integration:runtimes": "node scripts/runtime-matrix.cjs",
     "licenses:report": "node scripts/license-inventory.cjs",
     "test:licenses": "node --test test/license-inventory.test.cjs",
-    "test:integration:websocket": "node scripts/ws-smoke.cjs"
+    "test:integration:websocket": "node scripts/ws-smoke.cjs",
+    "test:integration:compose": "node scripts/compose-smoke.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

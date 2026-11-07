@@ -4,6 +4,11 @@
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
 
+## Docker Compose — prueba real de fase 3
+
+- [x] Fixture local Go compilado estático en Docker Compose `FROM scratch`; HTTP k6 medido y limitado con puerto loopback, sin registro externo ni datos reales.
+- [ ] CI SHA exacto y revisión de logs `down --remove-orphans --volumes --rmi local`. No equivale a E2E WSL/SSH/Dev Container.
+
 ## Host remoto de VS Code — advertencias y privacidad
 
 - [x] Host real local/remoto explícito en el Centro de Control, ES/EN; aclaración de loopback en el host remoto. Modal de autorización y diagnóstico sin credenciales query expuestas.
