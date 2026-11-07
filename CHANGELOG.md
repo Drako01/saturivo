@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased] — 0.2.0 Enterprise AAAA implementation
+## [0.2.0] — 2026-11-07
+
+- Owner authorized publication of 0.2.0 after verified automated gates (CI #42425033225: 7/7 PASS on `ebac70f`). Actual release must verify final SHA after this documentation change, protected tag and Marketplace/Open VSX jobs.
+- Manual installed-host validation is explicitly deferred by the owner to after publication, and remains **NOT RUN**, not PASS. Includes real UI dialogs, WSL/SSH/Dev Containers, accessibility and remote adversarial networks; see [post-publication QA](docs/POST_RELEASE_QA_0_2_0.md). Do not claim complete Enterprise AAAA certification.
+
 
 - Verified 7/7 exact-commit [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) on `0d73879`: Windows/macOS/Linux installed 0.1.0→0.2.0 VSIX CLI upgrades with persisted v1/v2 history, real Go/k6/Compose/WebSocket/Chromium and shipped JavaScript inventory.
 - Fixed Windows VS Code CLI upgrade by invoking native Code.exe in Electron Node CLI mode without executing untrusted `.cmd` files through a shell.

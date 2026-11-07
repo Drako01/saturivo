@@ -1,6 +1,6 @@
 # Saturivo 0.2.0 — Release Acceptance Tracker
 
-**Estado:** BLOQUEADO. **Fuente:** [PR #5 (Ready for review)](https://github.com/Drako01/saturivo/pull/5) · rama `feat/enterprise-aaaa-v0.1.1` · versión candidata **0.2.0 sin Preview**. El repo público **no** autoriza publicar la extensión. El propietario autorizó **únicamente el merge condicional** al cumplimiento completo del checklist. No crear tag ni publicar sin autorización adicional.
+**Estado:** OWNER AUTORIZÓ RELEASE 0.2.0 CON QA MANUAL POSTERIOR; PENDIENTE PUBLICACIÓN REAL. **Fuente:** [PR #5 (Ready for review)](https://github.com/Drako01/saturivo/pull/5) · rama `feat/enterprise-aaaa-v0.1.1` · versión candidata **0.2.0 sin Preview**. El repo público **no** autoriza publicar la extensión. El propietario autorizó expresamente merge y publicación **0.2.0** tras CI final verde y pipeline protegido; realizará QA manual una vez instalada. Los controles manuales permanecen **NOT RUN**, sin declarar Enterprise AAAA íntegramente aprobada. [Matriz de QA pospublicación](POST_RELEASE_QA_0_2_0.md).
 
 **Checklist de implementación actualizado:** [ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md)  
 **Especificación:** [ENTERPRISE_AAAA_MASTER_PLAN.md](ENTERPRISE_AAAA_MASTER_PLAN.md)  
@@ -36,4 +36,4 @@
 - Cuatro capturas finales realizadas en [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f), [workflow #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) PASS. Workflow temporal borrado.
 - **CI post-imágenes:** [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042), SHA `e777ddae314f831c650529c24282c35de43090e0`: **7/7 PASS**. **CI del nuevo commit documental PENDING** hasta finalizar en el mismo SHA, sin heredar el anterior.
 - **BLOCKED:** diálogos E2E VS Code instalados, hosts WSL/SSH/Dev Containers, NVDA/VoiceOver/zoom 200% manual, DNS/proxy remoto, attestation externa, revisión legal de licencias/seguridad y firma del propietario. Ver [REMOTE_VALIDATION.md](REMOTE_VALIDATION.md).
-- **Merge condicional autorizado por el propietario cuando todos los gates estén cerrados.** Sin tag, GitHub Release, Marketplace ni Open VSX hasta autorización independiente.
+- **Merge, tag `v0.2.0` y publicación autorizados por el propietario**, sujetos a CI verde del SHA definitivo, reglas protegidas, integridad de artefacto y aprobación de los entornos. QA manual explícitamente diferido.

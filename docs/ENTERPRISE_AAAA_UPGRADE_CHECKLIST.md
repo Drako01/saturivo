@@ -2,7 +2,7 @@
 
 **Actualizado:** 2026-11-07 · **Versión objetivo:** 0.2.0 (non-preview)
 **Repositorio:** [Drako01/saturivo](https://github.com/Drako01/saturivo)
-**PR en desarrollo:** [#5](https://github.com/Drako01/saturivo/pull/5) · Rama `feat/enterprise-aaaa-v0.1.1` · **Ready for review — merge autorizado por el owner solamente al cerrar todos los gates; tag y publicación no autorizados**.
+**PR en desarrollo:** [#5](https://github.com/Drako01/saturivo/pull/5) · Rama `feat/enterprise-aaaa-v0.1.1` · **Ready for review — owner autorizó merge y publicar 0.2.0 tras CI final PASS, con QA manual posterior aún NOT RUN**.
 **Especificación contractual:** [ENTERPRISE_AAAA_MASTER_PLAN.md](ENTERPRISE_AAAA_MASTER_PLAN.md). **Release:** [RELEASE_0_2_0_CHECKLIST.md](RELEASE_0_2_0_CHECKLIST.md). **Criterios cuantificables:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
 > **Regla de estado:** `[x]` = implementación comprobada por el CI citado o incorporada con prueba específica; `[ ]` = requisito abierto. Para un código recién incorporado sin CI del SHA exacto se indica **CI PENDING**. Una prueba anterior verde **no valida** cambios posteriores. Enterprise AAAA es objetivo interno de madurez, no certificación externa.
@@ -107,4 +107,4 @@
 - **CI post-imágenes verificado:** [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042), SHA `e777ddae314f831c650529c24282c35de43090e0`, 7/7 PASS. **Este cambio documental crea un SHA posterior**, por lo que se exige un nuevo PASS sobre la HEAD definitiva antes del merge.
 - **BLOCKED:** diálogos/import-export/delete E2E en VS Code instalado, WSL/SSH/devcontainer, NVDA/VoiceOver/zoom 200%, DNS/proxy/rebinding remoto, WSL procesos, attestation y sign-off de seguridad/owner.
 - **YAGNI:** gRPC/ghz, profilers externos Node/Java/Python e IA BYO fuera de 0.2.0, no anunciados como funcionalidad.
-- **Gobernanza:** PR #5 Ready for review. El owner autorizó **merge condicional** sujeto a todas las verificaciones obligatorias; **no autorizó** Git tags, GitHub Release, Marketplace u Open VSX.
+- **Gobernanza:** owner autorizó merge y publicación de 0.2.0 con CI final y controles protegidos; QA manual instalado se realizará después. Ninguna prueba manual se contabiliza como PASS. [Plan post-release](POST_RELEASE_QA_0_2_0.md).
