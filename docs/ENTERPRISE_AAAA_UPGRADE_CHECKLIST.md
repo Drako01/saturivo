@@ -9,6 +9,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Clasificación conservadora de regresiones — fase 1 (2026-11-07)
+
+- [x] Comparación individual y bootstrap 3×3 comparten validación de calidad de evidencias: `INCONCLUSIVE` cuando el presupuesto global de solicitudes se agotó, hubo iteraciones descartadas o el SLO de la ejecución no es concluyente.
+- [x] Incluye solicitudes totales de fases auxiliares (`totalRequests`) para detectar cap aunque el tramo medido tenga menos requests; tests unitarios de regresión específicos.
+- [ ] Confirmar TypeScript/CI exacto y validación con muestras repetidas de carga real, ruido y saturación.
+
 ## Auditoría de la estructura VSIX (fase 5, 2026-11-07)
 
 - [x] Auditor del paquete endurecido: detecta ZIP con entradas duplicadas o colisiones case-insensitive, rutas inseguras, enlaces simbólicos, ZIP cifrado, ZIP64/multipart, inconsistencias entre cabeceras, compresión anómala y descompresión excesiva.

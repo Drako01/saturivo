@@ -29,3 +29,29 @@ test("one-sided environment evidence cannot establish a comparable baseline", ()
     environmentHash: "a".repeat(64) } };
   assert.equal(compareRuns(base, newer).status, "inconclusive");
 });
+
+test("request-capped workloads cannot be classified as throughput regressions or improvements", () => {
+  const bounded: RunResult = { ...base, scenario: { ...base.scenario, maxRequests: 1000 },
+    metrics: { ...base.metrics, requests: 950 } };
+  const capped: RunResult = { ...bounded, id: "b",
+    metrics: { ...bounded.metrics, requests: 1000, p95Ms: 160,
+      requestsPerSecond: 20 } };
+  const comparison = compareRuns(bounded, capped);
+  assert.equal(comparison.status, "inconclusive");
+  assert.equal(comparison.comparable, false);
+  assert.match(comparison.reasons.join(" "), /Request budget reached/);
+  const phased = compareRuns(bounded, { ...capped,
+    metrics: { ...capped.metrics, requests: 750, totalRequests: 1000 } });
+  assert.equal(phased.status, "inconclusive");
+  assert.match(phased.reasons.join(" "), /Request budget reached/);
+});
+
+test("dropped load and inconclusive SLO cannot produce an apparently stable comparison", () => {
+  const dropped: RunResult = { ...base, id: "b",
+    metrics: { ...base.metrics, droppedIterations: 1 } };
+  assert.equal(compareRuns(base, dropped).status, "inconclusive");
+  assert.match(compareRuns(base, dropped).reasons.join(" "), /Dropped/);
+  const inconclusive: RunResult = { ...base, id: "c",
+    sloAssessment: { status: "inconclusive", violations: [] } };
+  assert.equal(compareRuns(base, inconclusive).status, "inconclusive");
+});

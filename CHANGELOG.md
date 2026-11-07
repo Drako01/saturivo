@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Comparisons now return INCONCLUSIVE when capped request budgets, dropped iterations or inconclusive run SLOs make throughput/latency evidence unsuitable for regression claims; shared unit-tested quality guard for two-run and 3×3 bootstrap comparisons.
+
 - Hardened VSIX ZIP central/local header audit against duplicate paths, symlink entries, encrypted archives, ZIP bombs, and unsupported metadata; added five adversarial tests to the multi-OS verification gate (exact commit CI pending).
 
 - Fixed exported SARIF tool metadata to read the packaged extension version instead of advertising 0.1.0; added a manifest-parity regression test. Consolidated v0.2.0 acceptance criteria and the six-phase gate summary (CI of exact commit pending).

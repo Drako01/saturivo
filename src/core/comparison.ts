@@ -1,5 +1,6 @@
 import type { Comparison, RunResult } from "./types";
 import { fingerprintScenario } from "./fingerprint";
+import { measurementQualityReasons } from "./evidence-quality";
 
 const round = (value: number): number => Math.round(value * 100) / 100;
 const percent = (older: number, newer: number): number => older > 0 ? round(((newer - older) / older) * 100) : 0;
@@ -26,6 +27,8 @@ export function compareRuns(baseline: RunResult, candidate: RunResult): Comparis
     reasons.push("Load-generator environment fingerprint differs");
   }
   if (baseline.metrics.requests < 100 || candidate.metrics.requests < 100) reasons.push("Fewer than 100 requests in at least one run");
+  for (const reason of new Set([...measurementQualityReasons(baseline),
+      ...measurementQualityReasons(candidate)])) reasons.push(reason);
   const deltaP95Percent = percent(baseline.metrics.p95Ms, candidate.metrics.p95Ms);
   const deltaRpsPercent = percent(baseline.metrics.requestsPerSecond, candidate.metrics.requestsPerSecond);
   const deltaFailedPercentagePoints = round((candidate.metrics.failedRate - baseline.metrics.failedRate) * 100);

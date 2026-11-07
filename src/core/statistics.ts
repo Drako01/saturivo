@@ -1,4 +1,5 @@
 import { fingerprintScenario } from "./fingerprint";
+import { measurementQualityReasons } from "./evidence-quality";
 import type { RunResult } from "./types";
 
 export type StatisticalStatus = "regression" | "improvement" | "stable" | "inconclusive";
@@ -66,8 +67,11 @@ export function compareTrialGroups(
         reasons.push("Execution environment differs"); break;
       }
     }
-    if (all.some(run => run.metrics.requests < 100 || run.metrics.droppedIterations > 0)) {
-      reasons.push("Insufficient requests or dropped load-generator iterations");
+    if (all.some(run => run.metrics.requests < 100)) {
+      reasons.push("Insufficient measured requests");
+    }
+    for (const reason of new Set(all.flatMap(run => measurementQualityReasons(run)))) {
+      reasons.push(reason);
     }
     if (all.some(run => !Number.isFinite(run.metrics.p95Ms) || run.metrics.p95Ms <= 0)) {
       reasons.push("Missing positive P95 measurement");

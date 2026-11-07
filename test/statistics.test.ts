@@ -58,3 +58,22 @@ test("duplicate trials and missing or mismatched environment identities are inco
     environmentHash: "a".repeat(64) } }));
   assert.equal(compareTrialGroups(a, sameHost).status, "regression");
 });
+
+test("bootstrap classifications are inconclusive when any trial reaches the request budget", () => {
+  const a = runs([100, 100, 100]).map(run => ({
+    ...run, scenario: { ...run.scenario, maxRequests: 1000 },
+    metrics: { ...run.metrics, requests: 999 },
+  }));
+  const b = runs([150, 150, 150]).map((run, index) => ({
+    ...run, scenario: { ...run.scenario, maxRequests: 1000 },
+    metrics: { ...run.metrics, requests: index === 1 ? 1000 : 999 },
+  }));
+  const result = compareTrialGroups(a, b);
+  assert.equal(result.status, "inconclusive");
+  assert.match(result.reasons.join(" "), /Request budget reached/);
+  const gc = compareTrialGroups(a, b.map(run => ({
+    ...run, metrics: { ...run.metrics, requests: 850, totalRequests: 1000 },
+  })));
+  assert.equal(gc.status, "inconclusive");
+  assert.match(gc.reasons.join(" "), /Request budget reached/);
+});
