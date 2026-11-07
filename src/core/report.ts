@@ -37,6 +37,27 @@ export function markdownReport(run: RunResult, comparison?: Comparison,
     "| P99 | " + num(run.metrics.p99Ms) + " ms |",
     "| Dropped iterations | " + run.metrics.droppedIterations + " |",
   ];
+  if (run.metrics.targetArrivalRate !== undefined) {
+    lines.push("| Requested arrivals | " + num(run.metrics.targetArrivalRate) + " /s |");
+  }
+  if (run.metrics.achievedArrivalRate !== undefined) {
+    lines.push("| Observed HTTP arrivals | " + num(run.metrics.achievedArrivalRate) + " /s |");
+  }
+  if (run.metrics.statusDistribution) {
+    for (const [status, count] of Object.entries(run.metrics.statusDistribution)) {
+      lines.push("| HTTP " + safe(status) + " | " + count + " |");
+    }
+  }
+  if (run.environment.environmentHash) {
+    lines.push("", "## Execution environment", "",
+      "- Environment SHA-256: `" + run.environment.environmentHash + "`",
+      "- Host fingerprint SHA-256: `" + (run.environment.loadHostFingerprint ?? "unavailable") + "`",
+      "- CPU model: " + safe(run.environment.cpuModel ?? "unknown"),
+      "- CPU count: " + run.environment.cpuCount,
+      "- Source revision: " + safe(run.environment.gitSha ?? "not captured"),
+      "",
+      "Host identity is pseudonymous, not anonymous. Review before exporting.");
+  }
   if (run.sloAssessment?.violations.length) lines.push("", "## SLO findings", "",
     ...run.sloAssessment.violations.map(value => "- " + safe(value)));
   if (comparison) lines.push("", "## Relative comparison", "", "- Classification: " + comparison.status,
