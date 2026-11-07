@@ -14,9 +14,9 @@ PR #5 commit cbd3724 passed [CI 42404881890](https://github.com/Drako01/saturivo
 | P1 editor de escenarios HTTP v2 | IMPLEMENTED / CI PENDING | Validator, target desde settings, form persistente, límites, consentimiento; falta ramp editor y prueba host completa |
 | P1 fingerprint y métricas de ambiente | PARTIAL | Git SHA/env fingerprint, arrivals reales, stages y exclusión warm-up/cooldown |
 | P1 repetición 3×3 y piloto local | PARTIAL | Fixtures previas verdes; falta UX del piloto y evidencia de comportamiento bajo degradación/ruido |
-| P2 Go race/pprof/timeline/trace | IMPLEMENTED / CI PENDING | Captura real de trace/mutex/block; fixture de crecimiento goroutines y bloqueos, overhead/diagnóstico sustentado |
+| P2 Go race/pprof/timeline/trace | IMPLEMENTED / CI PENDING | Trace/mutex/block y fixture controlada de crecimiento/contención; resta correlación avanzada, overhead/diagnóstico sustentado |
 | P3 HTTP Go + Node + Python | IMPLEMENTED / CI PENDING | Matriz real de 3 runtimes con mismo workload k6, resultados y cancelación |
-| P3 gRPC/WebSocket/runtime adapter | NOT RUN | Un protocolo no HTTP y plugins de runtime verificables; capacidad no soportada debe decir NOT SUPPORTED |
+| P3 WebSocket/gRPC/runtime adapter | PARTIAL | Probe WebSocket loopback y fixture E2E incorporados; falta CI exacto, gRPC opcional y runtime adapters Node/Java/Python |
 | P4 Control Center en editor, UI ES/EN | PARTIAL | Capturas en README, editor propio, comparador con baseline elegido; completar keyboard/WCAG, charts y E2E |
 | P4 JSON/MD/SARIF, imports/retención | PARTIAL | Verificar roundtrip y manejo de datos maliciosos y borrado desde host real |
 | P5 threat model y SSRF | PARTIAL | [Threat model](THREAT_MODEL.md) creado, casos adversariales reales aún abiertos |
@@ -34,7 +34,7 @@ PR #5 commit cbd3724 passed [CI 42404881890](https://github.com/Drako01/saturivo
 
 ## Release sign-off — requisitos pendientes
 
-- [ ] Final CI verde de Linux/Windows/macOS, integración k6 real, HTTP Go/Node/Python, Go profiles, VSIX Extension Host y capturas sobre **un mismo SHA**.
+- [ ] Final CI verde de Linux/Windows/macOS, integración k6 real, HTTP Go/Node/Python, WebSocket RFC6455, Go profiles, VSIX Extension Host y capturas sobre **un mismo SHA**.
 - [ ] Pruebas de seguridad adversariales con resultado y entorno documentados; cero fallas críticas propias.
 - [ ] Reimportación JSON v1/v2, controles de borrado, navegación de resultados y cancelación real.
 - [ ] VSIX exacto instalado y actualizado desde 0.1.0; sha256, SBOM, licencias y procedencia comprobados.
