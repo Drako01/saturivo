@@ -69,7 +69,7 @@ export async function captureGoProfile(
       res.once("end", () => finish(undefined, Buffer.concat(chunks)));
       res.once("error", e => finish(e));
     });
-    const onAbort = (): void => req.destroy(new Error("Cancelled"));
+    const onAbort = (): void => { req.destroy(new Error("Cancelled")); };
     const timer = setTimeout(() => req.destroy(new Error("Go profile deadline exceeded")), 15_000);
     req.once("error", e => finish(e));
     signal.addEventListener("abort", onAbort, { once: true });

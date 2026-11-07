@@ -36,10 +36,6 @@ export function renderK6Script(scenario: Scenario, output: string): string {
   ].join("\n");
 }
 
-function trimmed(value: string): string {
-  return value.length > 5000 ? value.slice(-5000) : value;
-}
-
 export async function runK6(
   scenario: Scenario,
   policy: TargetPolicy,

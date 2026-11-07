@@ -254,9 +254,10 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       title: this.t("profile"),
       placeHolder: this.t("profileChoose"),
     });
-    if (!selection) return;
+    if (!selection || !kinds.includes(selection as GoProfileKind)) return;
+    const kind = selection as GoProfileKind;
     const origin = this.config().get<string>("goProfilerOrigin", "http://127.0.0.1:6060/");
-    localPprofEndpoint(origin, selection);
+    localPprofEndpoint(origin, kind);
     const accepted = await vscode.window.showWarningMessage(
       this.t("profileConsent") + " " + origin + " (" + selection + ").",
       { modal: true }, this.t("profileAuthorize")
@@ -267,11 +268,11 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     this.message = this.t("profileRunning");
     this.refresh();
     try {
-      const evidence = await captureGoProfile(origin, selection, this.storageDir, this.controller.signal);
+      const evidence = await captureGoProfile(origin, kind, this.storageDir, this.controller.signal);
       this.output.appendLine("Go pprof " + evidence.kind + ": " + evidence.localPath +
         " (" + evidence.bytes + " bytes)");
       this.message = this.t("profileSaved") + " (" + evidence.bytes + " bytes)";
-      if (selection === "goroutine") {
+      if (kind === "goroutine") {
         const document = await vscode.workspace.openTextDocument(vscode.Uri.file(evidence.localPath));
         await vscode.window.showTextDocument(document, { preview: false });
       } else {
