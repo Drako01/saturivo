@@ -17,8 +17,8 @@ export function parseGoRaceOutput(output: string, workspace: string): GoRaceFind
     if (line.includes("WARNING: DATA RACE")) { inRace = true; access = "unknown"; continue; }
     if (!inRace) continue;
     if (line === "==================") { inRace = false; continue; }
-    if (/^(Previous )?Read at /.test(line)) access = "read";
-    else if (/^(Previous )?Write at /.test(line)) access = "write";
+    if (/^(Previous )?Read at /i.test(line)) access = "read";
+    else if (/^(Previous )?Write at /i.test(line)) access = "write";
     const match = /^\s*(.+\.go):(\d+)(?:\s+\+0x[0-9a-fA-F]+)?\s*$/.exec(line);
     if (!match) continue;
     const original = match[1], row = Number(match[2]);
