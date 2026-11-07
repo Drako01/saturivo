@@ -12,6 +12,7 @@ export function compareRuns(baseline: RunResult, candidate: RunResult): Comparis
     a.arrivalRate !== b.arrivalRate) reasons.push("Scenario configuration differs");
   if (baseline.environment.platform !== candidate.environment.platform ||
     baseline.environment.arch !== candidate.environment.arch ||
+    baseline.environment.node !== candidate.environment.node ||
     baseline.environment.cpuCount !== candidate.environment.cpuCount) reasons.push("Execution environment differs");
   if (baseline.metrics.requests < 100 || candidate.metrics.requests < 100) reasons.push("Fewer than 100 requests in at least one run");
   const deltaP95Percent = percent(baseline.metrics.p95Ms, candidate.metrics.p95Ms);
