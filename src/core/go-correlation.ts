@@ -62,7 +62,7 @@ export async function captureGoLoadTimeline(
 }
 
 export function goCorrelationMarkdown(result: GoCorrelation): string {
-  const [before, during, after] = result.points;
+  const during = result.points[1];
   const rows = result.points.map(p => "| " + p.phase + " | " + p.observedAt +
     " | " + p.snapshot.observedStacks + " | " + p.profile.bytes + " |").join("\n");
   return [
