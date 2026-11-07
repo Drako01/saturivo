@@ -11,11 +11,17 @@ function metric(root: Record<string, unknown>, key: string): Record<string, unkn
   return object(object(root[key]).values);
 }
 
-export function readK6Summary(raw: unknown, targetArrivalRate?: number): Metrics {
+export function readK6Summary(raw: unknown, targetArrivalRate?: number,
+  measurementSeconds?: number): Metrics {
+  const phased = measurementSeconds !== undefined;
+  if (phased && (!Number.isFinite(measurementSeconds) || measurementSeconds! < 5 ||
+      measurementSeconds! > 120)) throw new Error("Invalid measured load window");
   const metrics = object(object(raw).metrics);
-  const durations = metric(metrics, "http_req_duration");
-  const requests = metric(metrics, "http_reqs");
-  const failures = metric(metrics, "http_req_failed");
+  const suffix = phased ? "{saturivo_phase:measurement}" : "";
+  const durations = metric(metrics, "http_req_duration" + suffix);
+  const requests = metric(metrics, "http_reqs" + suffix);
+  const failures = metric(metrics, "http_req_failed" + suffix);
+  const total = metric(metrics, "http_reqs");
   const dropped = metric(metrics, "dropped_iterations");
   const count = finite(requests.count);
   if (count === 0) throw new Error("k6 produced no HTTP requests; results cannot be interpreted");
@@ -28,9 +34,24 @@ export function readK6Summary(raw: unknown, targetArrivalRate?: number): Metrics
   }
   const p95 = finite(durations["p(95)"]);
   if (!p95) throw new Error("k6 summary is missing p(95) latency");
+  const prefix = phased ? "saturivo_measure_status_" : "saturivo_status_";
+  if (phased) {
+    const totalCount = total.count;
+    if (typeof totalCount !== "number" || !Number.isInteger(totalCount) ||
+        totalCount < count) {
+      throw new Error("k6 summary is missing the full-run request budget count");
+    }
+    const buckets = ["1xx", "2xx", "3xx", "4xx", "5xx", "unknown"] as const;
+    const observed = buckets.reduce((sum, key) => sum + finite(metric(metrics, prefix + key).count), 0);
+    if (!Object.keys(metrics).some(key => key.startsWith(prefix)) || observed !== count) {
+      throw new Error("k6 measured HTTP status evidence is incomplete");
+    }
+  }
   return {
     requests: count,
-    requestsPerSecond: finite(requests.rate),
+    // k6 submetric .rate is computed over the whole run, including excluded phases.
+    requestsPerSecond: phased ? count / measurementSeconds! : finite(requests.rate),
+    ...(phased ? { totalRequests: finite(total.count) } : {}),
     failedRate: Math.min(1, finite(failures.rate)),
     avgMs: finite(durations.avg),
     p50Ms: finite(durations.med),
@@ -38,16 +59,16 @@ export function readK6Summary(raw: unknown, targetArrivalRate?: number): Metrics
     p99Ms: finite(durations["p(99)"]),
     droppedIterations: finite(dropped.count),
     ...(targetArrivalRate !== undefined ? {
-      targetArrivalRate, achievedArrivalRate: finite(requests.rate),
+      targetArrivalRate, achievedArrivalRate: phased ? count / measurementSeconds! : finite(requests.rate),
     } : {}),
-    ...(Object.keys(metrics).some(key => key.startsWith("saturivo_status_")) ? {
+    ...(Object.keys(metrics).some(key => key.startsWith(prefix)) ? {
       statusDistribution: {
-        "1xx": finite(metric(metrics, "saturivo_status_1xx").count),
-        "2xx": finite(metric(metrics, "saturivo_status_2xx").count),
-        "3xx": finite(metric(metrics, "saturivo_status_3xx").count),
-        "4xx": finite(metric(metrics, "saturivo_status_4xx").count),
-        "5xx": finite(metric(metrics, "saturivo_status_5xx").count),
-        unknown: finite(metric(metrics, "saturivo_status_unknown").count),
+        "1xx": finite(metric(metrics, prefix + "1xx").count),
+        "2xx": finite(metric(metrics, prefix + "2xx").count),
+        "3xx": finite(metric(metrics, prefix + "3xx").count),
+        "4xx": finite(metric(metrics, prefix + "4xx").count),
+        "5xx": finite(metric(metrics, prefix + "5xx").count),
+        unknown: finite(metric(metrics, prefix + "unknown").count),
       },
     } : {}),
   };

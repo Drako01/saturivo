@@ -95,3 +95,47 @@ test("incomplete or corrupt k6 HTTP summary cannot be interpreted as zero failur
     { ...base, http_req_duration: { values: { avg: 10, med: 9, "p(95)": 20 } } },
   ]) assert.throws(() => readK6Summary({ metrics: broken }), /missing or corrupt/);
 });
+
+test("v2 measured window isolates P95, errors and rates, with full-run request budget", () => {
+  const phase = "{saturivo_phase:measurement}";
+  const result = readK6Summary({ metrics: {
+    http_reqs: { values: { count: 100, rate: 10 } },
+    ["http_reqs"+phase]: { values: { count: 70, rate: 7 } },
+    ["http_req_failed"+phase]: { values: { rate: 0.1 } },
+    ["http_req_duration"+phase]: { values: {
+      avg: 22, med: 15, "p(95)": 36, "p(99)": 55,
+    } },
+    saturivo_measure_status_2xx: { values: { count: 63 } },
+    saturivo_measure_status_5xx: { values: { count: 7 } },
+  } }, 10, 7);
+  assert.equal(result.requests, 70);
+  assert.equal(result.totalRequests, 100);
+  assert.equal(result.requestsPerSecond, 10);
+  assert.equal(result.achievedArrivalRate, 10);
+  assert.equal(result.failedRate, 0.1);
+  assert.equal(result.p95Ms, 36);
+  assert.equal(result.statusDistribution?.["5xx"], 7);
+  assert.throws(() => readK6Summary({ metrics: {
+    http_reqs: { values: { count: 100, rate: 10 } },
+    ["http_reqs"+phase]: { values: { count: 70, rate: 7 } },
+    ["http_req_failed"+phase]: { values: { rate: 0.1 } },
+    ["http_req_duration"+phase]: { values: {
+      avg: 22, med: 15, "p(95)": 36, "p(99)": 55,
+    } },
+    saturivo_measure_status_2xx: { values: { count: 69 } },
+  } }, undefined, 7), /status evidence is incomplete/);
+});
+
+test("phase-aware k6 script tags HTTP requests, keeps global cap and scopes only measured SLOs", () => {
+  const scenario: Scenario = { id: "phase", name: "Measured", target: "http://127.0.0.1:8080/",
+    method: "GET", model: "constant-vus", workloadVersion: 2, durationSeconds: 10,
+    virtualUsers: 1, maxRequests: 1000, warmupSeconds: 2, cooldownSeconds: 2 };
+  const generated = renderK6Script(scenario, "/tmp/phased.json");
+  assert.match(generated, /currentTestRunDuration/);
+  assert.match(generated, /saturivo_phase: phase/);
+  assert.match(generated, /http_reqs\{saturivo_phase:measurement\}/);
+  assert.match(generated, /saturivo_measure_status_2xx/);
+  assert.match(generated, /iterationInTest >= 1000/);
+  assert.match(renderK6Script({ ...scenario, warmupSeconds: 0, cooldownSeconds: 0 },
+    "/tmp/unphased.json"), /iterationInTest >= 1000/);
+});

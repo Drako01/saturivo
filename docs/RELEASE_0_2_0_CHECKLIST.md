@@ -10,6 +10,11 @@ This document is the **release subset** of [the single current AAAA checklist](E
 
 ## Handoff de release — 2026-11-07
 
+- **P1:** separación explícita warm-up/measurement/cool-down, métricas y SLO exclusivos de la ventana central, presupuesto global sin alteración y fingerprint v4 retrocompatible. Tests y fixture k6 real incorporados; **CI pendiente del SHA del commit**.
+- El Control Center permite configurar fases en ES/EN, previsualizar distribución temporal y rechazar mediciones inválidas. Las capturas finales siguen diferidas.
+
+
+
 - La validación funcional UI tiene job independiente `ui-browser` (Chrome headless, `--verify-only`, no imágenes): selección/historial y editor de escenarios. Capturas finales siguen manuales. **CI exacto pendiente.**
 
 

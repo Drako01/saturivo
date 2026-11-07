@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Added optional bounded warm-up and cool-down windows for v2 load scenarios. k6 tags requests by phase, reports latency/errors/RPS and SLOs only for the measurement window, and retains all-phase request-budget enforcement; older workload fingerprints remain unchanged.
+
 - Split browser functional QA from README asset regeneration: ordinary CI validates scenario editing and history investigation in real Chromium, while screenshot files can only be refreshed through an explicitly requested final-stage workflow.
 
 - Added an in-editor accessible run investigation view: exact observed latency/RPS/errors/status counts, SLO findings, warnings and workload fingerprint; persistent selected run and bilingual disclosure. Final README screenshots deferred until complete UX sign-off.

@@ -132,3 +132,21 @@ test("v2 run evidence rejects forged fingerprints, SLO decisions and HTTP counts
     assert.equal(isStoredRun({ ...sample, schemaVersion: 1 }), true);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test("phased imported history cannot forge total request budgets or an invalid SLO decision", () => {
+  const scenario = { ...sample.scenario, workloadVersion: 2 as const,
+    durationSeconds: 10, warmupSeconds: 2, cooldownSeconds: 2,
+    maxRequests: 100, slo: { maxP95Ms: 10 } };
+  const run: RunResult = {
+    ...sample, schemaVersion: 2, scenario, scenarioHash: fingerprintScenario(scenario),
+    metrics: { ...sample.metrics, requests: 50, totalRequests: 100, requestsPerSecond: 8.33 },
+    sloAssessment: { status: "inconclusive", violations: [
+      "Request budget reached; throughput is capped",
+    ] },
+  };
+  assert.equal(isStoredRun(run), true);
+  assert.equal(isStoredRun({ ...run, metrics: { ...run.metrics, totalRequests: 10 } }), false);
+  assert.equal(isStoredRun({ ...run, metrics: { ...run.metrics, totalRequests: undefined } }), false);
+  assert.equal(isStoredRun({ ...run, sloAssessment: { status: "pass", violations: [] } }), false);
+  assert.equal(isStoredRun({ ...run, scenario: { ...scenario, warmupSeconds: 8 } }), false);
+});

@@ -13,6 +13,9 @@ import { pinnedTargetHosts } from "./network-safety";
 export function renderK6Script(
   scenario: Scenario, output: string, verifiedHosts: Readonly<Record<string, string>> = {}
 ): string {
+  const warmup = scenario.warmupSeconds ?? 0;
+  const cooldown = scenario.cooldownSeconds ?? 0;
+  const phased = warmup > 0 || cooldown > 0;
   const executor = scenario.model === "constant-vus"
     ? { executor: "constant-vus", vus: scenario.virtualUsers, duration: scenario.durationSeconds + "s" }
     : scenario.model === "constant-arrival-rate"
@@ -26,6 +29,12 @@ export function renderK6Script(
         gracefulRampDown: "0s" };
   const options = {
     scenarios: { saturivo: executor },
+    // Scoped submetrics only when a validated v2 measurement window is configured.
+    ...(phased ? { thresholds: {
+      "http_reqs{saturivo_phase:measurement}": ["count>0"],
+      "http_req_failed{saturivo_phase:measurement}": ["rate<1.1"],
+      "http_req_duration{saturivo_phase:measurement}": ["p(95)<120000"],
+    } } : {}),
     summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
     discardResponseBodies: true,
     noConnectionReuse: false,
@@ -47,13 +56,35 @@ export function renderK6Script(
     '  5: new Counter("saturivo_status_5xx"),',
     '  other: new Counter("saturivo_status_unknown"),',
     '};',
+    ...(phased ? [
+      'const measuredStatuses = {',
+      '  1: new Counter("saturivo_measure_status_1xx"),',
+      '  2: new Counter("saturivo_measure_status_2xx"),',
+      '  3: new Counter("saturivo_measure_status_3xx"),',
+      '  4: new Counter("saturivo_measure_status_4xx"),',
+      '  5: new Counter("saturivo_measure_status_5xx"),',
+      '  other: new Counter("saturivo_measure_status_unknown"),',
+      '};',
+    ] : []),
     "export const options = " + JSON.stringify(options) + ";",
     "export default function () {",
     "  if (exec.scenario.iterationInTest >= " + String(scenario.maxRequests ?? 10000) + ") { sleep(1); return; }",
+    ...(phased ? [
+      "  const elapsed = exec.instance.currentTestRunDuration / 1000;",
+      "  const phase = elapsed < " + warmup + " ? \"warmup\" : elapsed >= " +
+        (scenario.durationSeconds - cooldown) + " ? \"cooldown\" : \"measurement\";",
+    ] : []),
     "  const response = http.request(" + JSON.stringify(scenario.method) + ", " + JSON.stringify(scenario.target) +
-      ', null, { redirects: 0, timeout: "10s" });',
+      (phased ? ', null, { redirects: 0, timeout: "10s", tags: { saturivo_phase: phase } });' :
+        ', null, { redirects: 0, timeout: "10s" });'),
     '  const group = Math.floor(Number(response.status || 0) / 100);',
     '  if (group >= 1 && group <= 5) statuses[group].add(1); else statuses.other.add(1);',
+    ...(phased ? [
+      '  if (phase === "measurement") {',
+      '    if (group >= 1 && group <= 5) measuredStatuses[group].add(1);',
+      '    else measuredStatuses.other.add(1);',
+      '  }',
+    ] : []),
     "}",
     "export function handleSummary(data) {",
     "  return { [" + JSON.stringify(output) + "]: JSON.stringify(data) };",
@@ -128,10 +159,17 @@ export async function runK6(
     if ((await stat(summary)).size > 4_000_000) throw new Error("Summary exceeds the size limit");
     const summaryText = await readFile(summary, "utf8");
     if (Buffer.byteLength(summaryText) > 4_000_000) throw new Error("Summary exceeds the size limit");
+    const warmup = safeScenario.warmupSeconds ?? 0;
+    const cooldown = safeScenario.cooldownSeconds ?? 0;
+    const measuredSeconds = warmup || cooldown ? safeScenario.durationSeconds - warmup - cooldown : undefined;
     const metrics = readK6Summary(JSON.parse(summaryText) as unknown,
-      safeScenario.model === "constant-arrival-rate" ? safeScenario.arrivalRate : undefined);
+      safeScenario.model === "constant-arrival-rate" ? safeScenario.arrivalRate : undefined,
+      measuredSeconds);
     const warnings: string[] = [];
-    if (safeScenario.model === "ramping-vus") warnings.push("Ramp metrics cover all stages; warm-up and cool-down are not excluded from reported percentiles.");
+    if (measuredSeconds !== undefined) warnings.push(
+      "The measured HTTP window excludes warm-up and cool-down requests; dropped iterations and the global budget still cover the full test.");
+    else if (safeScenario.model === "ramping-vus") warnings.push(
+      "Ramp metrics cover all stages; warm-up and cool-down are not excluded from reported percentiles.");
     if (processResult.truncated) warnings.push("k6 process output exceeded the capture budget; see summary metrics for evidence.");
     if (metrics.droppedIterations > 0) warnings.push("Dropped iterations: the configured arrival rate was not fully achieved.");
     if (metrics.targetArrivalRate !== undefined && metrics.achievedArrivalRate !== undefined &&
@@ -139,7 +177,7 @@ export async function runK6(
       warnings.push("Achieved request arrivals are over 5% below requested arrival rate.");
     }
     if (metrics.requests < 100) warnings.push("Small sample size: avoid drawing strong conclusions.");
-    const budgetReached = metrics.requests >= (safeScenario.maxRequests ?? 10000);
+    const budgetReached = (metrics.totalRequests ?? metrics.requests) >= (safeScenario.maxRequests ?? 10000);
     if (budgetReached) warnings.push("Request budget reached: observed throughput is capped, not sustainable capacity.");
     const cpu = cpus();
     const cpuModel = cpu[0]?.model ?? "unknown";

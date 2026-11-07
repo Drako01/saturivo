@@ -13,6 +13,17 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 - [x] Código y pruebas focalizadas para IPv6 canónico/no canónico, IPv4-mapped, 6to4, Teredo, documentación y 6bone; DNS mixto falla cerrado.
 - [ ] Validación CI del SHA y pruebas adversariales en red/proxy/redirect/WSL para cierre de fase 5.
 
+## P1 — medición de carga con fases aisladas (2026-11-07)
+
+**Implementado para el siguiente commit; CI y k6 real: PENDING hasta comprobar SHA.** No se regeneran capturas README antes del cierre.
+
+- Escenarios `workloadVersion: 2` aceptan `warmupSeconds` y `cooldownSeconds` entre 0 y 30 cada uno, con **mínimo cinco segundos medidos** dentro de la duración global (5–120s). La autorización del destino, VUs y presupuesto global no cambian.
+- k6 etiqueta solicitudes por fase usando `exec.instance.currentTestRunDuration`; los submétricos etiquetados de la ventana central informan **P50/P95/P99, errores, RPS, distribución HTTP y SLO**. El presupuesto de solicitudes se evalúa con `totalRequests` de todas las fases; `dropped_iterations` continúa siendo conservador para el ensayo completo.
+- Huella nueva `saturivo-scenario-v4` **solo** cuando hay fases no nulas. Escenarios antiguos mantienen sus hashes v1/v2/v3, preservando comparaciones históricas.
+- Historial/importación rechaza escenarios con fases no acotadas, `totalRequests` incoherente y SLO sobre presupuesto falsificado. Exportación Markdown e inspector muestran ventanas de medición y total.
+- UX ES/EN: controles de calentamiento y enfriamiento, distribución visual de fases, validación inmediata. Tests de parser, validación, SHA, historial, UI, salida k6 y fixture real local.
+- **Pendientes para DoD:** verificar TypeScript + test + navegador Chromium + integración k6 con output etiquetado por el SHA del bloque; justificar límites de muestras, latencia transfrontera y ruido. No declarar capacidad sostenible certificada.
+
 ## QA UX sin regenerar capturas (2026-11-07)
 
 - `scripts/capture-readme.cjs --verify-only` ejecuta interacciones reales en Chromium sin escribir archivos PNG ni modificar el README: escenario válido/inválido y selección accesible del inspector, foco, `aria-expanded` y persistencia de `WebviewState`.

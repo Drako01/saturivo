@@ -235,3 +235,15 @@ test("history investigation opens measured run details without fabricated eviden
   assert.match(es, /INSPECTOR DE MEDICIONES/);
   assert.match(es, /Inspeccionar/);
 });
+
+test("measurement window editor and live visualization expose honest scoped time", () => {
+  const en = dashboard({ target:"http://127.0.0.1/", history:[],busy:false,message:"" }, "en");
+  assert.match(en, /name="warmupSeconds" required min="0" max="30"/);
+  assert.match(en, /name="cooldownSeconds" required min="0" max="30"/);
+  assert.match(en, /id="preview-phase-track"/);
+  assert.match(en, /data-phase="measurement"/);
+  assert.match(en, /measured<|measurement/);
+  const es = dashboard({ target:"http://127.0.0.1/", history:[],busy:false,message:"" }, "es-AR");
+  assert.match(es, /Calentamiento \(s\)/);
+  assert.match(es, /Enfriamiento \(s\)/);
+});

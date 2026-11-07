@@ -70,7 +70,7 @@ En VS Code ejecutá **Extensions: Install from VSIX…** y seleccioná `saturivo
 4. Ejecutá una prueba rápida, una carga por usuarios virtuales o una tasa de llegadas (*open loop*). Podés cancelar.
 5. Revisá P95/P99, RPS, errores e historial; repetí el mismo escenario, elegí un baseline explícito y exportá resultados.
 
-**Editor propio:** en Pruebas de carga podés definir GET/HEAD, VUs o tasa de llegadas, duración, presupuesto y P95 objetivo. La extensión revalida todo antes de ejecutar. **WebSocket:** existe una prueba separada de loopback que pide endpoint ws:// y consentimiento; sus métricas corresponden a sesiones WebSocket, no a requests HTTP.
+**Editor propio:** en Pruebas de carga podés definir GET/HEAD, VUs, tasa de llegadas o etapas de rampa, duración, presupuesto y P95 objetivo. El calentamiento y enfriamiento opcionales se separan de la ventana medida: P50/P95/P99, errores y RPS se calculan únicamente para esa ventana, mientras el presupuesto sigue cubriendo toda la ejecución. La extensión revalida todo antes de ejecutar. **WebSocket:** existe una prueba separada de loopback que pide endpoint ws:// y consentimiento; sus métricas corresponden a sesiones WebSocket, no a requests HTTP.
 
 **Piloto de capacidad local:** configurá primero un SLO P95, elegí una URL HTTP con IP literal de loopback (por ejemplo `http://127.0.0.1:8080/health`) y ejecutá **Piloto de capacidad local**. Hace hasta 3 etapas acotadas de 10 segundos (10, 20 y 40 llegadas/s), con presupuesto finito, cancelación y corte por SLO o evidencia insuficiente. No representa el límite real de producción.
 

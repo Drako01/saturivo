@@ -99,8 +99,18 @@ function main() {
           'field("stages").value="5:999,5:0";',
           'form.dispatchEvent(new Event("change",{bubbles:true}));',
           'const invalid=form.querySelector("button[type=submit]").disabled&&',
+
           'document.getElementById("preview-warning").classList.contains("preview-invalid");',
-          'document.documentElement.setAttribute("data-ui-smoke",valid&&invalid?"pass":"fail");',
+          'field("stages").value="5:2,10:10,5:0";',
+          'field("warmupSeconds").value="12";field("cooldownSeconds").value="12";',
+          'form.dispatchEvent(new Event("change",{bubbles:true}));',
+          'const phaseInvalid=form.querySelector("button[type=submit]").disabled;',
+          'field("warmupSeconds").value="2";field("cooldownSeconds").value="2";',
+          'form.dispatchEvent(new Event("change",{bubbles:true}));',
+          'const phaseValid=!form.querySelector("button[type=submit]").disabled&&',
+          'document.getElementById("preview-phase-summary").textContent.includes("16s");',
+          'document.documentElement.setAttribute("data-ui-smoke",',
+          'valid&&invalid&&phaseInvalid&&phaseValid?"pass":"fail");',
         ].join("");
         const checked = html.replace("</body>",
           '<script nonce="' + nonce + '">' + probe + '</script></body>');

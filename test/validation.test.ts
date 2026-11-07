@@ -66,3 +66,15 @@ test("adversarial target authority, credentials, private address and DNS lookali
   assert.equal(assertAllowedTarget("https://example.com/health",
     {...policy, allowRemoteTargets: true}).hostname, "example.com");
 });
+
+test("warm-up and cool-down require a bounded v2 measurement window", () => {
+  const phased: Scenario = { ...scenario, workloadVersion: 2, warmupSeconds: 2,
+    cooldownSeconds: 2 };
+  assert.equal(validateScenario(phased, policy).warmupSeconds, 2);
+  for (const invalid of [
+    { ...phased, warmupSeconds: 5, cooldownSeconds: 1 },
+    { ...phased, warmupSeconds: 31 },
+    { ...phased, warmupSeconds: -1 },
+    { ...scenario, warmupSeconds: 2, cooldownSeconds: 2 },
+  ]) assert.throws(() => validateScenario(invalid, policy));
+});

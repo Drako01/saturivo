@@ -33,10 +33,20 @@ export function markdownReport(run: RunResult, comparison?: Comparison,
     "- Model: " + run.scenario.model,
     "- VUs: " + run.scenario.virtualUsers,
     "- Duration: " + run.scenario.durationSeconds + " seconds",
+    ...((run.scenario.warmupSeconds ?? 0) + (run.scenario.cooldownSeconds ?? 0) > 0 ? [
+      "- Warm-up: " + (run.scenario.warmupSeconds ?? 0) + " seconds (excluded)",
+      "- Measured window: " + (run.scenario.durationSeconds -
+        (run.scenario.warmupSeconds ?? 0) - (run.scenario.cooldownSeconds ?? 0)) + " seconds",
+      "- Cool-down: " + (run.scenario.cooldownSeconds ?? 0) + " seconds (excluded)",
+      "- Scope: latency/error/throughput metrics reflect only measurement-window requests.",
+    ] : []),
     "",
     "| Metric | Value |",
     "|---|---:|",
-    "| Requests | " + run.metrics.requests + " |",
+    "| " + (run.metrics.totalRequests !== undefined ? "Measured HTTP requests" : "Requests") +
+      " | " + run.metrics.requests + " |",
+    ...(run.metrics.totalRequests !== undefined ?
+      ["| Total HTTP requests (all phases) | " + run.metrics.totalRequests + " |"] : []),
     "| Throughput | " + num(run.metrics.requestsPerSecond) + " req/s |",
     "| Failed | " + num(run.metrics.failedRate * 100) + "% |",
     "| Average | " + num(run.metrics.avgMs) + " ms |",

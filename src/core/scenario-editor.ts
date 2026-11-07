@@ -42,6 +42,8 @@ export function parseScenarioEditorInput(
   const virtualUsers = integer(fields.virtualUsers, "Virtual users", 1, policy.maxVirtualUsers);
   const maxRequests = integer(fields.maxRequests, "Request budget", 100, 100000);
   const p95 = integer(fields.maxP95Ms, "P95 SLO", 0, 120000);
+  const warmupSeconds = integer(fields.warmupSeconds ?? "0", "Warm-up", 0, 30);
+  const cooldownSeconds = integer(fields.cooldownSeconds ?? "0", "Cool-down", 0, 30);
   const stages = (() => {
     if (model !== "ramping-vus") return undefined;
     if (typeof fields.stages !== "string" || fields.stages.length > 160) {
@@ -62,6 +64,8 @@ export function parseScenarioEditorInput(
   const scenario: Scenario = {
     id: "custom-v2", name, target, method, model, workloadVersion: 2,
     durationSeconds, virtualUsers, maxRequests,
+    ...(warmupSeconds > 0 ? { warmupSeconds } : {}),
+    ...(cooldownSeconds > 0 ? { cooldownSeconds } : {}),
     ...(model === "constant-arrival-rate"
       ? { arrivalRate: integer(fields.arrivalRate, "Arrival rate", 1, 500) } : {}),
     ...(p95 > 0 ? { slo: { maxP95Ms: p95 } } : {}),

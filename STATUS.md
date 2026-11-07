@@ -25,6 +25,10 @@ El PR #5 incorpora además un rediseño UX orientado a la experiencia del desarr
 
 La matriz anterior corresponde al commit histórico `a819a894`; además, [CI #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) pasó 7/7 sobre el SHA `cbd3724` del PR #5. Todo cambio posterior exige CI de su propio SHA; no se hereda un PASS.
 
+## Load Engineering: ventanas medidas (P1)
+
+La fase de carga incorpora ventanas opcionales de calentamiento y enfriamiento para escenarios v2 con etiquetado k6, cálculo separado de métricas y SLO sobre la ventana central y presupuesto global; hashes históricos compatibles. **Estado: código y pruebas añadidas, integración k6 real y CI del nuevo SHA pendientes.**
+
 ## Control Center: investigación de ejecuciones (P4)
 
 El PR #5 incorpora inspector de ejecuciones integrado en el historial, sin abrir paneles externos: datos registrados, SLO, fingerprint, advertencias, selección persistente y ES/EN. **Estado: código implementado; CI del nuevo SHA, pruebas visuales y a11y manual pendientes.** Las cuatro capturas se regeneran recién al finalizar todas las fases.

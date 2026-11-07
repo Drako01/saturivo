@@ -70,6 +70,16 @@ export function validateScenario(input: Scenario, policy: TargetPolicy): Scenari
       throw new Error("Unsupported workload version");
     }
   }
+  const warmup = input.warmupSeconds ?? 0;
+  const cooldown = input.cooldownSeconds ?? 0;
+  if (input.warmupSeconds !== undefined || input.cooldownSeconds !== undefined) {
+    if (input.workloadVersion !== 2) throw new Error("Load phases require workload version 2");
+    if (!Number.isInteger(warmup) || warmup < 0 || warmup > 30 ||
+        !Number.isInteger(cooldown) || cooldown < 0 || cooldown > 30 ||
+        warmup + cooldown > input.durationSeconds - 5) {
+      throw new Error("Warm-up and cool-down must allow at least 5 measured seconds");
+    }
+  }
   const maxRequests = input.maxRequests ?? policy.maxRequests ?? 10000;
   if (!Number.isInteger(maxRequests) || maxRequests < 100 || maxRequests > 100000) {
     throw new Error("Maximum requests must be 100–100000");

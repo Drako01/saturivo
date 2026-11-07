@@ -72,3 +72,21 @@ test("custom ramp stages are parsed and bounded by the global VU ceiling", () =>
   ]) assert.throws(() => parseScenarioEditorInput(
     { ...input, model: "ramping-vus", stages }, target, policy));
 });
+
+test("explicit measurement phases are bounded and never change the authorized target", () => {
+  const phased = parseScenarioEditorInput({ ...input, durationSeconds: "20",
+    warmupSeconds: "3", cooldownSeconds: "4" }, target, policy);
+  assert.equal(phased.warmupSeconds, 3);
+  assert.equal(phased.cooldownSeconds, 4);
+  assert.equal(phased.durationSeconds - phased.warmupSeconds! - phased.cooldownSeconds!, 13);
+  assert.notEqual(fingerprintScenario(phased),
+    fingerprintScenario({ ...phased, cooldownSeconds: 5 }));
+  for (const values of [
+    { warmupSeconds: "30", cooldownSeconds: "0" },
+    { warmupSeconds: "6", cooldownSeconds: "5" },
+    { warmupSeconds: "-1", cooldownSeconds: "0" },
+  ]) assert.throws(() => parseScenarioEditorInput({ ...input, ...values }, target, policy));
+  const legacy = parseScenarioEditorInput(input, target, policy);
+  assert.equal(legacy.warmupSeconds, undefined);
+  assert.equal(legacy.cooldownSeconds, undefined);
+});

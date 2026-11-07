@@ -57,3 +57,16 @@ test("Markdown report retains ordinary letters and redacts sensitive query strin
   assert.doesNotMatch(rendered, /DO_NOT_LEAK|token=secret/);
   assert.match(rendered, /scenario SHA identifies the original workload/);
 });
+
+test("v4 measurement phases change identity but preserve pre-phase v2 workload hashes", () => {
+  const old: Scenario = { ...scenario, workloadVersion: 2 };
+  assert.equal(fingerprintScenario(old), fingerprintScenario({
+    ...old, warmupSeconds: 0, cooldownSeconds: 0,
+  }));
+  const measured: Scenario = { ...old, warmupSeconds: 2, cooldownSeconds: 3 };
+  assert.notEqual(fingerprintScenario(old), fingerprintScenario(measured));
+  assert.notEqual(fingerprintScenario(measured), fingerprintScenario({
+    ...measured, warmupSeconds: 3, cooldownSeconds: 2,
+  }));
+  assert.match(markdownReport(run(measured)), /Measured window: 5 seconds/);
+});

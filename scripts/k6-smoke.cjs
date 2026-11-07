@@ -30,6 +30,9 @@ async function main() {
       { ...base, id: "real-smoke", name: "Real smoke", model: "constant-vus", virtualUsers: 1 },
       { ...base, id: "real-arrival", name: "Real arrival", model: "constant-arrival-rate",
         virtualUsers: 10, arrivalRate: 20 },
+      { ...base, id: "real-phase", name: "Real measured window", model: "constant-vus",
+        workloadVersion: 2, durationSeconds: 10, virtualUsers: 1,
+        maxRequests: 100000, warmupSeconds: 2, cooldownSeconds: 2 },
       { ...base, id: "real-ramp", name: "Real ramp", model: "ramping-vus",
         workloadVersion: 2, virtualUsers: 6, durationSeconds: 20,
         stages: [{ durationSeconds: 5, targetVus: 2 },
@@ -44,8 +47,16 @@ async function main() {
       assert(Number.isFinite(result.metrics.p99Ms));
       assert(Number.isFinite(result.metrics.requestsPerSecond));
       assert.equal(result.metrics.failedRate, 0);
-      assert(result.metrics.requests <= 10000, "Configured request budget must be enforced");
-      const capped = result.metrics.requests >= 10000;
+      assert(result.metrics.requests <= (scenario.maxRequests ?? 10000),
+        "Configured request budget must be enforced");
+      const capped = (result.metrics.totalRequests ?? result.metrics.requests) >=
+        (scenario.maxRequests ?? 10000);
+      if (scenario.warmupSeconds) {
+        assert(result.metrics.totalRequests >= result.metrics.requests);
+        assert(result.metrics.requests > 0);
+        assert.equal(Object.values(result.metrics.statusDistribution).reduce((a, b) => a + b, 0),
+          result.metrics.requests, "Measured HTTP status classes must match measured requests");
+      }
       assert.equal(result.sloAssessment.status, capped ? "inconclusive" : "pass");
       assert.match(result.scenarioHash, /^[0-9a-f]{64}$/);
       assert(result.environment.k6Version.includes("k6"));

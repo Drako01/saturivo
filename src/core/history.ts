@@ -36,6 +36,13 @@ export function isStoredRun(value: unknown): value is RunResult {
   try { assertAllowedTarget(s.target as string, { allowRemoteTargets: true, maxVirtualUsers: 100 }); }
   catch { return false; }
   if (s.workloadVersion !== undefined && s.workloadVersion !== 2) return false;
+  const warmup = s.warmupSeconds ?? 0, cooldown = s.cooldownSeconds ?? 0;
+  if (s.warmupSeconds !== undefined || s.cooldownSeconds !== undefined) {
+    if (s.workloadVersion !== 2 ||
+        !Number.isInteger(warmup) || warmup < 0 || warmup > 30 ||
+        !Number.isInteger(cooldown) || cooldown < 0 || cooldown > 30 ||
+        warmup + cooldown > (s.durationSeconds as number) - 5) return false;
+  }
   if (s.maxRequests !== undefined && (!Number.isInteger(s.maxRequests) ||
       (s.maxRequests as number) < 100 || (s.maxRequests as number) > 100000)) return false;
   if (s.slo !== undefined) {
@@ -59,6 +66,10 @@ export function isStoredRun(value: unknown): value is RunResult {
       !Number.isInteger(m.requests) || (m.requests as number) < 1 ||
       (m.p95Ms as number) <= 0 || (m.failedRate as number) > 1 ||
       !Number.isInteger(m.droppedIterations)) return false;
+  if (m.totalRequests !== undefined &&
+      (!Number.isInteger(m.totalRequests) || (m.totalRequests as number) < (m.requests as number) ||
+       (m.totalRequests as number) > ((s.maxRequests as number | undefined) ?? 10000))) return false;
+  if (warmup + cooldown > 0 && m.totalRequests === undefined) return false;
   if (m.targetArrivalRate !== undefined && (!Number.isInteger(m.targetArrivalRate) ||
       (m.targetArrivalRate as number) < 1 || (m.targetArrivalRate as number) > 500)) return false;
   if (m.achievedArrivalRate !== undefined && !finite(m.achievedArrivalRate)) return false;
@@ -97,7 +108,7 @@ export function isStoredRun(value: unknown): value is RunResult {
         !assessment.violations.every(v => typeof v === "string" && v.length <= 500)) return false;
     if (value.schemaVersion === 2) {
       const expected = assessSlo(m as unknown as Metrics, s.slo as SloDefinition | undefined,
-        (m.requests as number) >= ((s.maxRequests as number | undefined) ?? 10000));
+        ((m.totalRequests ?? m.requests) as number) >= ((s.maxRequests as number | undefined) ?? 10000));
       if (assessment.status !== expected.status ||
           JSON.stringify(assessment.violations) !== JSON.stringify(expected.violations)) return false;
     }

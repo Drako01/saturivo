@@ -24,6 +24,9 @@ export interface Scenario {
   readonly virtualUsers: number;
   readonly arrivalRate?: number;
   readonly maxRequests?: number;
+  /** Optional bounded load phases; only the middle window informs measured SLOs. */
+  readonly warmupSeconds?: number;
+  readonly cooldownSeconds?: number;
   readonly slo?: SloDefinition;
   /** Explicit workload v2 for staged/ramping profiles; omitted for legacy scenarios. */
   readonly workloadVersion?: 2;
@@ -39,6 +42,8 @@ export interface Metrics {
   readonly p95Ms: number;
   readonly p99Ms: number;
   readonly droppedIterations: number;
+  /** For phased tests, measured requests exclude warm-up/cool-down; budget uses total. */
+  readonly totalRequests?: number;
   /** Configured vs. observed network request starts, only for open-loop workloads. */
   readonly targetArrivalRate?: number;
   readonly achievedArrivalRate?: number;
