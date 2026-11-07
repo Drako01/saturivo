@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
 import { createServer, type Server } from "node:http";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, mkdir, writeFile, truncate } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { captureGoProfile, localPprofEndpoint } from "../src/core/go-profiler";
+import { captureGoProfile, checkGoProfileQuota, localPprofEndpoint } from "../src/core/go-profiler";
 
 test("profiler denies remote, credentials and arbitrary paths", () => {
   for (const url of [
@@ -61,4 +61,25 @@ test("rejects oversized profiles", async () => {
 test("rejects aborted profiler requests", async () => {
   const ctrl = new AbortController(); ctrl.abort();
   await assert.rejects(captureGoProfile("http://127.0.0.1:6060/", "heap", tmpdir(), ctrl.signal), /Cancelled/);
+});
+
+test("profile quota caps local storage without deleting existing evidence", async () => {
+  const root = await mkdtemp(join(tmpdir(), "saturivo-profile-quota-"));
+  const directory = join(root, "go-profiles");
+  try {
+    await mkdir(directory);
+    await checkGoProfileQuota(root);
+    const file = join(directory, "11111111-1111-4111-8111-111111111111-heap.pprof");
+    await writeFile(file, "small profile");
+    await truncate(file, 64 * 1024 * 1024);
+    await assert.rejects(checkGoProfileQuota(root, 1), /profile storage quota/);
+    assert.equal((await readFile(file)).byteLength, 64 * 1024 * 1024,
+      "Quota enforcement must never remove profiles without user approval");
+    await rm(file);
+    for (let i = 0; i < 30; i++) {
+      const prefix = String(i).padStart(8, "0");
+      await writeFile(join(directory, prefix + "-0000-4000-8000-000000000000-trace.trace"), "trace");
+    }
+    await assert.rejects(checkGoProfileQuota(root), /profile storage quota/);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
