@@ -256,7 +256,8 @@
     "test:integration:regression": "node scripts/k6-regression.cjs",
     "audit:vsix": "node scripts/audit-vsix.cjs saturivo.vsix",
     "checksum:vsix": "node scripts/vsix-checksum.cjs write saturivo.vsix && node scripts/vsix-checksum.cjs check saturivo.vsix",
-    "verify:release": "node scripts/release-gate.cjs"
+    "verify:release": "node scripts/release-gate.cjs",
+    "test:release-manifest": "node --test test/release-artifact.test.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
