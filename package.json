@@ -156,6 +156,11 @@
         "command": "saturivo.correlateGo",
         "title": "%command.correlateGo%",
         "category": "Saturivo"
+      },
+      {
+        "command": "saturivo.websocketProbe",
+        "title": "%command.websocket%",
+        "category": "Saturivo"
       }
     ],
     "viewsContainers": {
@@ -265,7 +270,8 @@
     "screenshots:readme": "node scripts/capture-readme.cjs",
     "test:integration:runtimes": "node scripts/runtime-matrix.cjs",
     "licenses:report": "node scripts/license-inventory.cjs",
-    "test:licenses": "node --test test/license-inventory.test.cjs"
+    "test:licenses": "node --test test/license-inventory.test.cjs",
+    "test:integration:websocket": "node scripts/ws-smoke.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
