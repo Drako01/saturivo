@@ -1,4 +1,11 @@
-# Saturivo
+<p align="center">
+  <img src="media/saturivo-logo.svg" alt="Saturivo — Load &amp; Concurrency Inspector by ArmoTuSitio" width="750" />
+</p>
+
+<h1 align="center">Saturivo</h1>
+
+<p align="center"><strong>Find the limits. Fix the bottlenecks.</strong></p>
+
 
 **Load & Concurrency Inspector — by ArmoTuSitio**
 
@@ -35,7 +42,6 @@ Saturivo is a VS Code extension for **evidence-first local performance engineeri
 ```bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-git switch feat/initial-enterprise-foundation
 npm install
 npm run verify
 npm run package:vsix
@@ -70,7 +76,7 @@ CI verifies Linux, Windows and macOS and builds a preview VSIX on Linux. No auto
 
 ## Architecture and evidence
 
-See `ARCHITECTURE.md`, `docs/METHODOLOGY.md`, `docs/ACCEPTANCE_CRITERIA.md`, `ROADMAP.md`, `STATUS.md`, `SECURITY.md` and `PRIVACY.md`.
+See `ARCHITECTURE.md`, `docs/METHODOLOGY.md`, `docs/ACCEPTANCE_CRITERIA.md`, `docs/ENTERPRISE_AAAA_MASTER_PLAN.md`, `ROADMAP.md`, `STATUS.md`, `SECURITY.md` and `PRIVACY.md`.
 
 **Disclaimer:** the preliminary comparison rule uses heuristic thresholds, not repeated-trial statistical inference. Saturivo v0.1.0 is a foundational MVP, not an Enterprise AAAA-complete product.
 

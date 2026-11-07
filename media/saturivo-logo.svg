@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="260" viewBox="0 0 980 260" role="img" aria-labelledby="title desc">
+  <title id="title">Saturivo — Load &amp; Concurrency Inspector</title>
+  <desc id="desc">Turquoise performance gauge with an orange needle over a three-bar throughput chart beside the Saturivo wordmark.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#101E29"/>
+      <stop offset="100%" stop-color="#0A111D"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#55E5E0"/>
+      <stop offset="100%" stop-color="#15B9CD"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFB568"/>
+      <stop offset="100%" stop-color="#FF8F43"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="260" rx="28" fill="url(#panel)"/>
+  <rect x="1" y="1" width="978" height="258" rx="27" fill="none" stroke="#27404C" stroke-width="2"/>
+  <g transform="translate(37 36)">
+    <rect x="0" y="0" width="188" height="188" rx="36" fill="#0C1822" stroke="#255D6B" stroke-width="3"/>
+    <path d="M39 123a60 60 0 0 1 120 0" fill="none" stroke="url(#cyan)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M54 119l-10-3M73 82l-7-9M94 71V59M116 82l7-9M134 118l10-3" fill="none" stroke="#D9F5F6" stroke-width="4.8" stroke-linecap="round"/>
+    <rect x="77" y="128" width="14" height="26" rx="3" fill="#168A9D"/>
+    <rect x="98" y="113" width="14" height="41" rx="3" fill="#19B3C4"/>
+    <rect x="119" y="94" width="14" height="60" rx="3" fill="url(#cyan)"/>
+    <path d="M93 123l49-43" fill="none" stroke="url(#orange)" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="93" cy="123" r="11" fill="#FFB568"/>
+    <circle cx="93" cy="123" r="4.5" fill="#18232E"/>
+    <path d="M48 163h92" stroke="#2E5D67" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <path d="M260 55v150" stroke="#254554" stroke-width="2"/>
+  <g font-family="Inter, Segoe UI, Arial, Helvetica, sans-serif">
+    <text x="298" y="125" font-size="84" font-weight="760" letter-spacing="-3" fill="#F6F8FA">Saturi<tspan fill="url(#cyan)">vo</tspan></text>
+    <text x="301" y="164" font-size="26" font-weight="500" letter-spacing="0.5" fill="#B9CFD8">Load &amp; Concurrency Inspector</text>
+    <text x="301" y="207" font-size="18" font-weight="500" letter-spacing="1.8" fill="#69BCC3">BY ARMOTUSITIO</text>
+  </g>
+  <path d="M303 226h182" stroke="url(#orange)" stroke-width="4" stroke-linecap="round"/>
+</svg>
