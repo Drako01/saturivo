@@ -65,6 +65,9 @@ jobs:
         run: |
           npm run audit:vsix
           npm run checksum:vsix
+      - name: Inspect shipped VSIX content, runtime requires and notices
+        if: runner.os == 'Linux'
+        run: node scripts/shipped-inventory.cjs saturivo.vsix
       - name: Bind candidate package to checked-out commit and verify release manifest
         if: runner.os == 'Linux'
         shell: bash
@@ -85,6 +88,7 @@ jobs:
             saturivo.vsix
             saturivo.vsix.sha256
             saturivo.release.json
+            reports/saturivo-shipped-inventory.json
           if-no-files-found: error
 
   integration-k6:
