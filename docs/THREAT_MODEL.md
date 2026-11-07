@@ -79,3 +79,11 @@ decompressed data or every ZIP parser implementation. The final exact VSIX must
 still pass VS Code installation, SHA-256 checksum/provenance, SBOM/license audit,
 and the protected publish preflight. A passing metadata check alone does not
 establish supply-chain integrity.
+
+## Markdown rendering and imported text
+
+Report generators now escape imported scenario names, warnings and timestamps as
+single-line literal Markdown text, including image/link syntax. Rendering an
+attacker-provided `![image](https://...)` inside the Markdown preview must not
+initiate a fetch solely because it was an imported scenario name. This is
+defense-in-depth; JSON exports remain lossless by design and require consent.

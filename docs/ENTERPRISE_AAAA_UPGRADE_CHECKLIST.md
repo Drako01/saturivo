@@ -9,6 +9,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## Markdown export: prevención de enlaces e imágenes inyectados (2026-11-07)
+
+- [x] Escape de caracteres de formato Markdown y HTML en nombres, advertencias, timestamps y etiquetas no confiables, antes de generar reportes de carga y correlación Go.
+- [x] Casos adversariales `![image](https://...)`, links, emphasis, encabezados/pipe de tablas; no se convierte texto de informes en recursos de red activos cuando se previsualiza.
+- [ ] Gate CI SHA exacto y revisión de privacidad de todas las exportaciones del Control Center.
+
 ## Docker Compose real — P3 (2026-11-07)
 
 - [x] Fixture HTTP Go estática con `CGO_ENABLED=0` y Dockerfile `FROM scratch` generado: no descarga imágenes ni paquetes de contenedor, corre como UID no root 65532.

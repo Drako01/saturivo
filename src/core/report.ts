@@ -1,10 +1,9 @@
 import type { Comparison, RunResult } from "./types";
 import { fingerprintScenario } from "./fingerprint";
 import type { StatisticalComparison } from "./statistics";
+import { escapeMarkdownInline } from "./markdown-safety";
 
-function safe(value: string): string {
-  return value.replace(/[|\r\n]/g, " ").replace(/[<>]/g, "");
-}
+function safe(value: string): string { return escapeMarkdownInline(value); }
 /** Preserve the experiment fingerprint, but never print URL query secrets in Markdown. */
 function reportTarget(raw: string): string {
   const queryStart = raw.indexOf("?");

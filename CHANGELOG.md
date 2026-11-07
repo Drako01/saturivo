@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Prevented active Markdown links/images from untrusted run names and warning text in load and Go timeline reports, without changing JSON evidence or fingerprint identity.
+
 - Added real Docker Compose + statically linked Go loopback fixture with bounded k6 workload and cleanup to Linux CI, without container registry downloads; exact SHA pending verification.
 
 - Explicitly identify VS Code remote execution context and localhost scope in the Control Center, bilingual; redact URL queries from authorization modals without changing validated execution target.

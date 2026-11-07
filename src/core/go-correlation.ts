@@ -3,6 +3,7 @@ import type { GoGcObservation } from "./go-gc";
 import type { CapturedGoProfile } from "./go-profiler";
 import { readGoroutineSnapshot, type GoroutineSnapshot } from "./go-profile-analysis";
 import type { RunResult } from "./types";
+import { escapeMarkdownInline } from "./markdown-safety";
 
 export type TimelinePhase = "before" | "during" | "after";
 export interface ProfilePoint {
@@ -90,7 +91,7 @@ export async function captureGoLoadTimeline(
 }
 
 export function goCorrelationMarkdown(result: GoCorrelation): string {
-  const safe = (value: string): string => value.replace(/[|\r\n]/g, " ").replace(/[<>]/g, "");
+  const safe = escapeMarkdownInline;
   const during = result.points[1];
   const rows = result.points.map(p => "| " + p.phase + " | " + safe(p.observedAt) +
     " | " + p.snapshot.observedStacks + " | " + p.profile.bytes +

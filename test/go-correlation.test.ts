@@ -141,3 +141,21 @@ test("absent GC exposure is marked NOT_SUPPORTED and never represented as zero",
     assert(!report.includes("0 GC cycles"));
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test("Go correlation Markdown does not render imported links or image syntax", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-markdown-"));
+  try {
+    const result = await captureGoLoadTimeline(async phase => {
+      const localPath = join(dir, phase + ".txt");
+      await writeFile(localPath, "goroutine 1 [running]:\n");
+      return { kind: "goroutine" as const, localPath, bytes: 24,
+        capturedAt: "2026-11-07T09:00:00Z" };
+    }, async () => ({ ...fixture, scenario: { ...fixture.scenario,
+      name: "![img](https://example.invalid/pixel) **spoof**" } }),
+    new AbortController().signal);
+    const report = goCorrelationMarkdown(result);
+    assert(!report.includes("![img]("));
+    assert(!report.includes("**spoof**"));
+    assert.match(report, /\\!\\\[img\\\]\\\(/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
