@@ -8,6 +8,7 @@ import { readFile, rm } from "node:fs/promises";
 import { HistoryStore, isStoredRun } from "./core/history";
 import { runK6 } from "./core/k6";
 import { parseScenarioEditorInput } from "./core/scenario-editor";
+import { runWebSocketProbe as executeWebSocketProbe, validateWebSocketTarget, webSocketReport } from "./core/websocket";
 import { markdownReport } from "./core/report";
 import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
 import { compareTrialGroups } from "./core/statistics";
@@ -74,6 +75,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       importJson: "saturivo.importJson", clearProfiles: "saturivo.clearProfiles",
       clearHistory: "saturivo.clearHistory", configureSlo: "saturivo.configureSlo",
       goRace: "saturivo.goRace", goBench: "saturivo.goBench",
+      websocketProbe: "saturivo.websocketProbe",
       captureGoProfile: "saturivo.captureGoProfile",
       correlateGo: "saturivo.correlateGo", cancel: "saturivo.cancel",
     };
@@ -198,6 +200,53 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       case "arrival":
         return { ...common, id: "arrival", name: "Arrival-rate", model: "constant-arrival-rate",
           virtualUsers: Math.min(20, max), arrivalRate: 25 };
+    }
+  }
+
+  async websocketProbe(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const proposal = this.target().replace(/^https?:/i, "ws:");
+    const entered = await vscode.window.showInputBox({
+      title: this.t("websocketTitle"),
+      prompt: this.t("websocketPrompt"),
+      value: proposal,
+      validateInput: value => {
+        try { validateWebSocketTarget(value); return undefined; }
+        catch (error) { return error instanceof Error ? error.message : String(error); }
+      },
+    });
+    if (entered === undefined) return;
+    validateWebSocketTarget(entered);
+    const consent = await vscode.window.showWarningMessage(
+      this.t("websocketConsent") + " " + entered,
+      { modal: true }, this.t("websocketAuthorize")
+    );
+    if (consent !== this.t("websocketAuthorize") || this.busy) return;
+    this.busy = true;
+    this.controller = new AbortController();
+    this.message = this.t("websocketRunning");
+    this.refresh();
+    try {
+      const evidence = await executeWebSocketProbe(
+        entered, this.config().get<string>("k6Path", "k6"),
+        this.storageDir, this.controller.signal
+      );
+      this.output.appendLine("WebSocket probe: " + JSON.stringify(evidence));
+      const document = await vscode.workspace.openTextDocument({
+        content: webSocketReport(evidence), language: "markdown",
+      });
+      await vscode.window.showTextDocument(document, { preview: false });
+      this.message = this.t("websocketComplete");
+    } catch (error) {
+      this.message = error instanceof Error ? error.message : String(error);
+      if (this.message !== "Cancelled") {
+        void vscode.window.showErrorMessage("Saturivo: " + this.message);
+      }
+    } finally {
+      this.busy = false;
+      this.controller = undefined;
+      this.refresh();
     }
   }
 
@@ -673,6 +722,7 @@ export function activate(context: vscode.ExtensionContext): void {
     goBench: () => app.runGoTask("benchmark"),
     captureGoProfile: () => app.captureProfile(),
     correlateGo: () => app.correlateGo(),
+    websocketProbe: () => app.websocketProbe(),
   };
   for (const [key, action] of Object.entries(actions)) {
     context.subscriptions.push(vscode.commands.registerCommand("saturivo." + key, async () => {
