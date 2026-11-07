@@ -97,3 +97,13 @@ test("WebSocket action is explicit and the running state disables protocol probe
     history: [], message: "" }, "es-AR");
   assert.match(busy, /data-action="websocketProbe" disabled/);
 });
+
+test("custom ramp editor exposes only selected stage controls and preserves accessible hints", () => {
+  const markup = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+    history: [], message: "" }, "es-AR");
+  assert.match(markup, /option value="ramping-vus"/);
+  assert.match(markup, /name="stages"/);
+  assert.match(markup, /aria-describedby="ramp-hint"/);
+  assert.match(markup, /toggleModels/);
+  assert.match(markup, /Etapas de rampa/);
+});
