@@ -110,8 +110,13 @@ jobs:
         run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
       - name: Audit VSIX before host installation
         run: npm run audit:vsix
-      - name: Launch actual VS Code 1.99 Extension Host
+      - uses: grafana/setup-k6-action@43b9fc21641a76002687994433dd586f56e791b1 # v1
+        with:
+          k6-version: '1.8.2'
+      - name: Launch actual VS Code 1.99 Extension Host, run and cancel real k6
         run: xvfb-run -a npm run test:integration:vscode
+        env:
+          K6_NO_USAGE_REPORT: 'true'
 
   go-runtime-evidence:
     name: Real Go race and pprof fixture (Linux)
