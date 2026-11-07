@@ -39,7 +39,9 @@ async function main() {
       assert(Number.isFinite(result.metrics.p99Ms));
       assert(Number.isFinite(result.metrics.requestsPerSecond));
       assert.equal(result.metrics.failedRate, 0);
-      assert.equal(result.sloAssessment.status, "pass");
+      assert(result.metrics.requests <= 10000, "Configured request budget must be enforced");
+      const capped = result.metrics.requests >= 10000;
+      assert.equal(result.sloAssessment.status, capped ? "inconclusive" : "pass");
       assert.match(result.scenarioHash, /^[0-9a-f]{64}$/);
       assert(result.environment.k6Version.includes("k6"));
       console.log(JSON.stringify({
