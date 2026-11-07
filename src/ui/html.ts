@@ -217,6 +217,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     diagTool('◈', 'profile', 'profileHelp', 'captureGoProfile', 'capture', 'clearProfiles', 'clearProfiles') +
     diagTool('↔', 'correlateGo', 'correlateGoHelp', 'correlateGo', 'correlateGoRun') +
     diagTool('↗', 'benchmark', 'benchHelp', 'goBench', 'runBench') +
+    diagTool('●', 'runtimeProbeTitle', 'runtimeProbeDescription', 'runtimeProbe', 'runtimeProbeRun') +
     '</div><div class="panel safety"><h3>' + t('safetyTitle') +
     '</h3><p>' + t('safety') + ' ' + t('help') + '</p></div></section>';
 
