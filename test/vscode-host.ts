@@ -10,7 +10,7 @@ export async function run(): Promise<void> {
   const commands = await vscode.commands.getCommands(true);
   for (const command of [
     "saturivo.openHome", "saturivo.runSmoke", "saturivo.cancel",
-    "saturivo.goRace", "saturivo.captureGoProfile", "saturivo.configureSlo",
+    "saturivo.goRace", "saturivo.navigateRace", "saturivo.captureGoProfile", "saturivo.configureSlo",
     "saturivo.capacityPilot", "saturivo.correlateGo", "saturivo.runRamp", "saturivo.importJson", "saturivo.clearProfiles",
     "saturivo.websocketProbe",
   ]) assert(commands.includes(command), "Expected command registered: " + command);

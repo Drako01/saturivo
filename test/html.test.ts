@@ -288,3 +288,12 @@ test("remote workspace loopback scope is explicit, localized and escaped", () =>
   assert(!hostile.includes("<img src=x"));
   assert(hostile.includes("&lt;img src=x"));
 });
+
+test("race diagnostics expose explicit source navigation in bilingual Control Center", () => {
+  for (const locale of ["en", "es-AR"]) {
+    const html = dashboard({ target: "http://127.0.0.1/", busy: false,
+      history: [], message: "" }, locale);
+    assert.match(html, /data-action="navigateRace"/);
+    assert.match(html, new RegExp(translate(locale, "raceNavigateAction")));
+  }
+});

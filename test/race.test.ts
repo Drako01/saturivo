@@ -1,7 +1,9 @@
 import { test } from "node:test";
+import { mkdtemp, writeFile, symlink, rm, realpath } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { strict as assert } from "node:assert";
 import { join, resolve } from "node:path";
-import { parseGoRaceOutput } from "../src/core/race";
+import { parseGoRaceOutput, validatedGoRaceSourcePath } from "../src/core/race";
 const root = resolve("race-test-fixture");
 const log = [
   "==================",
@@ -30,4 +32,25 @@ test("ignores logs without race and traversal outside root", () => {
   assert.deepEqual(parseGoRaceOutput("ok package\nPASS", root), []);
   const fake = "WARNING: DATA RACE\n  ../../outside.go:3 +0x1\n==================";
   assert.deepEqual(parseGoRaceOutput(fake, root), []);
+});
+
+test("verified Go race navigation resolves true files and rejects symlink escapes", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "saturivo-race-root-"));
+  const outside = await mkdtemp(join(tmpdir(), "saturivo-race-outside-"));
+  try {
+    const owned = join(workspace, "main.go");
+    const foreign = join(outside, "hidden.go");
+    await writeFile(owned, "package main\n");
+    await writeFile(foreign, "package secret\n");
+    assert.equal(await validatedGoRaceSourcePath(workspace, owned), await realpath(owned));
+    await symlink(foreign, join(workspace, "redirect.go"));
+    await assert.rejects(validatedGoRaceSourcePath(workspace, join(workspace, "redirect.go")),
+      /outside the original trusted workspace/);
+    await assert.rejects(validatedGoRaceSourcePath(workspace, foreign),
+      /outside the original trusted workspace/);
+    await assert.rejects(validatedGoRaceSourcePath(workspace, join(workspace, "missing.go")), /ENOENT/);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
 });

@@ -346,17 +346,20 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</div></div></section>';
 
   const diagTool = (symbol: string, title: string, intro: string, action: string, btn: string,
-    secondaryAction?: string, secondaryLabel?: string): string =>
+    secondaryAction?: string, secondaryLabel?: string,
+    tertiaryAction?: string, tertiaryLabel?: string): string =>
     '<article class="panel diagnostic"><div class="diag-symbol" aria-hidden="true">' + symbol +
     '</div><h3>' + t(title) + '</h3><p>' + t(intro) + '</p><div class="action-row">' +
     button(action, btn, 'primary', busy) +
     (secondaryAction && secondaryLabel ? button(secondaryAction, secondaryLabel, 'secondary', busy) : '') +
+    (tertiaryAction && tertiaryLabel ? button(tertiaryAction, tertiaryLabel, 'secondary', busy) : '') +
     '</div></article>';
   const diagnostics = '<section role="tabpanel" id="view-diagnostics" tabindex="0" data-view="diagnostics" aria-labelledby="tab-diagnostics" hidden>' +
     '<div class="section-title"><div><span class="eyebrow">' + t('toolchain') +
     '</span><h2>' + t('diagnosticsTitle') + '</h2><p>' + t('diagnosticsIntro') +
     '</p></div></div><div class="diagnostics">' +
-    diagTool('{ }', 'race', 'raceHelp', 'goRace', 'runDetector', 'exportSarif', 'exportSarif') +
+    diagTool('{ }', 'race', 'raceHelp', 'goRace', 'runDetector', 'exportSarif',
+      'exportSarif', 'navigateRace', 'raceNavigateAction') +
     diagTool('◈', 'profile', 'profileHelp', 'captureGoProfile', 'capture', 'clearProfiles', 'clearProfiles') +
     diagTool('↔', 'correlateGo', 'correlateGoHelp', 'correlateGo', 'correlateGoRun') +
     diagTool('↗', 'benchmark', 'benchHelp', 'goBench', 'runBench') +

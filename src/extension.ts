@@ -12,7 +12,8 @@ import { parseScenarioEditorInput } from "./core/scenario-editor";
 import { runWebSocketProbe as executeWebSocketProbe, validateWebSocketTarget, webSocketReport } from "./core/websocket";
 import { readRuntimeSnapshot, type RuntimeKind } from "./core/runtime-adapters";
 import { markdownReport } from "./core/report";
-import { parseGoRaceOutput, type GoRaceFinding } from "./core/race";
+import { parseGoRaceOutput, validatedGoRaceSourcePath, type GoRaceFinding } from "./core/race";
+import { relative as relativePath } from "node:path";
 import { compareTrialGroups } from "./core/statistics";
 import { fingerprintScenario } from "./core/fingerprint";
 import { assertLiteralLoopback, discoverLocalCapacity } from "./core/capacity";
@@ -33,6 +34,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private latest: RunResult | undefined;
   private history: RunResult[] = [];
   private raceFindings: GoRaceFinding[] = [];
+  private raceWorkspace: string | undefined;
   private readonly store: HistoryStore;
   private readonly output = vscode.window.createOutputChannel("Saturivo");
   private readonly raceDiagnostics = vscode.languages.createDiagnosticCollection("saturivo");
@@ -90,7 +92,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       exportJson: "saturivo.exportJson", exportSarif: "saturivo.exportSarif",
       importJson: "saturivo.importJson", clearProfiles: "saturivo.clearProfiles",
       clearHistory: "saturivo.clearHistory", configureSlo: "saturivo.configureSlo",
-      goRace: "saturivo.goRace", goBench: "saturivo.goBench",
+      goRace: "saturivo.goRace", navigateRace: "saturivo.navigateRace",
+      goBench: "saturivo.goBench",
       websocketProbe: "saturivo.websocketProbe",
       runtimeProbe: "saturivo.runtimeProbe",
       captureGoProfile: "saturivo.captureGoProfile",
@@ -559,6 +562,39 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       JSON.stringify(raceFindingsToSarif(this.raceFindings), null, 2), "utf8"));
   }
 
+  async navigateRace(): Promise<void> {
+    if (this.busy) return;
+    if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+    const workspace = this.raceWorkspace;
+    if (!workspace || !this.raceFindings.length) {
+      void vscode.window.showInformationMessage(this.t("raceNothingToNavigate"));
+      return;
+    }
+    if (!(vscode.workspace.workspaceFolders ?? []).some(folder => folder.uri.fsPath === workspace)) {
+      throw new Error("Race evidence belongs to a workspace that is no longer open");
+    }
+    const candidates = this.raceFindings.slice(0, 200).map(finding => ({
+      label: relativePath(workspace, finding.file) + ":" + finding.line,
+      description: finding.access.toUpperCase(),
+      detail: finding.description,
+      finding,
+    }));
+    const selection = await vscode.window.showQuickPick(candidates, {
+      title: this.t("raceNavigateTitle"), placeHolder: this.t("raceNavigateHelp"),
+      matchOnDescription: true,
+    });
+    if (!selection) return;
+    // A Go fixture can create a symlink or move source files after the race
+    // detector runs: verify the real file against the selected trusted root.
+    const file = await validatedGoRaceSourcePath(workspace, selection.finding.file);
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
+    const row = Math.min(selection.finding.line - 1, document.lineCount - 1);
+    const position = new vscode.Position(row, 0);
+    await vscode.window.showTextDocument(document, {
+      preview: false, selection: new vscode.Range(position, position),
+    });
+  }
+
   async clearHistory(): Promise<void> {
     if (this.busy) return;
     const choice = await vscode.window.showWarningMessage(
@@ -602,6 +638,11 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       { modal: true }, "Execute"
     );
     if (response !== "Execute") return;
+    if (task === "race") {
+      this.raceDiagnostics.clear();
+      this.raceFindings = [];
+      this.raceWorkspace = undefined;
+    }
     this.busy = true;
     this.message = this.t("runningGo") + ": " + task;
     this.controller = new AbortController();
@@ -613,6 +654,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         this.raceDiagnostics.clear();
         const findings = parseGoRaceOutput(result.output, folder);
         this.raceFindings = findings;
+        this.raceWorkspace = folder;
         const grouped = new Map<string, vscode.Diagnostic[]>();
         for (const finding of findings) {
           const location = new vscode.Range(finding.line - 1, 0, finding.line - 1, 0);
@@ -799,6 +841,7 @@ export function activate(context: vscode.ExtensionContext): void {
     exportSarif: () => app.exportRaceSarif(),
     clearHistory: () => app.clearHistory(),
     goRace: () => app.runGoTask("race"),
+    navigateRace: () => app.navigateRace(),
     goBench: () => app.runGoTask("benchmark"),
     captureGoProfile: () => app.captureProfile(),
     correlateGo: () => app.correlateGo(),

@@ -1,126 +1,38 @@
-# Saturivo 0.2.0 — Enterprise AAAA release tracker
+# Saturivo 0.2.0 — Release Acceptance Tracker
 
-**Candidato no Preview:** objetivo 0.2.0 (no es release autorizado). **Public repo:** Drako01/saturivo · **Source PR:** [#5](https://github.com/Drako01/saturivo/pull/5), currently OPEN as Draft · **Base:** main a3eaa376 · **Target version:** 0.2.0 · **Publication:** BLOCKED until explicit owner approval.
+**Estado:** BLOQUEADO. **Fuente:** [PR #5 (Draft)](https://github.com/Drako01/saturivo/pull/5) · rama `feat/enterprise-aaaa-v0.1.1` · versión candidata **0.2.0 sin Preview**. El repo público **no** autoriza publicar la extensión. No crear release, merge ni tag sin aprobación expresa.
 
-This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
+**Checklist de implementación actualizado:** [ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md)  
+**Especificación:** [ENTERPRISE_AAAA_MASTER_PLAN.md](ENTERPRISE_AAAA_MASTER_PLAN.md)  
+**Criterios de aceptación:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md)
 
-## Docker Compose — prueba real de fase 3
+## Gates obligatorios de publicación
 
-- [x] Fixture local Go compilado estático en Docker Compose `FROM scratch`; HTTP k6 medido y limitado con puerto loopback, sin registro externo ni datos reales.
-- [ ] CI SHA exacto y revisión de logs `down --remove-orphans --volumes --rmi local`. No equivale a E2E WSL/SSH/Dev Container.
-
-## Host remoto de VS Code — advertencias y privacidad
-
-- [x] Host real local/remoto explícito en el Centro de Control, ES/EN; aclaración de loopback en el host remoto. Modal de autorización y diagnóstico sin credenciales query expuestas.
-- [ ] Real WSL/SSH/devcontainer/Docker Compose E2E, no sustituible por pruebas unitarias.
-
-## Migración de evidencias v1 → v2
-
-- [x] Conversión explícita desde diálogo de importación, preservación de métricas e identidad, fingerprint v2 y validación SLO contra datos no confiables; pruebas roundtrip, idempotencia y rechazo de inconsistencias.
-- [ ] E2E del diálogo real de VS Code, instalación/upgrade con historial previo y CI exacto.
-
-## UX accesible — gates de QA
-
-- [x] Navegación asistida ES/EN y foco accesible en paneles, Chromium keyboard smoke ampliado sin capturas.
-- [ ] Pruebas manuales con lector de pantalla, zoom 200%, contraste y tema claro/oscuro.
-- [ ] CI del commit que incorpora cambios de navegación.
-
-## Evidencia del artefacto VSIX exacto
-
-- [x] CI usa checkout del HEAD del PR (no merge sintético), audita `saturivo.vsix`, verifica `saturivo.vsix.sha256` y genera `saturivo.release.json` vinculado al git SHA y versión 0.2.0.
-- [x] Test de manipulación de manifest y checksum existente ejecutado en el job de empaquetado.
-- [ ] Confirmar ejecución del commit, inspeccionar ZIP y archivo manifest del artefacto real, install/upgrade con datos persistidos, aprobación de maintainer.
-
-## Auditoría VSIX estructural — gate de release 0.2.0
-
-- [x] Detección de entradas duplicadas/case-colliding, rutas peligrosas, symlinks, ZIP cifrado, ZIP64/multipart, metadata local/central inconsistente y compresión excesiva.
-- [x] Tests locales sintéticos 5/5 PASS; CI ejecuta el nuevo test en `npm run verify`.
-- [ ] Evidencia del artefacto real y CI del commit exacto; checksum/SBOM/provenance y upgrade instalable siguen gates separados.
-
-## Seguridad IPv6 (implementación en rama; CI exacto pendiente)
-
-- Bloqueo de prefijos IPv6 de transición (6to4/Teredo/ORCHID), rangos de documentación con ceros no canónicos y 6bone; unit tests de DNS y URL literal. Resta matriz adversarial completa antes del sign-off.
-
-## Handoff de release — 2026-11-07
-
-- **Evidencia verificada P1:** `fa0bebc`, [CI #42415007006](https://github.com/Drako01/saturivo/actions/runs/42415007006), siete jobs PASS, capturas omitidas por la regla de finalizar el README al final.
-- **P4/P5 privacidad adicional:** redacción de query/fragmentos en los destinos visibles del Control Center sin modificar la URL real de prueba. Test agregado, CI del siguiente SHA pendiente.
-
-
-
-- **P1:** separación explícita warm-up/measurement/cool-down, métricas y SLO exclusivos de la ventana central, presupuesto global sin alteración y fingerprint v4 retrocompatible. Tests y fixture k6 real incorporados; **CI pendiente del SHA del commit**.
-- El Control Center permite configurar fases en ES/EN, previsualizar distribución temporal y rechazar mediciones inválidas. Las capturas finales siguen diferidas.
-
-
-
-- La validación funcional UI tiene job independiente `ui-browser` (Chrome headless, `--verify-only`, no imágenes): selección/historial y editor de escenarios. Capturas finales siguen manuales. **CI exacto pendiente.**
-
-
-
-- **P4 mejora UX:** inspector de una ejecución en el propio Control Center, navegación accesible, métricas registradas y ES/EN. **Implementado; CI y revisión manual pendiente.** Las capturas finales siguen diferidas.
-
-
-
-- **Capturas README:** diferidas al último bloque por decisión del maintainer. Deshabilitado el auto-commit de capturas durante CI de cada PR; finalización por workflow_dispatch con `capture_screenshots=true` exclusivamente en la rama del PR #5. Validación visual y CI posterior al commit siguen abiertos.
-
-
-
-- **Versión objetivo actualizada por el maintainer:** 0.2.0, sin `preview`. Se conserva el PR #5 y el nombre histórico de la rama. No generar Git tags.
-- **Metadatos de búsqueda:** 23 `keywords` relevantes, sin prometer capacidades gRPC/BYO AI o profiling por runtimes no implementado. Marketplace acepta hasta 30 keywords. Validación automatizada en `scripts/verify-manifest.cjs`.
-- **Gate de compatibilidad:** upgrade VSIX real desde 0.1.0 → 0.2.0, sin pérdida de historial ni configuración; corroboración de versionado de UI, lockfile, artefactos y documentación.
-- **Evidencia histórica:** el SHA previo `e8eee7c` superó [CI #42412836592](https://github.com/Drako01/saturivo/actions/runs/42412836592) 7/7 antes del version bump. CI del candidato 0.2.0 queda NOT RUN hasta el SHA de esta modificación.
-
-
-
-- Seguridad operacional: escalamiento de kill-tree POSIX, cancelación de cargas al fallar profiling y rechazo de snapshots hostiles. **Bloque implementado con CI pendiente del SHA exacto**.
-
-- Export Markdown con query de URL redactada; JSON sin pérdida bajo confirmación de privacidad. **CI PASS para el bloque:** commit `b131d7c`, [run #42412478761](https://github.com/Drako01/saturivo/actions/runs/42412478761), 7/7. UX manual sigue pendiente.
-
-- Integridad de evidencias/comparaciones reforzada en el bloque siguiente a `5fabbbb`; ver checklist maestro. **PASS en bloque de integridad:** `b54f902` con [CI #42412224059](https://github.com/Drako01/saturivo/actions/runs/42412224059) 7/7. El siguiente bloque vuelve a quedar pendiente de verificación SHA.
-
-
-- El estado técnico consolidado y los gates medibles están en [ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); este archivo se limita a las condiciones de publicación.
-- Actualización técnica: escenario ramp v2 y preview UX, fingerprints y observabilidad de arribo/status, nuevos tests adversariales DNS/archivo/proceso, perfilar Go con cuota, probe WebSocket, métricas runtime Linux, experiencia ES/EN y script real de VSIX upgrade.
-- [CI #42411433024](https://github.com/Drako01/saturivo/actions/runs/42411433024) se estaba ejecutando sobre un SHA anterior a este traspaso. **No marcarlo verde sin consultar su resultado y HEAD actual.**
-- **Release gate aún abierto:** validar SHA exacto del candidato después de los últimos commits; seguridad adversarial y UX/lectores de pantalla, migración/roundtrip, artefacto VSIX, install/upgrade, audit shipped, SBOM/licencias/notices, checksum/provenance.
-- Repositorio fuente público, pero **no hay autorización de publicación**. El cambio de estado Draft → Open no autoriza merge, tag ni deploy.
-- El propietario debe revisar y aprobar merge/publicación en decisiones separadas. No ejecutar release workflows para simular pruebas de publicación.
-
-## Historical green baseline
-
-PR #5 commit cbd3724 passed [CI 42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890), 7/7 jobs. La corrida 42412836592 fue verde para `e8eee7c`, todavía versionado 0.1.1. **0.2.0 necesita un CI independiente en el HEAD exacto**.
-
-| Gate | Status | Acceptance still required |
+| Gate | Evidencia existente | Validación final pendiente |
 |---|---|---|
-| Compatibilidad v0.1.0, TypeScript estricto | PARTIAL | Tests de schema v1/2, historial y artefacto actualizado |
-| P1 editor de escenarios HTTP v2 | PARTIAL / CI PENDING | Closed/open/ramp con estudio de escenarios e inspector visual; faltan warm-up/cool-down y migración total |
-| P1 fingerprint y métricas de ambiente | PARTIAL | Git SHA y hash env/host, arrival deseada/observada y códigos HTTP; falta warm-up/cool-down |
-| P1 repetición 3×3 y piloto local | PARTIAL | Fixtures previas verdes; falta UX del piloto y evidencia de comportamiento bajo degradación/ruido |
-| P2 Go race/pprof/timeline/trace | IMPLEMENTED / CI PENDING | Trace/mutex/block y fixture controlada de crecimiento/contención; resta correlación avanzada, overhead/diagnóstico sustentado |
-| P3 HTTP Go + Node + Python | IMPLEMENTED / CI PENDING | Matriz real de 3 runtimes con mismo workload k6, resultados y cancelación |
-| P3 WebSocket/gRPC/runtime adapter | PARTIAL | WebSocket local y adaptación read-only Node/Java/Python Linux; faltan gRPC/ghz y profiling por lenguaje |
-| P4 Control Center en editor, UI ES/EN | PARTIAL / CI PENDING | Workflow guiado, escenario visual, navegador de evidencia, prueba Chromium real y capturas sintéticas; falta WCAG/manual |
-| P4 JSON/MD/SARIF, imports/retención | PARTIAL | Importación hostil, anti-symlink y retención configurable; faltan roundtrip host y revisión redacción |
-| P5 threat model y SSRF | PARTIAL | [Threat model](THREAT_MODEL.md) creado, casos adversariales reales aún abiertos |
-| P5 lockfile, SBOM y licencias | IMPLEMENTED / CI PENDING | Evidencia CI exacta y revisión de avisos/licencias |
-| P5 VSIX/security/upgrade | PARTIAL / CI PENDING | Gate real de upgrade 0.1.0→0.2.0 Linux y cuotas/SSRF incorporados; faltan evidencia final y OS remotos |
-| Publish OIDC manual y con tag protegido | IMPLEMENTED / NOT EXERCISED | Validar ambientes, Trusted Publisher, credenciales/OIDC y recuperación sin reconstruir VSIX |
-| Publicación v0.2.0 | BLOCKED | Owner sign-off y aprobación expresa: no merge/release automático |
+| R01 · Versionado/branding | Manifest 0.2.0, sin `preview`, 23 keywords, íconos, README/ES | Revisar screenshots finales después de finalizar código/UX |
+| R02 · Lockfile/CI | `npm ci` y TypeScript estricto Linux/Windows/macOS; [CI #42419518364](https://github.com/Drako01/saturivo/actions/runs/42419518364) PASS en SHA `18b5069` | Volver a ejecutar únicamente sobre el SHA final congelado |
+| R03 · Tráfico medido | k6 closed/open/ramp, fases v2, Go/Node/Python, WebSocket, Docker Compose; [CI #42419034596](https://github.com/Drako01/saturivo/actions/runs/42419034596) PASS | Revisar regresiones estadísticas/noise y migración E2E |
+| R04 · Go/IDE | Race/pprof/trace/GC/stack timeline y navegación de race a archivo-línea implementada | Validación CI exacta de source navigation, overhead inducido e IDE E2E |
+| R05 · UX/accesibilidad | Centro de Control editor, formularios/inspector, ES/EN y Chromium keyboard smoke | NVDA/VoiceOver, contraste, zoom 200%, light/dark, flujos host y foco |
+| R06 · Seguridad | Threat model, DNS pinning, SSRF IPv6, read-only, no-follow, quotas, kill-tree, audit VSIX | DNS/proxy/rebinding adversarial, symlinks/procesos hostiles multi-OS, revisión |
+| R07 · Artifact | VSIX ZIP audit, hash SHA-256, manifest exact git HEAD, SBOM/licencias. [CI #42417954563](https://github.com/Drako01/saturivo/actions/runs/42417954563) PASS | Revisar el VSIX final exacto, notices/shipped audit y attestation |
+| R08 · Install/upgrade | VS Code 1.99 Extension Host Linux, VSIX 0.1.0→0.2.0 en Linux CI | E2E de persistencia/roundtrip y plataformas remotas soportadas |
+| R09 · Documentación visual | Render de producción y Chrome `--verify-only` sin crear imágenes | Generar y revisar **cuatro capturas únicamente al final** del PR |
+| R10 · Release governance | CI con checkout SHA del PR, pipeline protegido y sin deploy en PR | Firma maintainer y autorización independiente de merge / tag / Marketplace / Open VSX |
 
-## Seguridad y alcance
+## Procedimiento final (NO ejecutado)
 
-- Código GitHub **público**; el manifest dejó de declarar private:true. Eso no significa que el VSIX haya sido autorizado para publicación.
-- Sin carga automática al abrir Control Center; GET/HEAD, loopback predeterminado, autorización por sesión para remoto, límites finitos y AbortSignal.
-- Un audit --omit=dev fue reportado sin vulnerabilidades por el maintainer en una revisión anterior. No se extrapola ese resultado al candidato actual; los advisories moderados de herramientas de desarrollo se gestionan como WARN cuando no afectan código distribuido.
-- Los archivos Go trace/pprof son sensibles, locales y no constituyen prueba de causalidad.
+1. Completar los requisitos obligatorios del [checklist maestro](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); para opciones no necesarias (gRPC, BYO AI o profilers externos), registrar decisión YAGNI explícita.
+2. Congelar código y UX en un commit y ejecutar pruebas reales de integración y seguridad pendientes.
+3. Regenerar las **cuatro capturas README** usando el workflow `workflow_dispatch` / `capture_screenshots=true` solo en la rama del PR #5, tras revisar visualmente las cuatro vistas (no datos reales ni secretos).
+4. Obtener commit SHA definitivo **después** del commit de capturas y verificar CI sin fallas sobre ese mismo SHA (Windows/macOS/Linux, Go, k6, Compose, WebSocket, Chrome, Extension Host, VSIX upgrade).
+5. Auditar el VSIX exacto y sus dependencias shipped, checksum SHA-256, provenance/manifest, SBOM, notices/licencias, README/ES y estado del Marketplace.
+6. Registrar evidencia con URL de job, SHA, OS, versión de toolchain y responsable que aprueba. Solicitar **autorización expresa** para merge y posteriormente publicar. El estado Draft no cambia por código verde.
 
-## Release sign-off — requisitos pendientes
+## Último estado verificable (2026-11-07)
 
-- [ ] Final CI verde de Linux/Windows/macOS, integración k6 real, HTTP Go/Node/Python, WebSocket RFC6455, Go profiles, VSIX Extension Host y capturas sobre **un mismo SHA**.
-- [ ] Pruebas de seguridad adversariales con resultado y entorno documentados; cero fallas críticas propias.
-- [ ] Reimportación JSON v1/v2, controles de borrado, navegación de resultados y cancelación real.
-- [ ] VSIX exacto instalado y actualizado desde 0.1.0; sha256, SBOM, licencias y procedencia comprobados.
-- [ ] Comprobación manual de imágenes README/Marketplace, ES/EN y accesibilidad.
-- [ ] Aprobación explícita del propietario para merge y posteriormente publicación.
+- Último SHA de CI **verde conocido** antes del bloque de navegación Go: `18b50695f1e40b41b8b37d3db0bb9ac7f0c5b0e0`, [run #42419518364](https://github.com/Drako01/saturivo/actions/runs/42419518364), 7 jobs PASS y screenshots SKIPPED deliberadamente.
+- Código nuevo de navegación Go: implementado en PR #5, **CI SHA exacto pendiente**, nunca asumir PASS hasta verificar el job.
+- Publicación: **BLOCKED**. Ningún tag, release, merge o despliegue fue autorizado.
 
-**Regla:** usar tests por impacto durante desarrollo. No volver a ejecutar suites ya verdes sin cambios salvo gate integral del artefacto final. PASSED solo si existen resultados verificables en el SHA exacto. **Nunca fusionar ni publicar el PR #5 automáticamente.**

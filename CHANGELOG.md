@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
+- Added evidence-backed Go race source navigation from the central Control Center: choose an observed file/line in QuickPick, open real source in VS Code; rejects symlink traversal outside the original trusted workspace, with ES/EN labels and tests.
+- Consolidated contradictory historical AAAA status lists into one master checklist and compact release tracker; retained traceable CI references and outstanding release gates.
 
 - Prevented active Markdown links/images from untrusted run names and warning text in load and Go timeline reports, without changing JSON evidence or fingerprint identity.
 
@@ -12,7 +14,6 @@
 
 - Keyboard skip navigation, focusable tab panels and Escape focus recovery in inspector; bilingual checks and real Chromium tab keyboard interaction tests added.
 
-## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
 - Bound the CI-built VSIX to immutable PR HEAD, SHA-256 and release manifest and archived all three pieces; constrained k6 summary reads to no-follow, verified bounded file descriptors.
 

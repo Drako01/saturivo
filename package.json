@@ -113,6 +113,11 @@
         "category": "Saturivo"
       },
       {
+        "command": "saturivo.navigateRace",
+        "title": "%command.navigateRace%",
+        "category": "Saturivo"
+      },
+      {
         "command": "saturivo.goBench",
         "title": "%command.bench%",
         "category": "Saturivo"
