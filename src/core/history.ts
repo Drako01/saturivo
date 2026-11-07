@@ -36,7 +36,8 @@ export function isStoredRun(value: unknown): value is RunResult {
   try { assertAllowedTarget(s.target as string, { allowRemoteTargets: true, maxVirtualUsers: 100 }); }
   catch { return false; }
   if (s.workloadVersion !== undefined && s.workloadVersion !== 2) return false;
-  const warmup = s.warmupSeconds ?? 0, cooldown = s.cooldownSeconds ?? 0;
+  const warmup = (s.warmupSeconds as number | undefined) ?? 0;
+  const cooldown = (s.cooldownSeconds as number | undefined) ?? 0;
   if (s.warmupSeconds !== undefined || s.cooldownSeconds !== undefined) {
     if (s.workloadVersion !== 2 ||
         !Number.isInteger(warmup) || warmup < 0 || warmup > 30 ||
