@@ -30,7 +30,7 @@ test("editor dashboard has four ARIA tabs and existing actions remain available"
   }
   for (const action of ["runSmoke", "runStress", "runArrival", "runRamp", "compare",
     "capacityPilot", "clearHistory", "importJson", "exportJson", "goRace", "goBench",
-    "captureGoProfile", "clearProfiles", "configureSlo"]) {
+    "captureGoProfile", "clearProfiles", "configureSlo", "websocketProbe"]) {
     assert.match(markup, new RegExp('data-action="' + action + '"'));
   }
   assert.match(markup, /ArrowRight/);
@@ -86,4 +86,14 @@ test("custom scenario editor is accessible, bounded, localized and explicit-acti
   const running = dashboard({ target: "http://127.0.0.1/", busy: true,
     history: [], message: "" }, "en");
   assert.match(running, /type="submit" disabled/);
+});
+
+test("WebSocket action is explicit and the running state disables protocol probe", () => {
+  const idle = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+    history: [], message: "" }, "en");
+  assert.match(idle, /data-action="websocketProbe"/);
+  assert.match(idle, /WebSocket local probe/);
+  const busy = dashboard({ target: "http://127.0.0.1:8080/", busy: true,
+    history: [], message: "" }, "es-AR");
+  assert.match(busy, /data-action="websocketProbe" disabled/);
 });
