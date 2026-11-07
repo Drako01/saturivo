@@ -29,5 +29,6 @@
   "command.ramp": "Run Bounded VU Ramp",
   "command.correlateGo": "Capture Go Load Correlation",
   "command.websocket": "Probe local WebSocket",
-  "setting.historyRetention": "Maximum number of local run reports retained per workspace (1–1000). Excess reports are permanently pruned on save or when settings change."
+  "setting.historyRetention": "Maximum number of local run reports retained per workspace (1–1000). Excess reports are permanently pruned on save or when settings change.",
+  "command.runtimeProbe": "Inspect local runtime process metrics"
 }
