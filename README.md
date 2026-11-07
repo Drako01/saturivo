@@ -219,7 +219,7 @@ An earlier PR #5 commit, `cbd3724`, passed [GitHub Actions run #42404881890](htt
 | Real Go race and pprof fixture (Linux) | **PASS** |
 | VSIX candidate and CycloneDX SBOM artifact generation (historical SHA) | **PASS** |
 
-CI is commit-specific and does not certify later revisions. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) passed 7/7 on SHA `0d73879` (including real VSIX CLI upgrade/persisted history Windows/macOS/Linux). Four screenshots were regenerated from the production renderer with synthetic data in [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f). **Final post-screenshot/documentation SHA still requires CI, manual UX/security review and separate maintainer authorization**. PR #5 remains Draft; no merge, tags or publication.
+CI is commit-specific and does not certify later revisions. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) passed 7/7 on SHA `0d73879` (including real VSIX CLI upgrade/persisted history Windows/macOS/Linux). Four screenshots were regenerated from the production renderer with synthetic data in [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f). **Post-screenshot CI #42424211042 passed 7/7 on `e777dda`; the next documentation commit requires a new exact-SHA CI. Manual UX/security review remains BLOCKED. The owner authorized merge only after all required gates pass; tags and publication are not authorized.** PR #5 is Ready for review.
 
 Development commands:
 

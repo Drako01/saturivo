@@ -2,7 +2,7 @@
 
 **Actualizado:** 2026-11-07 · **Versión objetivo:** 0.2.0 (non-preview)
 **Repositorio:** [Drako01/saturivo](https://github.com/Drako01/saturivo)
-**PR en desarrollo:** [#5](https://github.com/Drako01/saturivo/pull/5) · Rama `feat/enterprise-aaaa-v0.1.1` · **Draft — no autorizado para merge, tags ni publicación**.
+**PR en desarrollo:** [#5](https://github.com/Drako01/saturivo/pull/5) · Rama `feat/enterprise-aaaa-v0.1.1` · **Ready for review — merge autorizado por el owner solamente al cerrar todos los gates; tag y publicación no autorizados**.
 **Especificación contractual:** [ENTERPRISE_AAAA_MASTER_PLAN.md](ENTERPRISE_AAAA_MASTER_PLAN.md). **Release:** [RELEASE_0_2_0_CHECKLIST.md](RELEASE_0_2_0_CHECKLIST.md). **Criterios cuantificables:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
 > **Regla de estado:** `[x]` = implementación comprobada por el CI citado o incorporada con prueba específica; `[ ]` = requisito abierto. Para un código recién incorporado sin CI del SHA exacto se indica **CI PENDING**. Una prueba anterior verde **no valida** cambios posteriores. Enterprise AAAA es objetivo interno de madurez, no certificación externa.
@@ -30,7 +30,8 @@
 - [x] **B03/B04 CLI/storage:** VSIX 0.1.0→0.2.0 instalado y datos v1/v2 migrados/releídos/eliminados en Windows/macOS/Linux. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS en SHA `0d73879`.
 - [ ] **B03/B04 nativo:** falta usar diálogo real de abrir/importar/exportar/eliminar/reload en IDE instalado.
 - [x] **B06 imágenes:** cuatro PNG del renderer real, con datos sintéticos, generadas al terminar código/UX; commit [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f) y [captura #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) PASS.
-- [ ] **B06 sign-off:** inspección visual humana y CI en SHA definitivo posterior a imágenes/docs.
+- [x] **B06 CI post-imágenes:** [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042) **PASS 7/7** en `e777dda` (los cuatro PNG ya estaban incorporados).
+- [ ] **B06 sign-off:** inspección visual humana y CI en el **nuevo SHA definitivo** después de esta actualización de documentos.
 
 ## Fase 1 · Motor reproducible de carga
 
@@ -80,7 +81,8 @@
 - [x] **UX automatizada:** foco preservado entre renders, ES/EN host, CSS forced-colors/responsive, teclado/acciones de historial en Chromium; [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) PASS.
 - [ ] **UX manual BLOCKED:** zoom 200%, temas, contraste, NVDA/VoiceOver, foco en diálogos reales y estados error/empty.
 - [x] **Cuatro capturas README generadas** al cerrar código/UX: [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f); [captura #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) PASS. Workflow temporal eliminado.
-- [ ] Revisión visual humana y CI final post-capturas.
+- [x] CI post-capturas [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042) **PASS 7/7** en `e777dda`.
+- [ ] Revisión visual humana y CI final después del último commit de documentación.
 - [ ] BYO AI opt-in es **opcional** y no debe promocionarse ni introducirse sin justificación, redacción y consentimiento.
 
 ## Fase 5 · Seguridad y sign-off de 0.2.0
@@ -102,7 +104,7 @@
 
 - **CI pre-capturas:** [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667), SHA `0d73879b63204010f4cccaef329cd611c0e9b48f`: **7/7 PASS** (Linux/Windows/macOS, upgrade, k6/Go/Compose/WebSocket, Chrome, seguridad y shipped inventory). Screenshot job normal omitido por diseño.
 - **Capturas:** cuatro PNG únicamente en commit [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f) y [captura #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) SUCCESS. El workflow one-shot fue retirado en commit `b8deb87`.
-- **CI SHA final:** pendiente sobre el nuevo HEAD tras imágenes/documentación; no extrapolar PASS desde otro commit.
+- **CI post-imágenes verificado:** [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042), SHA `e777ddae314f831c650529c24282c35de43090e0`, 7/7 PASS. **Este cambio documental crea un SHA posterior**, por lo que se exige un nuevo PASS sobre la HEAD definitiva antes del merge.
 - **BLOCKED:** diálogos/import-export/delete E2E en VS Code instalado, WSL/SSH/devcontainer, NVDA/VoiceOver/zoom 200%, DNS/proxy/rebinding remoto, WSL procesos, attestation y sign-off de seguridad/owner.
 - **YAGNI:** gRPC/ghz, profilers externos Node/Java/Python e IA BYO fuera de 0.2.0, no anunciados como funcionalidad.
-- **Gobernanza:** PR #5 Draft, sin merge, tags, GitHub Release, Marketplace ni Open VSX.
+- **Gobernanza:** PR #5 Ready for review. El owner autorizó **merge condicional** sujeto a todas las verificaciones obligatorias; **no autorizó** Git tags, GitHub Release, Marketplace u Open VSX.

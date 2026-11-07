@@ -1,6 +1,6 @@
 # Saturivo 0.2.0 — Release Acceptance Tracker
 
-**Estado:** BLOQUEADO. **Fuente:** [PR #5 (Draft)](https://github.com/Drako01/saturivo/pull/5) · rama `feat/enterprise-aaaa-v0.1.1` · versión candidata **0.2.0 sin Preview**. El repo público **no** autoriza publicar la extensión. No crear release, merge ni tag sin aprobación expresa.
+**Estado:** BLOQUEADO. **Fuente:** [PR #5 (Ready for review)](https://github.com/Drako01/saturivo/pull/5) · rama `feat/enterprise-aaaa-v0.1.1` · versión candidata **0.2.0 sin Preview**. El repo público **no** autoriza publicar la extensión. El propietario autorizó **únicamente el merge condicional** al cumplimiento completo del checklist. No crear tag ni publicar sin autorización adicional.
 
 **Checklist de implementación actualizado:** [ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md)  
 **Especificación:** [ENTERPRISE_AAAA_MASTER_PLAN.md](ENTERPRISE_AAAA_MASTER_PLAN.md)  
@@ -11,14 +11,14 @@
 | Gate | Evidencia existente | Validación final pendiente |
 |---|---|---|
 | R01 · Versionado/branding | 0.2.0 sin Preview, 23 keywords, cuatro capturas generadas en 6387739 | Revisión visual humana y CI final del SHA poscapturas |
-| R02 · Lockfile/CI | npm ci + TypeScript/tests Windows/macOS/Linux, 7/7 PASS #42422983667 en 0d73879 | CI del SHA definitivo PENDING |
+| R02 · Lockfile/CI | npm ci + TypeScript/tests Windows/macOS/Linux, 7/7 PASS #42422983667 en 0d73879 | CI post-imágenes [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042) 7/7 PASS (`e777dda`); nueva HEAD documental requiere PASS |
 | R03 · Tráfico medido | k6 3×3, 64 pruebas ruido sintético, Go/Node/Python/WebSocket/Compose PASS #42422983667 | Variación real multi-host y migración mediante UI |
 | R04 · Go/IDE | Go race/pprof/trace/GC y experimento overhead controlado con JSON PASS #42422983667 | Navegación a fuente Go en IDE real, más toolchains |
 | R05 · UX/accesibilidad | Centro central ES/EN, foco restaurado, forced colors y Chromium keyboard/acciones PASS | NVDA/VoiceOver, contraste, 200% y diálogos nativos |
 | R06 · Seguridad | DNS/SSRF y proxy/redirect local, kill-tree Windows y ZIP hostil PASS #42422983667 | DNS/proxy remoto, WSL procesos y aprobación amenazas |
 | R07 · Artifact | VSIX SHA-256/manifest HEAD, SBOM/licencias, notices y shipped inventory PASS | Artifact final, revisión legal y attestation externa |
 | R08 · Install/upgrade | Upgrade VSIX 0.1.0→0.2.0 CLI y storage v1/v2 en Windows/macOS/Linux PASS | UI real import/export/reload y remotos BLOCKED |
-| R09 · Documentación visual | Cuatro capturas renderer con datos sintéticos commit 6387739, run #42423371472 PASS | Revisión humana y CI poscapturas |
+| R09 · Documentación visual | Cuatro capturas renderer con datos sintéticos commit 6387739, run #42423371472 PASS | Revisión humana y CI poscapturas PASS en `e777dda`; nuevo SHA documental pendiente |
 | R10 · Release governance | Política de release protegida sin despliegue PR | Aprobación owner independiente merge, tag y publicadores |
 
 ## Procedimiento final (NO ejecutado)
@@ -34,6 +34,6 @@
 
 - [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667), SHA `0d73879b63204010f4cccaef329cd611c0e9b48f`: **7/7 PASS**, incluyendo upgrades CLI/almacenamiento Windows/macOS/Linux, Go/k6/Compose/WebSocket, Chromium y VSIX/SBOM/notices.
 - Cuatro capturas finales realizadas en [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f), [workflow #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) PASS. Workflow temporal borrado.
-- **CI del nuevo SHA post-imágenes/documentación: PENDING.** No reutilizar PASS de un SHA anterior.
+- **CI post-imágenes:** [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042), SHA `e777ddae314f831c650529c24282c35de43090e0`: **7/7 PASS**. **CI del nuevo commit documental PENDING** hasta finalizar en el mismo SHA, sin heredar el anterior.
 - **BLOCKED:** diálogos E2E VS Code instalados, hosts WSL/SSH/Dev Containers, NVDA/VoiceOver/zoom 200% manual, DNS/proxy remoto, attestation externa, revisión legal de licencias/seguridad y firma del propietario. Ver [REMOTE_VALIDATION.md](REMOTE_VALIDATION.md).
-- **No merge, tag, release, Marketplace ni Open VSX sin autorización expresa.**
+- **Merge condicional autorizado por el propietario cuando todos los gates estén cerrados.** Sin tag, GitHub Release, Marketplace ni Open VSX hasta autorización independiente.

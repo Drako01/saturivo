@@ -1,6 +1,6 @@
 # Saturivo — Product Roadmap
 
-**0.2.0 non-preview, todavía no publicado:** [PR #5 Draft](https://github.com/Drako01/saturivo/pull/5). Los estados exactos por SHA se mantienen en el [checklist Enterprise AAAA](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); este roadmap no implica certificación.
+**0.2.0 non-preview, todavía no publicado:** [PR #5 Ready for review](https://github.com/Drako01/saturivo/pull/5). Los estados exactos por SHA se mantienen en el [checklist Enterprise AAAA](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); este roadmap no implica certificación.
 
 ## Base 0.1.0
 
@@ -19,7 +19,8 @@
 
 ## Pendientes de aceptación obligatoria
 
-- [ ] CI del SHA definitivo **posterior** a imágenes y documentación y revisión visual humana de las cuatro capturas.
+- [x] CI **7/7 PASS** posterior a imágenes y cambios funcionales: [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042) sobre `e777dda`.
+- [ ] CI del **nuevo SHA definitivo** posterior a esta actualización documental y revisión visual humana de las cuatro capturas.
 - [ ] E2E UI real en VS Code instalado de importar/exportar/borrar/reload/navegar Go y cambios de baseline.
 - [ ] WSL, Remote-SSH y Dev Containers con selección de host y cleanup real; [runbook](docs/REMOTE_VALIDATION.md).
 - [ ] NVDA/VoiceOver, zoom 200%, light/dark, alto contraste, teclado-only y estados de error.
