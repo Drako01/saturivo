@@ -18,12 +18,12 @@
 
 | Risk | Current mitigation or observation | Open verification |
 |---|---|---|
-| SSRF to metadata, private or unapproved service | loopback is default; target authority is validated; remote testing requires separate opt-in and per-run confirmation | **OPEN:** remote DNS rebinding/private-address policy; explicit threat fixtures and proxy/network tests |
+| SSRF to metadata, private or unapproved service | loopback is default; target authority is validated; remote testing requires separate opt-in and per-run confirmation | **PARTIAL:** public-IP validation and DNS pinning with adversarial tests added; proxy/IPv6 edge cases and actual hostile network fixture sign-off remain |
 | Spoofed localhost/DNS result | k6 explicitly pins localhost to 127.0.0.1; literal loopback addresses accepted; redirects disabled | **PARTIAL:** attack matrix for alternate encodings, IPv4/IPv6 and proxy settings |
 | Unbounded load or automatic traffic | no run on activation, defined requests/VUs/duration/arrival ceilings; explicit form submit and consent | **PARTIAL:** installed VSIX stress/cancel UI E2E, budget exhaustion and cleanup probes |
 | Child-process escape or zombie descendants | shell disabled; POSIX detached process group kill and Windows taskkill tree | **PARTIAL:** adversarial process descendants on all three OSes |
 | Malicious imported history | max 100 KiB, numeric/fingerprint/type checks, atomic write and corruption-tolerant reads | **PARTIAL:** version migration/reimport roundtrip and malformed field matrix |
-| Profile/data exfiltration | local storage, no network upload/telemetry/AI by default; profile limit 4 MB, deadline 15 s | **PARTIAL:** retention, redaction of exported paths/metadata and volume quotas |
+| Profile/data exfiltration | local storage, no network upload/telemetry/AI by default; 4 MB/profile and 15 s/request, plus 30 owned files / 64 MiB local storage ceiling | **PARTIAL:** configurable run retention and Go profile quota added; export redaction and end-to-end limits still require review |
 | Misleading diagnostics | observed vs inferred distinctions; no race freedom or leak certainty claims | **PARTIAL:** independent Go contention and goroutine-growth fixtures |
 | Third-party dependency advisories | lockfile, CycloneDX SBOM, scope-separated license inventory | **PARTIAL:** exact-version release audit; development-only warnings must be disclosed |
 | Forged/repackaged release | pinned workflow actions, immutable VSIX/checksum and protected publish jobs | **PARTIAL:** exact release candidate install/upgrade and approval verification |
