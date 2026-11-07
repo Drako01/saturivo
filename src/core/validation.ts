@@ -1,6 +1,7 @@
 import { isIP } from "node:net";
 import type { Scenario } from "./types";
 import { assertValidSlo } from "./slo";
+import { isPublicIp } from "./network-safety";
 
 export interface TargetPolicy {
   readonly allowRemoteTargets: boolean;
@@ -22,8 +23,14 @@ export function assertAllowedTarget(raw: string, policy: TargetPolicy): URL {
   if (!["http:", "https:"].includes(url.protocol)) throw new Error("Only http(s) targets are supported");
   if (url.username || url.password) throw new Error("Credentials inside target URLs are not permitted");
   if (url.hash) throw new Error("URL fragments are not supported");
-  if (!policy.allowRemoteTargets && !isLoopbackHost(url.hostname)) {
-    throw new Error("Remote targets are disabled. Enable them explicitly in Saturivo settings.");
+  if (!isLoopbackHost(url.hostname)) {
+    if (!policy.allowRemoteTargets) {
+      throw new Error("Remote targets are disabled. Enable them explicitly in Saturivo settings.");
+    }
+    const host = url.hostname.replace(/^\[|\]$/g, "");
+    if (isIP(host) && !isPublicIp(host)) {
+      throw new Error("Private or special-use remote IP is prohibited");
+    }
   }
   return url;
 }
