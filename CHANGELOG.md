@@ -2,6 +2,8 @@
 
 ## [Unreleased] — 0.2.0 Enterprise AAAA implementation
 
+- Redact URL query/fragment values in visible Control Center endpoint labels while retaining the original execution target and scenario fingerprint.
+
 - Added optional bounded warm-up and cool-down windows for v2 load scenarios. k6 tags requests by phase, reports latency/errors/RPS and SLOs only for the measurement window, and retains all-phase request-budget enforcement; older workload fingerprints remain unchanged.
 
 - Split browser functional QA from README asset regeneration: ordinary CI validates scenario editing and history investigation in real Chromium, while screenshot files can only be refreshed through an explicitly requested final-stage workflow.

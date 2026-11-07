@@ -18,6 +18,12 @@ export interface DashboardState {
 }
 const escapeHtml = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
   .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+/** Display-only target; actual validated execution URL remains unchanged. */
+function displayTarget(raw: string): string {
+  const start = [raw.indexOf("?"), raw.indexOf("#")].filter(index => index >= 0);
+  return start.length ? raw.slice(0, Math.min(...start)) + " [query redacted]" : raw;
+}
+
 const numeric = (n: number | undefined, decimals = 2): string =>
   n !== undefined && Number.isFinite(n) ? n.toFixed(decimals) : "—";
 const count = (n: number | undefined): string =>
@@ -243,7 +249,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     editField('maxRequests', 'maxRequests', state.maxRequests ?? 10000, 100, state.maxRequests ?? 10000) +
     editField('maxP95Ms', 'customP95', state.sloMaxP95Ms ?? 0, 0, 120000) +
     '</div><p class="fineprint">' + t('customTargetNote') + ' ' +
-    '<code>' + escapeHtml(state.target) + '</code></p>' +
+    '<code>' + escapeHtml(displayTarget(state.target)) + '</code></p>' +
     '<div class="action-row"><button class="button button-primary" type="submit"' +
     (busy ? ' disabled' : '') + '>' + t('customRun') + '</button>' +
     button('configureTarget', 'configure', 'secondary', busy) +
@@ -275,7 +281,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</p><div class="action-row">' + button('runSmoke', 'quickStart', 'primary', busy) +
     button('configureTarget', 'configure', 'secondary', busy) +
     '</div></div><div class="endpoint"><span class="eyebrow">' + t('target') +
-    '</span><code>' + escapeHtml(state.target) + '</code><span class="endpoint-hint">' +
+    '</span><code>' + escapeHtml(displayTarget(state.target)) + '</code><span class="endpoint-hint">' +
     t(state.allowRemoteTargets ? 'remoteAllowed' : 'loopbackDefault') +
     '</span></div></div>' + (hasEvidence ? '' : guidance) +
     '<div class="section-title"><div><span class="eyebrow">' + t('observability') +

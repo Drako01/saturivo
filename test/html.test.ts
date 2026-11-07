@@ -247,3 +247,11 @@ test("measurement window editor and live visualization expose honest scoped time
   assert.match(es, /Calentamiento \(s\)/);
   assert.match(es, /Enfriamiento \(s\)/);
 });
+
+test("Control Center masks URL query tokens in visual targets without altering runtime configuration", () => {
+  const markup = dashboard({ target:"http://127.0.0.1:8080/health?api_key=DO_NOT_RENDER",
+    history:[],busy:false,message:"" }, "en");
+  assert.match(markup, /http:\/\/127\.0\.0\.1:8080\/health \[query redacted\]/);
+  assert(!markup.includes("DO_NOT_RENDER"));
+  assert(!markup.includes("api_key="));
+});

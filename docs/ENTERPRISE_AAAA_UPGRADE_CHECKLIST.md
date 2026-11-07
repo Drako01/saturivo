@@ -13,9 +13,15 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 - [x] Código y pruebas focalizadas para IPv6 canónico/no canónico, IPv4-mapped, 6to4, Teredo, documentación y 6bone; DNS mixto falla cerrado.
 - [ ] Validación CI del SHA y pruebas adversariales en red/proxy/redirect/WSL para cierre de fase 5.
 
+## Privacidad visual del destino y evidencia P1 (2026-11-07)
+
+- [CI #42415007006](https://github.com/Drako01/saturivo/actions/runs/42415007006): **PASS**, commit `fa0bebc00879593274c3eea12373afbe07cf45d3`, siete jobs satisfactorios (Ubuntu/Windows/macOS, k6 real con ventanas medidas, Go, VS Code Extension Host y navegador Chromium). Job de capturas intencionalmente SKIPPED, no considerado falla.
+- Nuevo hardening de privacidad **implementado, CI pendiente del SHA nuevo**: la UI oculta query y fragmentos del target en textos visibles; el endpoint ejecutado mantiene su valor original para no cambiar el escenario ni su fingerprint. Test de no filtración agregado.
+- Capturas README siguen RESERVADAS PARA EL FINAL del PR #5.
+
 ## P1 — medición de carga con fases aisladas (2026-11-07)
 
-**Implementado para el siguiente commit; CI y k6 real: PENDING hasta comprobar SHA.** No se regeneran capturas README antes del cierre.
+**Verificado para `fa0bebc` en CI #42415007006 (7 PASS + 1 screenshot SKIPPED): k6 real, TypeScript y navegador.** No se regeneran capturas README antes del cierre.
 
 - Escenarios `workloadVersion: 2` aceptan `warmupSeconds` y `cooldownSeconds` entre 0 y 30 cada uno, con **mínimo cinco segundos medidos** dentro de la duración global (5–120s). La autorización del destino, VUs y presupuesto global no cambian.
 - k6 etiqueta solicitudes por fase usando `exec.instance.currentTestRunDuration`; los submétricos etiquetados de la ventana central informan **P50/P95/P99, errores, RPS, distribución HTTP y SLO**. El presupuesto de solicitudes se evalúa con `totalRequests` de todas las fases; `dropped_iterations` continúa siendo conservador para el ensayo completo.

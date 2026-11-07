@@ -10,6 +10,11 @@ This document is the **release subset** of [the single current AAAA checklist](E
 
 ## Handoff de release — 2026-11-07
 
+- **Evidencia verificada P1:** `fa0bebc`, [CI #42415007006](https://github.com/Drako01/saturivo/actions/runs/42415007006), siete jobs PASS, capturas omitidas por la regla de finalizar el README al final.
+- **P4/P5 privacidad adicional:** redacción de query/fragmentos en los destinos visibles del Control Center sin modificar la URL real de prueba. Test agregado, CI del siguiente SHA pendiente.
+
+
+
 - **P1:** separación explícita warm-up/measurement/cool-down, métricas y SLO exclusivos de la ventana central, presupuesto global sin alteración y fingerprint v4 retrocompatible. Tests y fixture k6 real incorporados; **CI pendiente del SHA del commit**.
 - El Control Center permite configurar fases en ES/EN, previsualizar distribución temporal y rechazar mediciones inválidas. Las capturas finales siguen diferidas.
 
