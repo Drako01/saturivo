@@ -229,10 +229,12 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     if (this.busy) return;
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const kinds: readonly RuntimeKind[] = ["node", "java", "python"];
-    const runtime = await vscode.window.showQuickPick<RuntimeKind>([...kinds], {
-      title: this.t("runtimeProbeTitle"),
-      placeHolder: this.t("runtimeProbeDescription"),
-    });
+    const picked = await vscode.window.showQuickPick(
+      kinds.map(value => ({ label: value, value })),
+      { title: this.t("runtimeProbeTitle"),
+        placeHolder: this.t("runtimeProbeDescription") }
+    );
+    const runtime = picked?.value;
     if (!runtime) return;
     const entered = await vscode.window.showInputBox({
       title: this.t("runtimeProbePid"),
