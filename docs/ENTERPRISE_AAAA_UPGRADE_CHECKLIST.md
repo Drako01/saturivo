@@ -1,8 +1,42 @@
 # Saturivo — Enterprise AAAA Upgrade Checklist
 
-**Fecha:** 2026-11-07 · **PR activo:** [#5](https://github.com/Drako01/saturivo/pull/5) · **Rama:** feat/enterprise-aaaa-v0.1.1 · **Estado:** abierto, Draft.
+**Fecha:** 2026-11-07 · **PR activo:** [#5](https://github.com/Drako01/saturivo/pull/5) · **Rama:** `feat/enterprise-aaaa-v0.1.1` · **Estado observado:** Draft; no autorizado para merge o publicación.
 
 Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) define el alcance; [tracker de versión](RELEASE_0_1_1_CHECKLIST.md) registra los gates de release. PASS significa implementación, prueba y evidencia del **SHA indicado**. PARTIAL indica funciones implementadas sin todos los casos o plataformas. NOT RUN nunca equivale a aprobado.
+
+## Handoff 2026-11-07 — auditoría de continuación
+
+Este bloque prevalece sobre estados anteriores cuando los commits son más recientes. El checklist se actualiza durante el desarrollo, pero no sustituye una ejecución de pruebas en el SHA exacto.
+
+- **SHA leído antes de esta actualización:** `be4154e4dd8d59ddb685656b23a93c7b9240cda6`. El commit propio de documentación y cualquier push posterior obligan a releer el HEAD.
+- **CI al momento de la consulta:** [run #42411433024](https://github.com/Drako01/saturivo/actions/runs/42411433024) — in_progress, conclusión PENDIENTE.
+- **Detalle de jobs:** Real Go race and pprof fixture (Linux): in_progress; Verify (macos-latest): success; Capture actual Control Center views for README: success; Verify (ubuntu-latest): success; Real VS Code Extension Host (Linux): success; Verify (windows-latest): success; Local k6 integration (Linux): in_progress.
+- **Gobernanza:** repositorio GitHub público; `package.json` sin `private: true`. PR #5 abierto; **NO merge, NO tag, NO publicación Marketplace/Open VSX** sin autorización explícita.
+- **Alcance:** Master Plan es contrato técnico, no certificado. `PASS` exige implementación + test + evidencia CI/artefacto para el SHA final; `PARCIAL`, `NOT RUN` y `BLOCKED` no son sinónimos de aprobado.
+
+### Implementaciones adicionales observadas en la rama
+
+1. **UX/UI:** editor central al abrir desde Activity Bar; onboarding guiado que cambia al existir historial, biblioteca de presets con gráficos, custom scenario studio, preview dinámico de etapas/presupuestos, métricas, comparador P95, estados vacíos e indeterminados, ES/EN, foco/keyboard y tablas de datos accesibles. **Pendiente:** auditoría manual visual de cuatro vistas, interacciones Webview E2E, responsive/tema claro/oscuro, contraste WCAG y capturas finales revisadas.
+2. **P1:** escenarios `constant-vus`, `constant-arrival-rate` y `ramping-vus` con 2–8 etapas, límites y validación en Extension Host; SHA de escenario, Git SHA opcional, fingerprint host/entorno, tasas solicitada/observada, distribución HTTP, comparador de baseline explícito. **Pendiente:** warm-up/cool-down medidos separadamente, migración formal v1/v2 y regresión robusta con ruido/3+ trials.
+3. **P2:** `go test -race`, pprof CPU/heap/goroutine/mutex/block, runtime trace, capturas before/during/after, fixtures de crecimiento/contención, cuota de perfiles (30 archivos/64 MiB). **Pendiente:** GC/allocations correlacionados con latencia, overhead medido, source navigation y pruebas de diagnósticos con fixtures controladas.
+4. **P3:** mismos HTTP+k6 reales contra Go, Node y Python; WebSocket RFC6455 en loopback con autorización; adapter opt-in Node/Java/Python basado en procfs Linux, respuesta `NOT_SUPPORTED` cuando no aplica; selección multi-root. **Pendiente:** WSL/SSH/devcontainer/Docker Compose verificados, runtime profiler artifacts y contratos en SO adicionales; gRPC opcional únicamente si aporta valor real.
+5. **P4:** JSON/MD/SARIF, historial local con retención configurable, validaciones anti-symlink/JSON malicioso, guardado/limpieza y métricas no causales. **Pendiente:** roundtrip import/export con v1/v2, redacción de secretos y experiencia integral de teclado/screen reader/ES+EN. BYO AI sigue opcional y no implementado.
+6. **P5:** threat model, DNS remoto verificado y pinneado (bloquea metadata/private IP), límites de load/process, test de cierre de descendientes, licencias y SBOM, run/cancel en Extension Host, script de upgrade de VSIX 0.1.0→0.1.1. **Pendiente:** proxies/redirects/rebinding adversariales completos, auditar VSIX exacto y provenance, upgrade multi-OS, security sign-off y autorización release.
+
+### Definition of Done verificable (todavía abierta)
+
+- [ ] Cada requisito obligatorio del Master Plan tiene código, prueba, evidencia y documentación en SHA final; opcionales excluidos justificadamente.
+- [ ] CI completo Linux/Windows/macOS, Go, k6 real, WebSocket, screenshots, Extension Host y upgrade VSIX en **mismo SHA** sin fallas.
+- [ ] Abrir desde Activity Bar → editor central; configurar → previsualizar → ejecutar → cancelar → historial → baseline → exportar/borrar, validado en VS Code real.
+- [ ] Escenarios protegidos: SSRF/DNS/proxy/redirect, cuotas VU/RPS/tiempo/archivos, trust, kill-tree y cero ejecución automática.
+- [ ] Evidence roundtrip v1/v2, consistencia de estadísticas y SLO, warnings honestos, políticas de retención/redacción y no dependencia de datos sintéticos para PASS.
+- [ ] Auditoría visual premium: claro/oscuro, responsive, a11y/teclado, ES/EN, README + 4 capturas de renderer actual sin información engañosa.
+- [ ] VSIX exacto con SHA-256, lockfile/SBOM/avisos/licencias, análisis de dependencias shipped, install/upgrade real, provenance y release guardrails comprobados.
+- [ ] Criterios de aceptación firmados por maintainer. **PR #5 sin merge ni publicación automática.**
+
+### Premisas para la próxima sesión
+
+Continuar exclusivamente en el PR #5; releer HEAD, CI, Master Plan y este checklist **antes de modificar**. Trabajar por bloques con commits pequeños, tests focalizados por impacto (KISS/DRY/YAGNI/SOLID, TypeScript estricto), actualizar este checklist tras cada bloque y `docs/RELEASE_0_1_1_CHECKLIST.md` en hitos de release. No repetir suites costosas ya verdes salvo nueva superficie afectada o gate final. No declarar `PASS` por simple existencia de código ni hacer publicaciones por cuenta propia.
 
 ## Evidencia consolidada
 
