@@ -23,13 +23,20 @@ export function isStoredRun(value: unknown): value is RunResult {
   const s = value.scenario, m = value.metrics, e = value.environment;
   if (!object(s) || !shortString(s.id, 80) || !shortString(s.name, 80) ||
       !shortString(s.target, 2048) || !["GET", "HEAD"].includes(String(s.method)) ||
-      !["constant-vus", "constant-arrival-rate"].includes(String(s.model)) ||
+      !["constant-vus", "constant-arrival-rate", "ramping-vus"].includes(String(s.model)) ||
       !Number.isInteger(s.durationSeconds) || (s.durationSeconds as number) < 5 ||
       (s.durationSeconds as number) > 120 ||
       !Number.isInteger(s.virtualUsers) || (s.virtualUsers as number) < 1 ||
       (s.virtualUsers as number) > 100) return false;
   if (s.model === "constant-arrival-rate" && (!Number.isInteger(s.arrivalRate) ||
       (s.arrivalRate as number) < 1 || (s.arrivalRate as number) > 500)) return false;
+  if (s.model === "ramping-vus" && (s.workloadVersion !== 2 ||
+      !Array.isArray(s.stages) || s.stages.length < 2 || s.stages.length > 8 ||
+      !s.stages.every(st => object(st) && Number.isInteger(st.durationSeconds) &&
+        (st.durationSeconds as number) >= 1 && Number.isInteger(st.targetVus) &&
+        (st.targetVus as number) >= 0 && (st.targetVus as number) <= (s.virtualUsers as number)) ||
+      s.stages.reduce((sum: number, st: { durationSeconds: number }) =>
+        sum + st.durationSeconds, 0) !== s.durationSeconds)) return false;
   if (!object(m) ||
       !["requests", "requestsPerSecond", "failedRate", "avgMs", "p50Ms",
         "p95Ms", "p99Ms", "droppedIterations"].every(key => finite(m[key])) ||

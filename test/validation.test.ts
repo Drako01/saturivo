@@ -35,3 +35,18 @@ test("strict bounded workloads", () => {
   assert.throws(() => validateScenario({ ...scenario, model: "constant-arrival-rate", arrivalRate: 501 }, policy), /rate/);
   assert.equal(validateScenario({ ...scenario, model: "constant-arrival-rate", arrivalRate: 25 }, policy).arrivalRate, 25);
 });
+
+test("v2 ramp stages are strictly bounded and consistent", () => {
+  const ramp: Scenario = {
+    ...scenario, model: "ramping-vus", workloadVersion: 2,
+    durationSeconds: 20, virtualUsers: 5,
+    stages: [{ durationSeconds: 5, targetVus: 2 }, { durationSeconds: 10, targetVus: 5 },
+      { durationSeconds: 5, targetVus: 0 }],
+  };
+  assert.equal(validateScenario(ramp, policy).stages?.length, 3);
+  assert.throws(() => validateScenario({ ...ramp, durationSeconds: 25 }, policy), /sum to scenario/);
+  assert.throws(() => validateScenario({ ...ramp, stages: [{ durationSeconds: 5, targetVus: 100 }] }, policy),
+    /2–8 stages/);
+  assert.throws(() => validateScenario({ ...ramp, workloadVersion: undefined }, policy), /version 2/);
+  assert.throws(() => validateScenario({ ...scenario, stages: ramp.stages }, policy), /ramping-vus model/);
+});

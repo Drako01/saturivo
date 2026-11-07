@@ -30,3 +30,17 @@ test("safe generated k6 script supports both load models", () => {
   assert.match(open, /iterationInTest/);
   assert.match(open, /sleep\(1\)/);
 });
+
+test("v2 ramping scenario renders bounded k6 stages", () => {
+  const ramp: Scenario = {
+    id: "ramp", name: "Ramp", target: "http://127.0.0.1:8080/",
+    model: "ramping-vus", workloadVersion: 2, method: "GET",
+    durationSeconds: 20, virtualUsers: 5,
+    stages: [{ durationSeconds: 5, targetVus: 2 }, { durationSeconds: 10, targetVus: 5 },
+      { durationSeconds: 5, targetVus: 0 }],
+  };
+  const source = renderK6Script(ramp, "/tmp/ramp-summary.json");
+  assert.match(source, /ramping-vus/);
+  assert.match(source, /"target":0/);
+  assert.match(source, /"duration":"10s"/);
+});

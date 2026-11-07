@@ -12,9 +12,15 @@ import { validateScenario, type TargetPolicy } from "./validation";
 export function renderK6Script(scenario: Scenario, output: string): string {
   const executor = scenario.model === "constant-vus"
     ? { executor: "constant-vus", vus: scenario.virtualUsers, duration: scenario.durationSeconds + "s" }
-    : { executor: "constant-arrival-rate", rate: scenario.arrivalRate, timeUnit: "1s",
-      duration: scenario.durationSeconds + "s", preAllocatedVUs: Math.min(5, scenario.virtualUsers),
-      maxVUs: scenario.virtualUsers };
+    : scenario.model === "constant-arrival-rate"
+      ? { executor: "constant-arrival-rate", rate: scenario.arrivalRate, timeUnit: "1s",
+        duration: scenario.durationSeconds + "s", preAllocatedVUs: Math.min(5, scenario.virtualUsers),
+        maxVUs: scenario.virtualUsers }
+      : { executor: "ramping-vus", startVUs: 0,
+        stages: (scenario.stages ?? []).map(stage => ({
+          duration: stage.durationSeconds + "s", target: stage.targetVus,
+        })),
+        gracefulRampDown: "0s" };
   const options = {
     scenarios: { saturivo: executor },
     summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
@@ -87,6 +93,7 @@ export async function runK6(
     if (Buffer.byteLength(summaryText) > 4_000_000) throw new Error("Summary exceeds the size limit");
     const metrics = readK6Summary(JSON.parse(summaryText) as unknown);
     const warnings: string[] = [];
+    if (safeScenario.model === "ramping-vus") warnings.push("Ramp metrics cover all stages; warm-up and cool-down are not excluded from reported percentiles.");
     if (processResult.truncated) warnings.push("k6 process output exceeded the capture budget; see summary metrics for evidence.");
     if (metrics.droppedIterations > 0) warnings.push("Dropped iterations: the configured arrival rate was not fully achieved.");
     if (metrics.requests < 100) warnings.push("Small sample size: avoid drawing strong conclusions.");

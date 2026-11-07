@@ -31,13 +31,32 @@ export function assertAllowedTarget(raw: string, policy: TargetPolicy): URL {
 export function validateScenario(input: Scenario, policy: TargetPolicy): Scenario {
   assertAllowedTarget(input.target, policy);
   if (input.method !== "GET" && input.method !== "HEAD") throw new Error("Only read-only GET/HEAD requests are supported");
-  if (!["constant-vus", "constant-arrival-rate"].includes(input.model)) throw new Error("Unsupported load model");
+  if (!["constant-vus", "constant-arrival-rate", "ramping-vus"].includes(input.model)) throw new Error("Unsupported load model");
   if (!Number.isInteger(input.durationSeconds) || input.durationSeconds < 5 || input.durationSeconds > 120) throw new Error("Duration must be 5–120 seconds");
   if (!Number.isInteger(policy.maxVirtualUsers) || policy.maxVirtualUsers < 1 || policy.maxVirtualUsers > 100) throw new Error("Invalid hard virtual-user ceiling");
   if (!Number.isInteger(input.virtualUsers) || input.virtualUsers < 1 || input.virtualUsers > policy.maxVirtualUsers) throw new Error("Virtual users exceed the configured safety ceiling");
   if (input.model === "constant-arrival-rate" &&
     (!Number.isInteger(input.arrivalRate) || (input.arrivalRate ?? 0) < 1 || (input.arrivalRate ?? 0) > 500)) {
     throw new Error("Arrival rate must be between 1 and 500 iterations/s");
+  }
+  if (input.model === "ramping-vus") {
+    if (input.workloadVersion !== 2 || !Array.isArray(input.stages) ||
+      input.stages.length < 2 || input.stages.length > 8) {
+      throw new Error("Ramping workloads require version 2 and 2–8 stages");
+    }
+    const stages = input.stages;
+    for (const stage of stages) {
+      if (!Number.isInteger(stage.durationSeconds) || stage.durationSeconds < 1 ||
+        !Number.isInteger(stage.targetVus) || stage.targetVus < 0 ||
+        stage.targetVus > input.virtualUsers) {
+        throw new Error("Invalid ramp stage duration or target VUs");
+      }
+    }
+    if (stages.reduce((sum, stage) => sum + stage.durationSeconds, 0) !== input.durationSeconds) {
+      throw new Error("Ramp stages must sum to scenario duration");
+    }
+  } else if (input.stages !== undefined || input.workloadVersion !== undefined) {
+    throw new Error("Ramping stage definitions require the ramping-vus model");
   }
   const maxRequests = input.maxRequests ?? policy.maxRequests ?? 10000;
   if (!Number.isInteger(maxRequests) || maxRequests < 100 || maxRequests > 100000) {

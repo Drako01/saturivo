@@ -1,4 +1,5 @@
-export type LoadModel = "constant-vus" | "constant-arrival-rate";
+export type LoadModel = "constant-vus" | "constant-arrival-rate" | "ramping-vus";
+export interface RampStage { readonly durationSeconds: number; readonly targetVus: number; }
 export type HttpMethod = "GET" | "HEAD";
 
 export interface SloDefinition {
@@ -24,6 +25,9 @@ export interface Scenario {
   readonly arrivalRate?: number;
   readonly maxRequests?: number;
   readonly slo?: SloDefinition;
+  /** Explicit workload v2 for staged/ramping profiles; omitted for legacy scenarios. */
+  readonly workloadVersion?: 2;
+  readonly stages?: readonly RampStage[];
 }
 
 export interface Metrics {

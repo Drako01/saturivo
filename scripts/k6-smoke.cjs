@@ -30,6 +30,11 @@ async function main() {
       { ...base, id: "real-smoke", name: "Real smoke", model: "constant-vus", virtualUsers: 1 },
       { ...base, id: "real-arrival", name: "Real arrival", model: "constant-arrival-rate",
         virtualUsers: 10, arrivalRate: 20 },
+      { ...base, id: "real-ramp", name: "Real ramp", model: "ramping-vus",
+        workloadVersion: 2, virtualUsers: 6, durationSeconds: 20,
+        stages: [{ durationSeconds: 5, targetVus: 2 },
+          { durationSeconds: 10, targetVus: 6 },
+          { durationSeconds: 5, targetVus: 0 }] },
     ];
     for (const scenario of scenarios) {
       const result = await runK6(scenario, policy, "k6", dir, new AbortController().signal);
