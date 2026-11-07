@@ -22,7 +22,7 @@ test("durable history, newest first, corrupt records ignored, explicit deletion"
     const store = new HistoryStore(dir);
     await store.save(sample);
     await store.save({ ...sample, schemaVersion: 2, id: "22222222-2222-4222-8222-222222222222",
-      startedAt: "2026-11-07T11:00:00Z" });
+      startedAt: "2026-11-07T11:00:00Z", endedAt: "2026-11-07T11:00:10Z" });
     await mkdir(join(dir, "runs"), { recursive: true });
     await writeFile(join(dir, "runs", "20261107120000-00000000-0000-4000-8000-000000000000.json"), "{invalid");
     const values = await store.list();
