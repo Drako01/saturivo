@@ -1,8 +1,17 @@
 # Saturivo 0.1.1 — Enterprise AAAA release tracker
 
-**Public repo:** Drako01/saturivo · **Source PR:** [#5](https://github.com/Drako01/saturivo/pull/5), Draft · **Base:** main a3eaa376 · **Target version:** 0.1.1 · **Publication:** BLOCKED until explicit owner approval.
+**Public repo:** Drako01/saturivo · **Source PR:** [#5](https://github.com/Drako01/saturivo/pull/5), currently OPEN (not Draft) · **Base:** main a3eaa376 · **Target version:** 0.1.1 · **Publication:** BLOCKED until explicit owner approval.
 
 This document is the **release subset** of [the single current AAAA checklist](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md). [Master Plan](ENTERPRISE_AAAA_MASTER_PLAN.md) remains the specification, not a statement of completion. Implementation does not equal validation.
+
+## Handoff de release — 2026-11-07
+
+- El estado técnico consolidado y los gates medibles están en [ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md](ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md); este archivo se limita a las condiciones de publicación.
+- Actualización técnica: escenario ramp v2 y preview UX, fingerprints y observabilidad de arribo/status, nuevos tests adversariales DNS/archivo/proceso, perfilar Go con cuota, probe WebSocket, métricas runtime Linux, experiencia ES/EN y script real de VSIX upgrade.
+- [CI #42411433024](https://github.com/Drako01/saturivo/actions/runs/42411433024) se estaba ejecutando sobre un SHA anterior a este traspaso. **No marcarlo verde sin consultar su resultado y HEAD actual.**
+- **Release gate aún abierto:** validar SHA exacto del candidato después de los últimos commits; seguridad adversarial y UX/lectores de pantalla, migración/roundtrip, artefacto VSIX, install/upgrade, audit shipped, SBOM/licencias/notices, checksum/provenance.
+- Repositorio fuente público, pero **no hay autorización de publicación**. El cambio de estado Draft → Open no autoriza merge, tag ni deploy.
+- El propietario debe revisar y aprobar merge/publicación en decisiones separadas. No ejecutar release workflows para simular pruebas de publicación.
 
 ## Historical green baseline
 
