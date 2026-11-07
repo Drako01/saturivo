@@ -24,6 +24,23 @@
 
 > **Public source · Development preview 0.1.0 (unreleased).** This branch is an Enterprise AAAA development candidate, **not a certified or published release**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
 
+## Control Center — 0.1.1 preview
+
+The new Control Center opens in a **full editor tab**, not a narrow sidebar. The screenshots below are captured from the **real dashboard renderer** with a fixed **synthetic test dataset**; the displayed metrics are illustrative, not real performance measurements.
+
+![Saturivo Control Center — overview](media/screenshots/control-center-overview.png)
+
+<details>
+<summary>View load scenarios, run history and Go diagnostics</summary>
+
+![Bounded load scenarios](media/screenshots/control-center-load.png)
+
+![Saved run evidence and comparisons](media/screenshots/control-center-history.png)
+
+![Go runtime and concurrency diagnostics](media/screenshots/control-center-diagnostics.png)
+
+</details>
+
 ## Why Saturivo?
 
 Load generators can tell you *that* latency increased. Saturivo helps keep the evidence needed to investigate *what changed*: the workload, latency distribution, failure rate, server-side Go behavior, and baseline.

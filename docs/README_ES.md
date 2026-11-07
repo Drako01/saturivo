@@ -11,6 +11,23 @@
 
 > **Código fuente público · Vista previa de desarrollo 0.1.0.** Las capacidades documentadas en el PR #4 son un candidato de desarrollo, no una versión publicada ni una certificación Enterprise AAAA.
 
+## Centro de Control — vista previa 0.1.1
+
+Saturivo ahora abre el Centro de Control en una **pestaña del editor**, con espacio para métricas, escenarios, historial y diagnóstico. Las capturas provienen del **renderizador real de la interfaz** con datos sintéticos y deterministas: **no representan mediciones reales**.
+
+![Saturivo — resumen del Centro de Control](../media/screenshots/control-center-overview.png)
+
+<details>
+<summary>Ver escenarios, historial y diagnóstico Go</summary>
+
+![Escenarios de carga](../media/screenshots/control-center-load.png)
+
+![Historial de ejecuciones](../media/screenshots/control-center-history.png)
+
+![Diagnóstico de concurrencia Go](../media/screenshots/control-center-diagnostics.png)
+
+</details>
+
 ## ¿Para qué sirve?
 
 Saturivo permite medir cómo responde una API bajo una carga controlada, guardar las condiciones de la prueba, comparar ejecuciones compatibles y observar señales de concurrencia en aplicaciones Go. Usa herramientas consolidadas, como **Grafana k6**, **go test -race** y **go tool pprof**, en lugar de inventar otro motor de carga.

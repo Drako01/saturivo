@@ -125,3 +125,43 @@ jobs:
       - run: npm run build
       - name: Verify real Go race evidence and pprof
         run: node scripts/go-evidence.cjs
+
+  screenshots:
+    name: Capture actual Control Center views for README
+    # Restricted to the maintainer's 0.1.1 feature branch. Never writes to main or forks.
+    if: github.event_name == 'pull_request' && github.head_ref == 'feat/enterprise-aaaa-v0.1.1' && github.event.pull_request.head.repo.full_name == 'Drako01/saturivo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: \${{ github.head_ref }}
+          persist-credentials: true # only this trusted documentation screenshot job
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run build
+      - name: Render four production UI views with synthetic fixture data
+        run: npm run screenshots:readme
+      - name: Upload screenshots for reviewer inspection
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: saturivo-control-center-screenshots
+          path: media/screenshots/*.png
+          if-no-files-found: error
+      - name: Commit changed generated screenshots to THIS feature branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add media/screenshots/
+          if git diff --staged --quiet; then
+            echo "Readme screenshots are unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs(readme): capture 0.1.1 control center from production renderer [skip ci]"
+          git push origin "HEAD:refs/heads/feat/enterprise-aaaa-v0.1.1"
