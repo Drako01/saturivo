@@ -54,3 +54,31 @@ test("localhost is pinned to a loopback address instead of DNS or manipulated ho
   assert.match(generated, /"hosts":\{"localhost":"127\.0\.0\.1","localhost\.":"127\.0\.0\.1"\}/);
   assert.match(generated, /redirects: 0/);
 });
+
+test("status class distribution and target vs achieved arrivals survive k6 summary parsing", () => {
+  const result = readK6Summary({ metrics: {
+    http_reqs: { values: { count: 100, rate: 19.2 } },
+    http_req_failed: { values: { rate: 0.1 } },
+    http_req_duration: { values: { avg: 15, med: 12, "p(95)": 29, "p(99)": 40 } },
+    saturivo_status_2xx: { values: { count: 90 } },
+    saturivo_status_5xx: { values: { count: 10 } },
+  } }, 25);
+  assert.equal(result.targetArrivalRate, 25);
+  assert.equal(result.achievedArrivalRate, 19.2);
+  assert.equal(result.statusDistribution?.["2xx"], 90);
+  assert.equal(result.statusDistribution?.["5xx"], 10);
+  assert.equal(result.statusDistribution?.["4xx"], 0);
+});
+
+test("generated k6 script instruments HTTP response statuses without unbounded output", () => {
+  const scenario: Scenario = {
+    id: "status", name: "Response distribution", target: "http://127.0.0.1/",
+    method: "GET", model: "constant-vus", virtualUsers: 1,
+    durationSeconds: 10, maxRequests: 1000,
+  };
+  const script = renderK6Script(scenario, "/tmp/status.json");
+  assert.match(script, /saturivo_status_5xx/);
+  assert.match(script, /saturivo_status_unknown/);
+  assert.match(script, /statuses\[group\]\.add\(1\)/);
+  assert.match(script, /iterationInTest >= 1000/);
+});
