@@ -5,6 +5,10 @@
 - Upgrade work begins from the verified 0.1.0 preview baseline.
 - Rebuilt the Control Center as a reusable editor-tab WebviewPanel launched from the Activity Bar, with four responsive ES/EN sections, accessible tab navigation, metric cards, an observed-P95 trend and reorganized diagnostics/history.
 - Added an editor-tab custom HTTP scenario v2 form (GET/HEAD, closed/open loop) with strict host-side validation, workload budgets and local form state.
+- Added a developer-oriented UX workflow: guided onboarding, safe preset-to-studio selection, live stage/arrival/VU visualization, inline validity, accessible chart values, transparent comparison context and responsive theme-aware layouts.
+- Added Chromium-backed interaction checks for valid/invalid workload previews and regenerated synthetic README screenshots from the production renderer.
+- Added optional Git/environment fingerprints, HTTP status-class and requested/observed arrival evidence; bounded history retention and Go profile storage; DNS-pinning safety tests and a real VSIX upgrade gate.
+- Added an opt-in local Linux process-metrics adapter for Node, Java and Python, with explicit NOT SUPPORTED status elsewhere.
 - Added explicit baseline choice before comparisons while preserving the 3+3 non-overlapping group constraint.
 - Added opt-in local Go runtime trace capture; real Go integration now also captures mutex and block profiles.
 - Added disposable Go, Node.js and Python HTTP fixtures executing the same real bounded k6 workload in CI.
