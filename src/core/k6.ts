@@ -62,16 +62,35 @@ export function renderK6Script(
   ].join("\n");
 }
 
+async function optionalGitSha(sourceRoot: string | undefined, signal: AbortSignal): Promise<string | undefined> {
+  if (!sourceRoot) return undefined;
+  try {
+    const result = await runBoundedProcess({
+      binary: "git", args: ["rev-parse", "--verify", "HEAD"], cwd: sourceRoot,
+      timeoutMs: 5000, maxOutputBytes: 1024, signal,
+      env: { PATH: process.env.PATH, Path: process.env.Path,
+        SystemRoot: process.env.SystemRoot },
+    });
+    const sha = result.stdout.trim();
+    return result.exitCode === 0 && /^[a-f0-9]{40,64}$/.test(sha) ? sha : undefined;
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return undefined; // Projects without Git remain fully supported.
+  }
+}
+
 export async function runK6(
   scenario: Scenario,
   policy: TargetPolicy,
   binary: string,
   workspaceStorage: string,
-  signal: AbortSignal
+  signal: AbortSignal,
+  sourceRoot?: string
 ): Promise<RunResult> {
   const safeScenario = validateScenario(scenario, policy);
   if (signal.aborted) throw new Error("Cancelled");
   const verifiedHosts = await pinnedTargetHosts(safeScenario.target, signal);
+  const gitSha = await optionalGitSha(sourceRoot, signal);
   await mkdir(workspaceStorage, { recursive: true });
   const version = await runBoundedProcess({
     binary, args: ["version"], cwd: workspaceStorage,
@@ -136,7 +155,7 @@ export async function runK6(
       environment: { platform: process.platform, arch: process.arch,
         node: process.version, cpuCount: cpu.length,
         cpuModel, totalMemoryBytes: totalmem(), k6Version,
-        loadHostFingerprint, environmentHash },
+        loadHostFingerprint, environmentHash, ...(gitSha ? { gitSha } : {}) },
       warnings,
     };
   } finally {
