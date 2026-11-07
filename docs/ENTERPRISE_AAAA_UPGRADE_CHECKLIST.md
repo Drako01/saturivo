@@ -9,6 +9,12 @@ Este es el **único checklist maestro de avance**. [Master Plan](ENTERPRISE_AAAA
 
 
 
+## QA de Markdown literal y legible (2026-11-07)
+
+- [x] La nueva codificación protege links/imágenes Markdown, conservando puntos y guiones de URLs/fechas normales.
+- [x] Corregida aserción histórica del `reportTarget` de `health?[query redacted]` para exigir corchetes escapados, sin aceptar que se filtren valores query.
+- [ ] CI de SHA exacto. Esta modificación corrige el gate tras la integración del sanitizador Markdown.
+
 ## Markdown export: prevención de enlaces e imágenes inyectados (2026-11-07)
 
 - [x] Escape de caracteres de formato Markdown y HTML en nombres, advertencias, timestamps y etiquetas no confiables, antes de generar reportes de carga y correlación Go.

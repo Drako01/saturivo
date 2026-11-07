@@ -6,5 +6,5 @@
 export function escapeMarkdownInline(value: string): string {
   return value.replace(/[\r\n\t]+/g, " ")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/([\\\`*_{}\[\]()#+.!|~-])/g, "\\$1");
+    .replace(/([\\\`*_{}\[\]()#!|~])/g, "\\$1");
 }
