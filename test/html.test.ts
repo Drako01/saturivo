@@ -107,3 +107,13 @@ test("custom ramp editor exposes only selected stage controls and preserves acce
   assert.match(markup, /toggleModels/);
   assert.match(markup, /Etapas de rampa/);
 });
+
+test("runtime process probe requires user action and is disabled during load", () => {
+  const idle = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+    history: [], message: "" }, "en");
+  assert.match(idle, /data-action="runtimeProbe"/);
+  assert.match(idle, /NOT SUPPORTED/);
+  const running = dashboard({ target: "http://127.0.0.1:8080/", busy: true,
+    history: [], message: "" }, "es-AR");
+  assert.match(running, /data-action="runtimeProbe" disabled/);
+});
