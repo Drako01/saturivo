@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
 import { createServer, type Server } from "node:http";
-import { mkdtemp, readFile, rm, mkdir, writeFile, truncate } from "node:fs/promises";
+import { mkdtemp, readFile, rm, mkdir, writeFile, truncate, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { captureGoProfile, checkGoProfileQuota, localPprofEndpoint } from "../src/core/go-profiler";
@@ -73,7 +73,7 @@ test("profile quota caps local storage without deleting existing evidence", asyn
     await writeFile(file, "small profile");
     await truncate(file, 64 * 1024 * 1024);
     await assert.rejects(checkGoProfileQuota(root, 1), /profile storage quota/);
-    assert.equal((await readFile(file)).byteLength, 64 * 1024 * 1024,
+    assert.equal((await stat(file)).size, 64 * 1024 * 1024,
       "Quota enforcement must never remove profiles without user approval");
     await rm(file);
     for (let i = 0; i < 30; i++) {
