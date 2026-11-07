@@ -56,6 +56,12 @@ async function main() {
     assert(heap.bytes > 0);
     const top = await summarizeGoPprof(heap.localPath, runtimeFolder, signal);
     assert.match(top, /Showing nodes accounting|File:|Type:/);
+    for (const kind of ["mutex", "block", "trace"]) {
+      const observed = await captureGoProfile(origin, kind, temp, signal);
+      assert(observed.bytes > 0, "Empty real Go " + kind + " output");
+      assert(observed.localPath.endsWith(kind === "trace" ? ".trace" : ".pprof"));
+    }
+    console.log("Go pprof mutex/block + runtime trace integration: PASS");
     console.log("Go pprof real runtime integration: PASS");
   } finally {
     if (server) server.kill();
