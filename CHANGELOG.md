@@ -3,6 +3,7 @@
 ## [Unreleased] — 0.1.1 Enterprise AAAA implementation
 
 - Upgrade work begins from the verified 0.1.0 preview baseline.
+- Rebuilt the Control Center as a reusable editor-tab WebviewPanel launched from the Activity Bar, with four responsive ES/EN sections, accessible tab navigation, metric cards, an observed-P95 trend and reorganized diagnostics/history.
 - Hardened distribution pipeline, workload reproducibility, Go tracing and runtime diagnostics are tracked in the 0.1.1 checklist.
 - **Not yet released:** all subsequent feature completion must be verified on the exact release commit.
 

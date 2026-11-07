@@ -6,6 +6,7 @@ export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension("armotusitio.saturivo");
   assert(extension, "Saturivo must be visible to VS Code's installed extension registry");
   await extension.activate();
+  // Control Center must be reachable as an editor tab, not just a narrow sidebar.
   const commands = await vscode.commands.getCommands(true);
   for (const command of [
     "saturivo.openHome", "saturivo.runSmoke", "saturivo.cancel",
