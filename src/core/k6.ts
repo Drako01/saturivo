@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { RunResult, Scenario } from "./types";
 import { readK6Summary } from "./metrics";
+import { fingerprintScenario } from "./fingerprint";
 import { validateScenario, type TargetPolicy } from "./validation";
 
 export function renderK6Script(scenario: Scenario, output: string): string {
@@ -85,7 +86,7 @@ export async function runK6(
     if (metrics.requests < 100) warnings.push("Small sample size: avoid drawing strong conclusions.");
     return {
       schemaVersion: 1, id, startedAt, endedAt: new Date().toISOString(),
-      engine: "k6", scenario: safeScenario, metrics,
+      engine: "k6", scenario: safeScenario, scenarioHash: fingerprintScenario(safeScenario), metrics,
       environment: { platform: process.platform, arch: process.arch,
         node: process.version, cpuCount: cpus().length },
       warnings,

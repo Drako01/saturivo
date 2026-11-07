@@ -30,6 +30,8 @@ export interface RunResult {
   readonly endedAt: string;
   readonly engine: "k6";
   readonly scenario: Scenario;
+  /** Added in the Phase 1 rollout; older schemaVersion 1 reports omit this field. */
+  readonly scenarioHash?: string;
   readonly metrics: Metrics;
   readonly environment: {
     readonly platform: string;

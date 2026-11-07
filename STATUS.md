@@ -1,12 +1,14 @@
 # Saturivo — Implementation status
 
-Updated: 2026-11-07. PR #1 merged to main; branding and Enterprise AAAA kickoff on feat/enterprise-aaaa-kickoff-branding.
+Updated: 2026-11-07. Baseline PR #2 merged into main; current work: `feat/enterprise-aaaa-phase0-quality-foundation`.
 
 ## Done in repository
 
 - Extension manifest, strict TS project and activity bar Control Center.
 - Safe target policy, bounded k6 scripts, two workload models, cancellation hooks.
 - Go race and benchmark command adapters, local history, comparison, Markdown report.
+- Phase 0: transparent rounded PNG logo and pixel-level alpha regression guard added in current branch (CI evidence pending).
+- Phase 1 vertical slice: stable SHA-256 workload fingerprint recorded on new runs, shown in reports, backward compatible with legacy results (CI evidence pending).
 - English and Spanish interface and manifests.
 - Unit coverage for validation, parsing, comparison and HTML escaping.
 - Cross-platform PR CI definition and packaging preview.
@@ -26,7 +28,7 @@ Updated: 2026-11-07. PR #1 merged to main; branding and Enterprise AAAA kickoff 
 1. Run real Extension Host and installed VSIX smoke; existing CI checks are green.
 2. Test k6 locally against a disposable loopback service (not a production endpoint).
 3. Fix any correctness/security issues surfaced by tests and dependency review.
-4. Add marketplace PNG icon, verified screenshots and reproducible lockfile. README SVG logo is available in branding kickoff branch.
+4. Verify updated transparent Marketplace PNG icon in VS Code and README, supply screenshots, and add a reproducible dependency lockfile.
 5. Obtain manual approval before initial public release.
 
 ## Engineering rule

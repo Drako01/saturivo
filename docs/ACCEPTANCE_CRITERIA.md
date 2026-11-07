@@ -16,5 +16,7 @@
 | A12 | Artifact | `vsce package --no-dependencies` generates installable VSIX and extension host activates | CI & host smoke pending |
 | A13 | Security | CSP, limited Webview messages, no cloud telemetry, local-first target | Unit/security review pending |
 | A14 | Release | No automatic publication; manual sign-off and clean checks | No publish workflow |
+| A15 | Transparent brand icon | PNG 192×192, four exterior corners alpha=0, center opaque | Pixel-level gate added in Phase 0 branch; CI pending |
+| A16 | Workload fingerprint | Identical workloads yield identical 64-char SHA-256, workload changes yield different hash; legacy history supported | Deterministic unit cases added in Phase 0 branch; CI pending |
 
 Criteria are explicit but are **not** marked PASS until observed. Go profiling, profiler correlation, dynamic capacity discovery and advanced regression statistics remain roadmap items.

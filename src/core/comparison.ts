@@ -1,4 +1,5 @@
 import type { Comparison, RunResult } from "./types";
+import { fingerprintScenario } from "./fingerprint";
 
 const round = (value: number): number => Math.round(value * 100) / 100;
 const percent = (older: number, newer: number): number => older > 0 ? round(((newer - older) / older) * 100) : 0;
@@ -10,6 +11,9 @@ export function compareRuns(baseline: RunResult, candidate: RunResult): Comparis
   if (a.target !== b.target || a.method !== b.method || a.model !== b.model ||
     a.durationSeconds !== b.durationSeconds || a.virtualUsers !== b.virtualUsers ||
     a.arrivalRate !== b.arrivalRate) reasons.push("Scenario configuration differs");
+  // Backward compatible: the fingerprint is derived for older stored runs.
+  if ((baseline.scenarioHash ?? fingerprintScenario(a)) !==
+    (candidate.scenarioHash ?? fingerprintScenario(b))) reasons.push("Scenario fingerprint differs");
   if (baseline.environment.platform !== candidate.environment.platform ||
     baseline.environment.arch !== candidate.environment.arch ||
     baseline.environment.node !== candidate.environment.node ||
