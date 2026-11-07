@@ -226,11 +226,13 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.cjs",
     "smoke:manifest": "node scripts/verify-manifest.cjs",
-    "verify": "npm run typecheck && npm run test && npm run smoke:manifest",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
     "vscode:prepublish": "npm run build",
     "test:integration:k6": "node scripts/k6-smoke.cjs",
-    "test:integration:vscode": "node scripts/run-vscode-host.cjs"
+    "test:integration:vscode": "node scripts/run-vscode-host.cjs",
+    "rulesets:check": "node scripts/rulesets.mjs --check",
+    "rulesets:status": "node scripts/rulesets.mjs --status"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

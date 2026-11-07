@@ -9,7 +9,7 @@
 
 [English README](../README.md) · [Arquitectura](../ARCHITECTURE.md) · [Estado real](../STATUS.md) · [Plan Enterprise AAAA](ENTERPRISE_AAAA_MASTER_PLAN.md)
 
-> **Vista previa privada 0.1.0.** Las capacidades documentadas en el PR #4 son un candidato de desarrollo, no una versión publicada ni una certificación Enterprise AAAA.
+> **Código fuente público · Vista previa de desarrollo 0.1.0.** Las capacidades documentadas en el PR #4 son un candidato de desarrollo, no una versión publicada ni una certificación Enterprise AAAA.
 
 ## ¿Para qué sirve?
 
@@ -96,4 +96,10 @@ Para conocer los pendientes reales, revisá el [checklist](ENTERPRISE_AAAA_UPGRA
 
 ---
 
-**Saturivo** es desarrollado por **Alejandro Daniel Di Stefano — [ArmoTuSitio](https://armotusitio.com.ar)**. Licencia MIT. Repositorio privado y extensión todavía sin publicar.
+**Saturivo** es desarrollado por **Alejandro Daniel Di Stefano — [ArmoTuSitio](https://armotusitio.com.ar)**. Licencia MIT. Repositorio público bajo licencia MIT; extensión todavía sin publicar.
+
+## Comunidad y contribuciones
+
+El repositorio de Saturivo es **público**. Aceptamos issues reproducibles, pruebas, documentación, accesibilidad y PRs siguiendo [CONTRIBUTING.md](../CONTRIBUTING.md) y el [Código de conducta](../CODE_OF_CONDUCT.md). Las vulnerabilidades se reportan en privado por [SECURITY.md](../SECURITY.md).
+
+Las definiciones de protección de `main` y tags `v*` están versionadas, pero **todavía necesitan activarse en la configuración administrativa de GitHub**. Consultá [RULESETS.md](RULESETS.md), el [modelo de gobernanza](GOVERNANCE.md) y [SUPPORT.md](../SUPPORT.md).

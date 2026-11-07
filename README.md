@@ -22,7 +22,7 @@
 
 ---
 
-> **Private preview · Version 0.1.0 (unreleased).** This branch is an Enterprise AAAA development candidate, **not a certified or published release**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
+> **Public source · Development preview 0.1.0 (unreleased).** This branch is an Enterprise AAAA development candidate, **not a certified or published release**. Refer to [implementation status](STATUS.md) and the [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Do not rely on preview builds for production capacity certification.
 
 ## Why Saturivo?
 
@@ -59,7 +59,7 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 - **Grafana k6** installed and available on your `PATH`. See the [official installation guide](https://grafana.com/docs/k6/latest/set-up/install-k6/).
 - **Go** (optional) for race detection, benchmarks and `pprof` analysis.
 - **Node.js 22+** and npm for building this extension from source.
-- Access to this private repository while the product remains in pre-release.
+- Git access to the public Saturivo source repository.
 
 ### Build and install the preview
 
@@ -207,7 +207,7 @@ npm run test:integration:k6
 npm run test:integration:vscode
 ~~~
 
-No Marketplace or Open VSX package has been published. The repository remains private until an explicit release decision.
+No Marketplace or Open VSX package has been published. **The source repository is public**; publication of a VSIX is a separate, explicitly approved release decision.
 
 ## Project documents
 
@@ -221,6 +221,14 @@ No Marketplace or Open VSX package has been published. The repository remains pr
 | [Acceptance criteria](docs/ACCEPTANCE_CRITERIA.md) | Measurable test and release gates |
 | [Security](SECURITY.md) / [Privacy](PRIVACY.md) | Threat boundaries, sensitive evidence and safeguards |
 | [Contributing](CONTRIBUTING.md) / [Changelog](CHANGELOG.md) | Development standards and change history |
+| [Governance](docs/GOVERNANCE.md) / [Rulesets](docs/RULESETS.md) | Contribution decisions, protected branches/tags and activation status |
+| [Code of Conduct](CODE_OF_CONDUCT.md) / [Support](SUPPORT.md) | Public community standards and support channels |
+
+## Community and contribution
+
+Saturivo's source is now **public and MIT-licensed**. Contributions are welcome through [issues](https://github.com/Drako01/saturivo/issues/new/choose) and focused [pull requests](https://github.com/Drako01/saturivo/pulls). Before contributing, review the [contribution guide](CONTRIBUTING.md), [Code of Conduct](CODE_OF_CONDUCT.md), [security disclosure policy](SECURITY.md) and [governance rules](docs/GOVERNANCE.md).
+
+**Repository protection:** versioned rulesets define required reviews, three-platform CI and immutable release tags. **The rulesets must still be applied to GitHub's live settings by an authorized administrator**; files in `.github/rulesets/` do not enforce themselves. See [Ruleset status and installation](docs/RULESETS.md).
 
 ---
 

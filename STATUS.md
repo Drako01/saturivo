@@ -1,6 +1,6 @@
 # Saturivo — Estado de implementación
 
-Actualizado: **2026-11-07**. PR de evolución: [#4](https://github.com/Drako01/saturivo/pull/4), rama `feat/enterprise-aaaa-runtime-evidence`. El repositorio continúa **privado**, la extensión **sin publicar** y el PR **Draft**.
+Actualizado: **2026-11-07**. PR de evolución: [#4](https://github.com/Drako01/saturivo/pull/4), rama `feat/enterprise-aaaa-runtime-evidence`. El repositorio es **público**, la extensión **todavía no publicada** y el PR **Draft**.
 
 ## Estado ejecutivo
 
@@ -32,3 +32,12 @@ Las referencias anteriores corresponden al commit `a819a894`. Cambios posteriore
 ## Regla de ingeniería
 
 No marcar funciones como completas por figurar en el plan. Evidencia medible, implementación sin regresión, higiene del repositorio, seguridad y validación por impacto. No repetir suites pesadas si los archivos no cambiaron, salvo gate final de release.
+
+## Gobernanza del repositorio público
+
+- [x] CODEOWNERS, CODE_OF_CONDUCT, CONTRIBUTING, SUPPORT, SECURITY y plantillas de Issues/PR preparados en PR #4 (comprobación CI del último SHA pendiente).
+- [x] Definiciones de rulesets versionadas a partir de las políticas activas de Probato PR / Indizivo / Orquestivo.
+- [ ] Reglas activas en GitHub: **NO**; lectura inicial de `GET /rulesets` devolvió `[]`. Requiere administrador y permiso Administration:write.
+- [ ] `rulesets:status` autenticado después de aplicar las dos políticas.
+
+Ver [docs/RULESETS.md](docs/RULESETS.md).

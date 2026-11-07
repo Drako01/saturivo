@@ -47,3 +47,15 @@
 6. Sin merge ni publicación automática: aprobación explícita del propietario.
 
 **Última evidencia completa:** `a819a894`. Todo cambio posterior requiere un nuevo CI sobre su SHA exacto antes de declararse verificado.
+
+## Gobernanza del repositorio público
+
+| Control | Estado actual | Prueba requerida |
+|---|---|---|
+| CODEOWNERS y normas de comunidad | Implementado; último CI pendiente | Archivo propietario + contribution/conduct/support + plantillas válidas |
+| Definiciones JSON Protect main + release tags | Versionadas, sin activar | `npm run rulesets:check` en CI |
+| Protección real de `main` en GitHub | **NOT APPLIED** | Administrador aplica y valida `npm run rulesets:status` |
+| Protección real de tags `v*` | **NOT APPLIED** | Administrador aplica y valida `npm run rulesets:status` |
+| Gate de CI y revisión | PENDIENTE DE RULESET | 3 checks Verify + aprobación PR + owner/last push/threads |
+
+No confundir presencia de JSON con políticas activas. [Manual de rulesets](RULESETS.md).
