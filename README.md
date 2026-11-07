@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/saturivo-logo.svg" alt="Saturivo — Load &amp; Concurrency Inspector by ArmoTuSitio" width="750" />
+  <img src="media/saturivo-icon.png" alt="Saturivo — Load &amp; Concurrency Inspector by ArmoTuSitio" width="160" />
 </p>
 
 <h1 align="center">Saturivo</h1>
