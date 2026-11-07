@@ -63,3 +63,19 @@ jobs:
         run: npm run test:integration:k6
         env:
           K6_NO_USAGE_REPORT: 'true'
+
+  bootstrap-lockfile:
+    name: Bootstrap reproducible npm lockfile (one-time)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Export lockfile bytes for commit (temporary CI step)
+        run: |
+          node -e "const fs=require('fs');const s=fs.readFileSync('package-lock.json').toString('base64');for(let i=0;i<s.length;i+=4000){console.log('SATURIVO_LOCK_PART:'+i+':'+s.slice(i,i+4000))}"
