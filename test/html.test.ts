@@ -197,11 +197,12 @@ test("sensitive JSON export disclosure is available in English and Spanish", () 
   assert.match(translate("es-AR", "exportJsonConfirm"), /Exportar JSON/);
 });
 
-test("non-preview Control Center displays the current 0.2.0 version", () => {
+test("non-preview Control Center displays the version from package.json", () => {
   const markup = dashboard({
     target: "http://127.0.0.1:8080/", busy: false, history: [], message: "",
   }, "en");
-  assert.match(markup, /<span class="version">0\.2\.0<\/span>/);
+  const version = JSON.parse(readFileSync("package.json", "utf8")).version as string;
+  assert(markup.includes('<span class="version">' + version + '</span>'));
   assert(!markup.includes('<span class="version">0.1.1</span>'));
 });
 
