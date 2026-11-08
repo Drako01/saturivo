@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M2 13h4l3-7 4 12 3-6h6" stroke="#C5C5C5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="12" r="1.4" fill="#C5C5C5"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 196 196" fill="none" aria-label="Saturivo">
+  <!-- Official gauge geometry, monochrome for VS Code Activity Bar. -->
+  <rect x="0" y="0" width="188" height="188" rx="36" stroke="#C5C5C5" stroke-width="6"/>
+  <path d="M39 123a60 60 0 0 1 120 0" stroke="#C5C5C5" stroke-width="11" stroke-linecap="round"/>
+  <path d="M54 119l-10-3M73 82l-7-9M94 71V59M116 82l7-9M134 118l10-3" stroke="#C5C5C5" stroke-width="4.8" stroke-linecap="round"/>
+  <rect x="77" y="128" width="14" height="26" rx="3" fill="#C5C5C5"/>
+  <rect x="98" y="113" width="14" height="41" rx="3" fill="#C5C5C5"/>
+  <rect x="119" y="94" width="14" height="60" rx="3" fill="#C5C5C5"/>
+  <path d="M93 123l49-43" stroke="#C5C5C5" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="93" cy="123" r="11" fill="#C5C5C5"/>
+  <path d="M48 163h92" stroke="#C5C5C5" stroke-width="3" stroke-linecap="round"/>
+</svg>
