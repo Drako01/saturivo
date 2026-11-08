@@ -549,7 +549,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '<title>Saturivo Control Center</title><style nonce="' + nonce + '">' + css + '</style></head><body>',
     '<a class="skip-link" href="#main-workspace">' + t('skipToContent') + '</a>' +
     '<main class="shell"><header class="topbar"><div class="brand"><div class="logo" aria-hidden="true">' + saturivoMark + '</div>',
-    '<div><div class="eyebrow">ARMOTUSITIO / PERFORMANCE ENGINEERING</div><h1>Saturivo <span class="version">0.2.1</span></h1></div></div>',
+    '<div><div class="eyebrow">ARMOTUSITIO / PERFORMANCE ENGINEERING</div><h1>Saturivo <span class="version">0.2.2</span></h1></div></div>',
     '<div class="state"><span class="dot' + (busy ? ' active' : '') + '" aria-hidden="true"></span><span>' +
       t(busy ? 'running' : 'idle') + '</span>' + (busy ? button('cancel', 'cancel', 'danger') : '') + '</div></header>',
     '<nav class="tabs" role="tablist" aria-label="' + t('navigation') + '">' +
