@@ -32,3 +32,15 @@ test("publication is not triggered by a plain merge into main", () => {
   assert.match(workflow, /environment: marketplace/);
   assert.match(workflow, /environment: open-vsx/);
 });
+
+test("GitHub Release verification downloads VSIX with its checksum sidecar, even on retry", () => {
+  const workflow = fs.readFileSync(
+    path.join(__dirname, "..", ".github", "workflows", "publish.yml"), "utf8");
+  const releaseStep = workflow.split("      - name: Create GitHub Release using already approved protected tag")[1];
+  assert.ok(releaseStep, "Expected GitHub Release verification step");
+  assert.ok(releaseStep.includes("gh release download \"$tag\" --pattern 'saturivo.vsix*' --dir verify"),
+    "Download both saturivo.vsix and saturivo.vsix.sha256");
+  assert.match(releaseStep, /check verify\/saturivo\.vsix --expect/);
+  assert.match(releaseStep, /if gh release view "\$tag"[\s\S]*?\n\s*else\n[\s\S]*?\n\s*fi\n[\s\S]*?gh release download/);
+  assert.doesNotMatch(releaseStep, /GitHub Release \$tag exists, no mutation\.[\s\S]*?exit 0/);
+});

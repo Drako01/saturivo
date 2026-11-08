@@ -285,11 +285,12 @@ jobs:
           set -euo pipefail
           tag="v$RELEASE_VERSION"
           if gh release view "$tag" >/dev/null 2>&1; then
-            echo "GitHub Release $tag exists, no mutation."
-            exit 0
+            echo "GitHub Release $tag already exists; verifying its published assets."
+          else
+            gh release create "$tag" saturivo.vsix saturivo.vsix.sha256 saturivo.release.json reports/saturivo-sbom.cdx.json reports/saturivo-licenses.json reports/saturivo-licenses.md \
+              --title "Saturivo $RELEASE_VERSION" --generate-notes
           fi
-          gh release create "$tag" saturivo.vsix saturivo.vsix.sha256 saturivo.release.json reports/saturivo-sbom.cdx.json reports/saturivo-licenses.json reports/saturivo-licenses.md \
-            --title "Saturivo $RELEASE_VERSION" --generate-notes
           mkdir -p verify
-          gh release download "$tag" --pattern saturivo.vsix --dir verify
+          # The checksum checker requires <vsix>.sha256 alongside the downloaded VSIX.
+          gh release download "$tag" --pattern 'saturivo.vsix*' --dir verify
           node scripts/vsix-checksum.cjs check verify/saturivo.vsix --expect "$(cut -d' ' -f1 saturivo.vsix.sha256)"
