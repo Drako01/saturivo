@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.1] — 2026-11-07
+
+- Fix incorrect Control Center logo branding and align the VS Code Activity Bar icon with the official Saturivo gauge.
+
 ## [0.2.0] — 2026-11-07
 
 - Owner authorized publication of 0.2.0 after verified automated gates (CI #42425033225: 7/7 PASS on `ebac70f`). Actual release must verify final SHA after this documentation change, protected tag and Marketplace/Open VSX jobs.

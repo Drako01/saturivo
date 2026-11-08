@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
+import { readFileSync } from "node:fs";
 import { dashboard } from "../src/ui/html";
 import { translate } from "../src/ui/localize";
 
@@ -196,11 +197,12 @@ test("sensitive JSON export disclosure is available in English and Spanish", () 
   assert.match(translate("es-AR", "exportJsonConfirm"), /Exportar JSON/);
 });
 
-test("non-preview Control Center displays the current 0.2.0 version", () => {
+test("non-preview Control Center displays the version from package.json", () => {
   const markup = dashboard({
     target: "http://127.0.0.1:8080/", busy: false, history: [], message: "",
   }, "en");
-  assert.match(markup, /<span class="version">0\.2\.0<\/span>/);
+  const version = JSON.parse(readFileSync("package.json", "utf8")).version as string;
+  assert(markup.includes('<span class="version">' + version + '</span>'));
   assert(!markup.includes('<span class="version">0.1.1</span>'));
 });
 
@@ -296,4 +298,29 @@ test("race diagnostics expose explicit source navigation in bilingual Control Ce
     assert.match(html, /data-action="navigateRace"/);
     assert.match(html, new RegExp(translate(locale, "raceNavigateAction")));
   }
+});
+
+test("Control Center and Activity Bar use official Saturivo gauge branding", () => {
+  const markup = dashboard({ target: "http://127.0.0.1:8080/", busy: false,
+    history: [], message: "" }, "en");
+  const canonical = readFileSync("media/saturivo-logo.svg", "utf8");
+  const activity = readFileSync("media/activity.svg", "utf8");
+  for (const segment of [
+    "M39 123a60 60 0 0 1 120 0", // official gauge arc
+    "M93 123l49-43",               // official needle
+    "M54 119l-10-3M73 82l-7-9",   // official tick marks
+    "M48 163h92",                  // official gauge baseline
+  ]) {
+    assert(canonical.includes(segment), "Canonical logo was changed: " + segment);
+    assert(markup.includes(segment), "Control Center mark differs: " + segment);
+    assert(activity.includes(segment), "Activity Bar mark differs: " + segment);
+  }
+  assert.match(markup, /class="logo" aria-hidden="true"><svg /);
+  assert.match(markup, /viewBox="0 0 188 188"/);
+  assert(!markup.includes("▂▅▇"), "Placeholder logo must not be rendered");
+  assert.match(activity, /stroke="#C5C5C5"/);
+  assert(!activity.includes("M2 13h4l3-7"), "Old generic pulse icon is forbidden");
+  const version = JSON.parse(readFileSync("package.json", "utf8")).version as string;
+  assert(markup.includes('class="version">' + version + '</span>'),
+    "Visible Control Center version must match packaged extension");
 });

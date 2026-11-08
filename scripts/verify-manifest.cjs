@@ -6,7 +6,7 @@ const en = JSON.parse(fs.readFileSync("package.nls.json", "utf8"));
 const es = JSON.parse(fs.readFileSync("package.nls.es.json", "utf8"));
 assert.equal(pkg.publisher, "armotusitio");
 assert.equal(pkg.name, "saturivo");
-assert.equal(pkg.version, "0.2.0", "Candidate manifest must target 0.2.0");
+assert.equal(pkg.version, "0.2.1", "Candidate manifest must target 0.2.1");
 assert.equal(Object.prototype.hasOwnProperty.call(pkg, "preview"), false,
   "Production-version manifest must not carry a preview label");
 assert(Array.isArray(pkg.keywords) && pkg.keywords.length >= 8 && pkg.keywords.length <= 30,
