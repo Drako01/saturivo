@@ -63,7 +63,7 @@ Alternative: create the rulesets through [Saturivo → Settings → Rules → Ru
 
 **Exact status names:** do not rename `Verify (ubuntu-latest)`, `Verify (windows-latest)` or `Verify (macos-latest)` without updating the rulesets and the governance checker first.
 
-**Release tags:** a ruleset can block automated tag creation. Never assume `GITHUB_TOKEN` bypasses it. Establish the release identity/permissions before enabling a publishing workflow, and require maintainer approval.
+**Release tags:** `Protect release tags` currently prohibits tag updates, deletion, and non-fast-forward movement; it does **not** prohibit new tag creation. After a green PR merges and the immutable VSIX has been packaged, `publish.yml` attempts to create the new `v*` ref using the scoped GitHub Actions token (`contents: write`) and checks that it points to the exact `main` SHA. If GitHub rejects creation, release fails closed without weakening the ruleset. See [release automation](RELEASE_AUTOMATION.md).
 
 **Repository merge settings:** verify squash merge is enabled and incompatible merge paths are disabled as desired. Versioned ruleset JSON does not change repository-level merge settings.
 

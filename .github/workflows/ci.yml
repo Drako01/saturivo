@@ -2,8 +2,7 @@ name: CI
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
+  # PR HEAD is the authoritative quality gate. Do not rerun on main merges.
   workflow_dispatch:
     inputs:
       capture_screenshots:
@@ -40,7 +39,7 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify TypeScript, tests and manifest
         run: npm run verify
-      - name: Package real 0.2.0 VSIX for Windows/macOS upgrade
+      - name: Package candidate VSIX for Windows/macOS upgrade
         if: runner.os != 'Linux'
         run: npx --no-install vsce package --no-dependencies --out saturivo.vsix
       - name: Install 0.1.0 then upgrade VSIX with persistent history (real OS CLI)
@@ -156,7 +155,7 @@ jobs:
         run: xvfb-run -a npm run test:integration:vscode
         env:
           K6_NO_USAGE_REPORT: 'true'
-      - name: Upgrade installed VSIX from pinned 0.1.0 to candidate 0.2.0
+      - name: Upgrade installed VSIX from pinned 0.1.0 to current candidate
         run: node scripts/verify-vsix-upgrade.cjs
 
   go-runtime-evidence:

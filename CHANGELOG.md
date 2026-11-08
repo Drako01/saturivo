@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.2] — 2026-11-07
+
+- Run the full CI suite once on the pull request; prevent duplicate CI on merge to `main`.
+- Automatically start the protected Trusted Publisher release on version-bumping merges to `main` after verifying the exact merged PR HEAD and its successful CI. Preserve immutable `v*` release tags, checksums, SBOM and OIDC distribution without rerunning the PR test matrix.
+
 ## [0.2.1] — 2026-11-07
 
 - Fix incorrect Control Center logo branding and align the VS Code Activity Bar icon with the official Saturivo gauge.
