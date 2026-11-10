@@ -1,5 +1,7 @@
+import { CancelledError } from "./cancelled-error";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { readBoundedRegularTextFile } from "./bounded-file";
 import { join } from "node:path";
 import { isLoopbackHost } from "./validation";
 import { runBoundedProcess } from "./process";
@@ -94,7 +96,7 @@ export async function runWebSocketProbe(
   raw: string, binary: string, storage: string, signal: AbortSignal
 ): Promise<WebSocketObservation> {
   validateWebSocketTarget(raw);
-  if (signal.aborted) throw new Error("Cancelled");
+  if (signal.aborted) throw new CancelledError();
   const dir = join(storage, "temporary", randomUUID());
   await mkdir(dir, { recursive: true });
   const script = join(dir, "ws-probe.js");
@@ -112,8 +114,7 @@ export async function runWebSocketProbe(
       },
     });
     if (result.exitCode !== 0) throw new Error("WebSocket k6 probe failed (" + result.exitCode + ")");
-    if ((await stat(summary)).size > 100000) throw new Error("WebSocket evidence too large");
-    return parseWebSocketSummary(JSON.parse(await readFile(summary, "utf8")) as unknown, raw);
+    return parseWebSocketSummary(JSON.parse(await readBoundedRegularTextFile(summary, 100000)) as unknown, raw);
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => undefined);
   }

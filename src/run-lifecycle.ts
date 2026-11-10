@@ -1,7 +1,6 @@
 /** Serializes runs at command entry, including consent and selection dialogs. */
-export class CancelledError extends Error {
-  constructor() { super("Cancelled"); this.name = "CancelledError"; }
-}
+import { CancelledError } from "./core/cancelled-error";
+export { CancelledError } from "./core/cancelled-error";
 export function isCancellation(error: unknown, signal: AbortSignal): boolean {
   return signal.aborted || error instanceof CancelledError ||
     (error instanceof Error && error.name === "AbortError");

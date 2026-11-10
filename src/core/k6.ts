@@ -1,3 +1,4 @@
+import { CancelledError } from "./cancelled-error";
 import { createHash, randomUUID } from "node:crypto";
 import { cpus, totalmem, hostname } from "node:os";
 import { join } from "node:path";
@@ -120,7 +121,7 @@ export async function runK6(
   sourceRoot?: string
 ): Promise<RunResult> {
   const safeScenario = validateScenario(scenario, policy);
-  if (signal.aborted) throw new Error("Cancelled");
+  if (signal.aborted) throw new CancelledError();
   const verifiedHosts = await pinnedTargetHosts(safeScenario.target, signal);
   const gitSha = await optionalGitSha(sourceRoot, signal);
   await mkdir(workspaceStorage, { recursive: true });

@@ -330,7 +330,6 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
 
   private async executeScenario(input: Scenario): Promise<void> {
     await this.lifecycle.withBusy(async signal => {
-    if (this.busy) { void vscode.window.showWarningMessage("Saturivo: " + this.t("taskAlreadyRunning")); return; }
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
       maxRequests: this.config().get<number>("maxRequests", 10000) };
