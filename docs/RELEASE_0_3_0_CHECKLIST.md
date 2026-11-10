@@ -1,4 +1,6 @@
-# Saturivo 0.3.0 — checklist vivo de aceptación
+# Saturivo 0.3.0 — checklist histórico de aceptación
+
+> **HISTÓRICO.** PR #9 se fusionó el 2026-11-10, pero [publish #42866596867](https://github.com/Drako01/saturivo/actions/runs/42866596867) falló con GitHub HTTP 404 al consultar políticas opcionales de Environments. No se publicó `v0.3.0`. Para la versión parche y la política de propietario único consultar [checklist 0.3.1](RELEASE_0_3_1_CHECKLIST.md). Los estados previos del documento se conservan como evidencia histórica.
 
 Base: `main@f7320fe1e76cbe012852fe40bc5b1f6d59dc3620` (0.2.2, auditoría 73/100). Upgrade: [PR #9](https://github.com/Drako01/saturivo/pull/9), rama `feat/saturivo-enterprise-aaaa-0.3.0`. Sin merge ni release.
 

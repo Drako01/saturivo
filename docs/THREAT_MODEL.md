@@ -12,7 +12,7 @@
 | Extension → profiler | runtime stack/heap/trace from process | only literal loopback IP and HTTP; no credentials/redirects; deadlines/size cap; explicit consent; local storage |
 | Extension → operating system | binary path and child process tree | no shell, bounded output, timeout, AbortSignal, terminate descendant tree on cancel where supported |
 | Evidence → Webview/export | JSON, names, paths, metrics, stack data | schema and size validation, HTML escaping and CSP, safe export defaults; user controls sharing |
-| GitHub CI → public registries | package, tags, credentials and provenance | pinned actions, least privilege, exact manifest/checksum, owner-controlled protected tag and approval environments |
+| GitHub CI → public registries | package, tags, credentials and provenance | pinned actions, least privilege, exact manifest/checksum, owner-controlled protected tag, exact green PR evidence, protected main and environment-scoped OIDC |
 
 ## Attack and failure cases
 
@@ -38,7 +38,7 @@
 3. Every active process and request has a bounded deadline and abort path; unauthorized background load is prohibited.
 4. Imported, generated and captured evidence is local, size-bounded and never exported without user action.
 5. PASS requires a named test plus the exact commit/runner/CI URL. An absent test is NOT RUN.
-6. A green pull request is **not** a release authorization. Publishing requires the maintainer's protected tag and registry environment approvals.
+6. A green pull request is **not** a release authorization. Publishing requires exact green PR evidence, the protected main SHA, an immutable tag and environment-scoped OIDC registry identity. A second deployment approver is optional for the sole maintainer.
 
 ## Residual risks and release blockers
 
@@ -77,7 +77,7 @@ ZIP adversarial tests are included in the standard verification gate.
 **Limits:** This guard inspects the ZIP envelope and declared sizes, not the
 decompressed data or every ZIP parser implementation. The final exact VSIX must
 still pass VS Code installation, SHA-256 checksum/provenance, SBOM/license audit,
-and the protected publish preflight. A passing metadata check alone does not
+and the protected-main publish preflight. A passing metadata check alone does not
 establish supply-chain integrity.
 
 ## Markdown rendering and imported text

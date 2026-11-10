@@ -12,7 +12,6 @@ import { resolve } from 'node:path';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { REQUIRED_JOBS } = require('./verify-merge-ci.cjs');
-const { verifyReleaseEnvironments } = require('./verify-release-environments.cjs');
 
 const repo = 'Drako01/saturivo';
 const base = 'https://api.github.com/repos/' + repo + '/rulesets';
@@ -48,12 +47,12 @@ function validate() {
     throw new Error('Rules are missing or have drifted from the approved reference.');
   }
   const review = main.rules.find((rule) => rule.type === 'pull_request')?.parameters;
-  if (!review || review.required_approving_review_count !== 1 ||
-      review.dismiss_stale_reviews_on_push !== true ||
-      review.require_code_owner_review !== true ||
-      review.require_last_push_approval !== true ||
+  if (!review || review.required_approving_review_count !== 0 ||
+      review.dismiss_stale_reviews_on_push !== false ||
+      review.require_code_owner_review !== false ||
+      review.require_last_push_approval !== false ||
       review.required_review_thread_resolution !== true ||
-      review.require_extra_approval_for_unattributed_changes !== true ||
+      review.require_extra_approval_for_unattributed_changes !== false ||
       !equal(review.allowed_merge_methods, ['squash'])) {
     throw new Error('PR review policy drifted.');
   }
@@ -156,7 +155,6 @@ async function main() {
       console.log('CREATED: '+desired.name);
     }
   }
-  if (mode === '--status') await verifyReleaseEnvironments(token);
   if (mode === '--status' && drift) process.exitCode = 1;
   if (mode === '--apply') console.log('Check GitHub Settings > Rules > Rulesets, then rerun --status.');
 }

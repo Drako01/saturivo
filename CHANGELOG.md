@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.1] — 2026-11-10
+
+**Stable release candidate (no Preview); awaiting exact PR CI and squash merge.** The 0.3.0 source upgrade was merged in PR #9 but never published: its release-environment verifier required human approval and queried the unavailable deployment-branch-policies endpoint (HTTP 404).
+
+- Adopt a solo-maintainer release gate: require the exact merged PR HEAD with seven successful CI jobs, identical squash-merge tree and protected `main` SHA; do not require a second human deployment approver.
+- Retain least-privilege workflow permissions, OIDC-scoped Marketplace/Open VSX environments, immutable tag, artifact hash, SBOM and GitHub Release verification.
+- Reconcile the versioned PR ruleset with zero human approvals while preserving strict seven-job CI, squash-only merges, branch protection and review-thread resolution.
+- Add negative tests for missing OIDC environment, unprotected main, wrong repository/ref/SHA and malformed release workflow.
+- Bump package and lockfile to 0.3.1; no changes to load generation, Go diagnostics or Control Center UI.
+
+
 ## [0.3.0] — 2026-11-10
 
 **Stable-channel release candidate; not yet published.** Release requires the final PR CI, operator approval, and verified GitHub deployment-environment rules.

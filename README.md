@@ -22,7 +22,7 @@
 
 ---
 
-> **Saturivo 0.3.0 — stable-channel source candidate (PR #9; NOT RELEASED).** The latest published version at the audit baseline is 0.2.2. This PR is not an approval to publish. The 0.3.0 security/release gate remains blocked until live GitHub environment rules are configured and validated. No Enterprise AAAA third-party certification is claimed.
+> **Saturivo 0.3.1 — stable release candidate, no Preview.** The 0.3.0 upgrade was merged but its automated publication was blocked. Version 0.3.1 fixes publication governance for the project's sole maintainer while retaining the seven-job PR evidence gate, protected `main`, immutable release tag, VSIX checksum and OIDC registry identities. The latest GitHub Release remains v0.2.2 until this candidate is merged and the publish workflow succeeds. No external Enterprise AAAA certification is claimed.
 
 ## Saturivo 0.3.0 — engineering upgrade
 
@@ -33,10 +33,10 @@ The 0.3.0 candidate strengthens execution correctness and release governance wit
 - **Consistent safety bounds:** scenario input, validation and persisted evidence share the same workload limits.
 - **Evidence hardening:** WebSocket summary reads use bounded, single-link, file-identity-checked access.
 - **Accurate identification:** k6 and WebSocket probes derive their User-Agent version from the packaged manifest.
-- **Release safety:** executable paths cannot be overridden by workspace settings; automated publication fails closed without reviewer-protected, main-only GitHub environments. All seven CI job names are versioned in the branch ruleset.
+- **Release safety:** executable paths cannot be overridden by workspace settings; automated publication validates protected `main` and the exact seven green PR CI jobs without depending on a second human deployment reviewer. All seven CI job names are versioned in the branch ruleset.
 - **Verification:** deterministic property tests, explicit lifecycle regression tests and measured coverage thresholds for the core and lifecycle.
 
-Version 0.3.0 is prepared for the stable release channel (no Preview metadata). **It has not been published.** Release approval remains separate from source verification.
+**0.3.1 is the proposed stable publication version (no Preview metadata).** It preserves the 0.3.0 product features and screenshots; no UI behavior was changed in this patch. Publication is authorized only from protected `main` after successful PR CI and a version-bumping squash merge.
 
 ## Control Center — Saturivo 0.3.0
 
@@ -89,7 +89,7 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 
 ## Capabilities
 
-| Area | Implemented in source (0.3.0 candidate) | Important boundary |
+| Area | Implemented in source (0.3.1 release candidate) | Important boundary |
 |---|---|---|
 | **Load testing** | k6 presets, ramping VUs, and a bilingual editor for bounded v2 HTTP GET/HEAD workloads | HTTP(S) GET/HEAD only; local target by default |
 | **Metrics & SLOs** | RPS, failures, P50/P95/P99, dropped iterations; configurable P95 SLO | Single-run status is not a statistical confidence guarantee |
