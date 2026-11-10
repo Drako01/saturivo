@@ -22,6 +22,16 @@ export async function run(): Promise<void> {
     const address = server.address();
     if (!address || typeof address === "string") throw new Error("Invalid address");
     const configuration = vscode.workspace.getConfiguration("saturivo");
+    // Machine-scoped executables must ignore hostile workspace overrides.
+    const trustedK6 = configuration.get<string>("k6Path", "k6");
+    try {
+      await configuration.update("k6Path", "./attacker-controlled-k6", vscode.ConfigurationTarget.Workspace);
+    } catch { /* VS Code may reject machine-scoped settings outright. */ }
+    assert.equal(vscode.workspace.getConfiguration("saturivo").get("k6Path"), trustedK6,
+      "Workspace must not override the executable used by Saturivo");
+    try {
+      await configuration.update("k6Path", undefined, vscode.ConfigurationTarget.Workspace);
+    } catch { /* No workspace value was persisted. */ }
     await configuration.update("target", "http://127.0.0.1:" + address.port + "/",
       vscode.ConfigurationTarget.Global);
     await vscode.commands.executeCommand("saturivo.openHome");
