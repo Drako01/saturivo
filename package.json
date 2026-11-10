@@ -232,7 +232,8 @@
         "saturivo.k6Path": {
           "type": "string",
           "default": "k6",
-          "description": "%setting.k6Path%"
+          "description": "%setting.k6Path%",
+          "scope": "machine"
         },
         "saturivo.durationSeconds": {
           "type": "integer",
@@ -251,7 +252,8 @@
         "saturivo.goProfilerOrigin": {
           "type": "string",
           "default": "http://127.0.0.1:6060/",
-          "description": "%setting.goProfilerOrigin%"
+          "description": "%setting.goProfilerOrigin%",
+          "scope": "machine"
         },
         "saturivo.sloMaxP95Ms": {
           "type": "number",
@@ -282,7 +284,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.cjs",
     "smoke:manifest": "node scripts/verify-manifest.cjs",
-    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses && node --test test/vsix-audit.test.cjs",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses && node --test test/vsix-audit.test.cjs test/release-governance.test.cjs",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
     "vscode:prepublish": "npm run build",
     "test:integration:k6": "node scripts/k6-smoke.cjs",

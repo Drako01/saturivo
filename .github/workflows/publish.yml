@@ -56,6 +56,11 @@ jobs:
           REQUEST_VERSION: ${{ inputs.version }}
           CONFIRMATION: ${{ inputs.confirmation }}
         run: node scripts/verify-merge-ci.cjs
+      - name: Enforce real human review and main-only deployment environments
+        if: steps.gate.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/verify-release-environments.cjs
 
   package:
     name: Verify and package immutable VSIX

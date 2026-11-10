@@ -24,6 +24,7 @@ assert.equal(lock.packages[""].version, pkg.version,
 assert.equal(pkg.main, "./out/src/extension.js");
 assert.equal(pkg.capabilities.untrustedWorkspaces.supported, false);
 assert.equal(pkg.capabilities.virtualWorkspaces.supported, false);
+require("./manifest-security.cjs").assertMachineOnlyExecutableSettings(pkg);
 assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
 const commands = pkg.contributes.commands.map(x => x.command);
 assert.equal(new Set(commands).size, commands.length);
