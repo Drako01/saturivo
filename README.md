@@ -42,7 +42,7 @@ Version 0.3.0 is prepared for the stable release channel (no Preview metadata). 
 
 Saturivo opens its Control Center in a **full editor tab**, with a workspace for scenario design, recorded performance evidence, comparisons and Go concurrency diagnostics.
 
-These screenshots are captured in **headless Chromium from the extension's actual production dashboard renderer** (`src/ui/html.ts`) at version **0.3.0**, using a deterministic **synthetic documentation fixture**. Metrics are illustrative; they are **not results of a real benchmark**. The screenshot process never starts a load test or contacts a remote target.
+These screenshots were captured in **headless Chromium from the extension's actual production dashboard renderer** (`src/ui/html.ts`) at version **0.3.0**, using a deterministic **synthetic documentation fixture**. Metrics are illustrative; they are **not results of a real benchmark**. The screenshot process never starts a load test or contacts a remote target. The four 1480 × 960 PNGs are checked into the PR as versioned assets. [Capture and browser-check evidence](https://github.com/Drako01/saturivo/actions/runs/42865237314).
 
 **Overview — inspection at a glance**
 
