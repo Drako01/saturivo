@@ -36,24 +36,36 @@ The 0.3.0 candidate strengthens execution correctness and release governance wit
 - **Release safety:** executable paths cannot be overridden by workspace settings; automated publication fails closed without reviewer-protected, main-only GitHub environments. All seven CI job names are versioned in the branch ruleset.
 - **Verification:** deterministic property tests, explicit lifecycle regression tests and measured coverage thresholds for the core and lifecycle.
 
-Version 0.3.0 is prepared for the stable release channel (no Preview metadata). **These changes have not been published** and must not be considered validated until checks on the final PR head pass. The current public screenshots below were captured from the actual 0.2.x renderer using synthetic fixtures; **new 0.3.0 screenshots are pending**, not simulated.
+Version 0.3.0 is prepared for the stable release channel (no Preview metadata). **It has not been published.** Release approval remains separate from source verification.
 
-## Control Center — validated 0.2.x UI
+## Control Center — Saturivo 0.3.0
 
-The Control Center opens in a **full editor tab**, not a narrow sidebar. The screenshots below are captured from the **real dashboard renderer** with a fixed **synthetic test dataset**; the displayed metrics are illustrative, not real performance measurements.
+Saturivo opens its Control Center in a **full editor tab**, with a workspace for scenario design, recorded performance evidence, comparisons and Go concurrency diagnostics.
 
-![Saturivo Control Center — overview](media/screenshots/control-center-overview.png)
+These screenshots are captured in **headless Chromium from the extension's actual production dashboard renderer** (`src/ui/html.ts`) at version **0.3.0**, using a deterministic **synthetic documentation fixture**. Metrics are illustrative; they are **not results of a real benchmark**. The screenshot process never starts a load test or contacts a remote target.
+
+**Overview — inspection at a glance**
+
+![Saturivo 0.3.0 Control Center overview with synthetic performance metrics](media/screenshots/control-center-0.3.0-overview.png)
 
 <details>
-<summary>View load scenarios, run history and Go diagnostics</summary>
+<summary><strong>Explore the other Control Center views — Scenario Studio, History and Go diagnostics</strong></summary>
 
-![Bounded load scenarios](media/screenshots/control-center-load.png)
+**Scenario Studio — bounded workload design and live preview**
 
-![Saved run evidence and comparisons](media/screenshots/control-center-history.png)
+![Saturivo 0.3.0 Scenario Studio with validated load parameters and workload preview](media/screenshots/control-center-0.3.0-load.png)
 
-![Go runtime and concurrency diagnostics](media/screenshots/control-center-diagnostics.png)
+**History — saved evidence, comparisons and run inspection**
+
+![Saturivo 0.3.0 run history and comparative evidence rendered from synthetic fixture data](media/screenshots/control-center-0.3.0-history.png)
+
+**Go diagnostics — opt-in runtime investigation**
+
+![Saturivo 0.3.0 Go concurrency diagnostics and profiling tools](media/screenshots/control-center-0.3.0-diagnostics.png)
 
 </details>
+
+*Reproduce the images:* `npm ci --ignore-scripts && npm run build && npm run screenshots:readme`. The capture generator runs browser interaction checks before writing screenshots. It produces `control-center-{overview,load,history,diagnostics}.png` locally; the screenshots committed for 0.3.0 use versioned filenames to avoid mixing them with older releases.
 
 ### A workflow designed for developers
 

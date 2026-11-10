@@ -1,0 +1,69 @@
+# One-shot documentation capture for the trusted Saturivo 0.3.0 PR branch.
+# Remove this workflow after the screenshots are committed. No default-branch write.
+name: Capture Saturivo 0.3.0 screenshots (one shot)
+on:
+  push:
+    branches:
+      - feat/saturivo-enterprise-aaaa-0.3.0
+permissions:
+  contents: write
+concurrency:
+  group: saturivo-0-3-0-capture
+  cancel-in-progress: false
+jobs:
+  capture:
+    if: github.repository == 'Drako01/saturivo' && github.ref == 'refs/heads/feat/saturivo-enterprise-aaaa-0.3.0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true # limited to the temporary screenshot job
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install reproducible tooling
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Compile actual 0.3.0 production webview
+        run: |
+          node -e "if (require('./package.json').version !== '0.3.0') process.exit(1)"
+          npm run build
+      - name: Run Chromium interaction probes and capture four actual views
+        run: npm run screenshots:readme
+      - name: Validate and version PNG screenshots (no external artwork)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          names = ("overview", "load", "history", "diagnostics")
+          for name in names:
+              old = Path("media/screenshots") / f"control-center-{name}.png"
+              payload = old.read_bytes()
+              assert payload[:8] == b"\x89PNG\r\n\x1a\n", f"Not PNG: {old}"
+              width, height = struct.unpack(">II", payload[16:24])
+              assert width >= 1200 and height >= 800, f"Unexpected screenshot geometry: {old} {width}x{height}"
+              assert 10000 < len(payload) < 3000000, f"Unexpected screenshot size: {old}"
+              new = old.with_name(f"control-center-0.3.0-{name}.png")
+              new.write_bytes(payload)
+              print(f"Captured {new}: {width}x{height}, {len(payload)} bytes")
+          PY
+          git rm media/screenshots/control-center-overview.png media/screenshots/control-center-load.png media/screenshots/control-center-history.png media/screenshots/control-center-diagnostics.png
+          git add -- media/screenshots/control-center-0.3.0-overview.png media/screenshots/control-center-0.3.0-load.png media/screenshots/control-center-0.3.0-history.png media/screenshots/control-center-0.3.0-diagnostics.png
+      - name: Commit screenshot assets to this PR branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/feat/saturivo-enterprise-aaaa-0.3.0'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --cached --quiet && { echo 'Screenshots did not change'; exit 1; }
+          git commit -m 'docs(screenshots): capture actual Saturivo 0.3.0 Control Center'
+          git push origin HEAD:refs/heads/feat/saturivo-enterprise-aaaa-0.3.0
+      - name: Archive reproducible PNG evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: saturivo-0-3-0-control-center
+          path: media/screenshots/control-center-0.3.0-*.png
+          if-no-files-found: error
