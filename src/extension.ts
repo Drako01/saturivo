@@ -23,6 +23,7 @@ import { redactTargetForDisplay } from "./core/display-privacy";
 import { dashboard, type DashboardState } from "./ui/html";
 import { translate } from "./ui/localize";
 import { RunLifecycle, isCancellation } from "./run-lifecycle";
+import { confirmWhileActive } from "./consent-gate";
 
 type Preset = "smoke" | "stress" | "arrival" | "ramp";
 
@@ -523,15 +524,18 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   async clearProfiles(): Promise<void> {
-    if (this.busy) return;
-    const confirmation = await vscode.window.showWarningMessage(
-      this.t("clearProfilesWarning"), { modal: true }, this.t("clearProfilesConfirm")
-    );
-    if (confirmation !== this.t("clearProfilesConfirm")) return;
-    await rm(vscode.Uri.joinPath(vscode.Uri.file(this.storageDir), "go-profiles").fsPath,
-      { recursive: true, force: true });
-    this.message = this.t("clearProfilesSuccess");
-    this.refresh();
+    await this.lifecycle.withBusy(async signal => {
+      const accepted = await confirmWhileActive(signal, async () =>
+        (await vscode.window.showWarningMessage(
+          this.t("clearProfilesWarning"), { modal: true }, this.t("clearProfilesConfirm")
+        )) === this.t("clearProfilesConfirm")
+      );
+      if (!accepted) return;
+      await rm(vscode.Uri.joinPath(vscode.Uri.file(this.storageDir), "go-profiles").fsPath,
+        { recursive: true, force: true });
+      this.message = this.t("clearProfilesSuccess");
+      this.refresh();
+    }, () => this.refresh());
   }
 
   async exportRaceSarif(): Promise<void> {
@@ -585,16 +589,19 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   async clearHistory(): Promise<void> {
-    if (this.busy) return;
-    const choice = await vscode.window.showWarningMessage(
-      this.t("historyClearWarning"), { modal: true }, this.t("historyClearConfirm")
-    );
-    if (choice !== this.t("historyClearConfirm")) return;
-    const deleted = await this.store.clear();
-    this.history = [];
-    this.latest = undefined;
-    this.message = this.t("historyCleared") + " (" + deleted + ")";
-    this.refresh();
+    await this.lifecycle.withBusy(async signal => {
+      const accepted = await confirmWhileActive(signal, async () =>
+        (await vscode.window.showWarningMessage(
+          this.t("historyClearWarning"), { modal: true }, this.t("historyClearConfirm")
+        )) === this.t("historyClearConfirm")
+      );
+      if (!accepted) return;
+      const deleted = await this.store.clear();
+      this.history = [];
+      this.latest = undefined;
+      this.message = this.t("historyCleared") + " (" + deleted + ")";
+      this.refresh();
+    }, () => this.refresh());
   }
 
   private folder(): string | undefined {
