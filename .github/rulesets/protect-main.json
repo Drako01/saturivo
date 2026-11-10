@@ -45,7 +45,7 @@
     {
       "type": "required_status_checks",
       "parameters": {
-        "strict_required_status_checks_policy": false,
+        "strict_required_status_checks_policy": true,
         "do_not_enforce_on_create": false,
         "required_status_checks": [
           {
@@ -58,6 +58,22 @@
           },
           {
             "context": "Verify (macos-latest)",
+            "integration_id": 15368
+          },
+          {
+            "context": "Local k6 integration (Linux)",
+            "integration_id": 15368
+          },
+          {
+            "context": "Real VS Code Extension Host (Linux)",
+            "integration_id": 15368
+          },
+          {
+            "context": "Real Go race and pprof fixture (Linux)",
+            "integration_id": 15368
+          },
+          {
+            "context": "Control Center browser interactions (no screenshots)",
             "integration_id": 15368
           }
         ]
