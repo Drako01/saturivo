@@ -1,3 +1,4 @@
+import { saturivoVersion } from "./version";
 import { CancelledError } from "./cancelled-error";
 import { randomUUID } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -37,7 +38,7 @@ export function renderWebSocketProbe(raw: string, output: string): string {
     scenarios: { probe: { executor: "constant-vus", vus: 1, duration: "5s" } },
     summaryTrendStats: ["avg", "med", "p(95)", "p(99)"],
     hosts,
-    userAgent: "Saturivo/0.1.1",
+    userAgent: "Saturivo/" + saturivoVersion(),
   };
   return [
     'import ws from "k6/ws";',
