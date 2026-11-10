@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - feat/saturivo-enterprise-aaaa-0.3.0
+    paths:
+      - '.github/workflows/capture-saturivo-0-3-0-once.yml'
 permissions:
   contents: write
 concurrency:
@@ -49,7 +51,9 @@ jobs:
               new.write_bytes(payload)
               print(f"Captured {new}: {width}x{height}, {len(payload)} bytes")
           PY
-          git rm media/screenshots/control-center-overview.png media/screenshots/control-center-load.png media/screenshots/control-center-history.png media/screenshots/control-center-diagnostics.png
+          # Restore only legacy images modified as intermediate generator outputs.
+          # Keep the historical files in Git; stage only the new versioned PNGs.
+          git restore -- media/screenshots/control-center-overview.png media/screenshots/control-center-load.png media/screenshots/control-center-history.png media/screenshots/control-center-diagnostics.png
           git add -- media/screenshots/control-center-0.3.0-overview.png media/screenshots/control-center-0.3.0-load.png media/screenshots/control-center-0.3.0-history.png media/screenshots/control-center-0.3.0-diagnostics.png
       - name: Commit screenshot assets to this PR branch only
         shell: bash
@@ -58,7 +62,7 @@ jobs:
           test "$GITHUB_REF" = 'refs/heads/feat/saturivo-enterprise-aaaa-0.3.0'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git diff --cached --quiet && { echo 'Screenshots did not change'; exit 1; }
+          git diff --cached --quiet && { echo 'Screenshots already match the committed 0.3.0 images'; exit 0; }
           git commit -m 'docs(screenshots): capture actual Saturivo 0.3.0 Control Center'
           git push origin HEAD:refs/heads/feat/saturivo-enterprise-aaaa-0.3.0
       - name: Archive reproducible PNG evidence
