@@ -5,6 +5,7 @@ import { compareRuns } from "../core/comparison";
 import { translate } from "./localize";
 import { redactTargetForDisplay } from "../core/display-privacy";
 import { saturivoVersion } from "../core/version";
+import { LIMITS } from "../core/limits";
 
 export interface DashboardState {
   readonly target: string;
@@ -237,17 +238,17 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</option><option value="ramping-vus">' + t('scenarioRamp') + '</option></select></label>' +
     '<label class="editor-field"><span>' + t('customMethod') +
     '</span><select name="method"><option>GET</option><option>HEAD</option></select></label>' +
-    editField('durationSeconds', 'duration', state.durationSeconds ?? 10, 5, 120) +
-    editField('warmupSeconds', 'warmupSeconds', 0, 0, 30) +
-    editField('cooldownSeconds', 'cooldownSeconds', 0, 0, 30) +
-    editField('virtualUsers', 'customVus', Math.min(5, state.maxVirtualUsers ?? 100), 1, state.maxVirtualUsers ?? 100) +
-    editField('arrivalRate', 'customArrival', 10, 1, 500) +
+    editField('durationSeconds', 'duration', state.durationSeconds ?? 10, LIMITS.duration.min, LIMITS.duration.max) +
+    editField('warmupSeconds', 'warmupSeconds', 0, LIMITS.phases.min, LIMITS.phases.max) +
+    editField('cooldownSeconds', 'cooldownSeconds', 0, LIMITS.phases.min, LIMITS.phases.max) +
+    editField('virtualUsers', 'customVus', Math.min(5, state.maxVirtualUsers ?? LIMITS.virtualUsers.max), LIMITS.virtualUsers.min, state.maxVirtualUsers ?? LIMITS.virtualUsers.max) +
+    editField('arrivalRate', 'customArrival', 10, LIMITS.arrivalRate.min, LIMITS.arrivalRate.max) +
     '<label class="editor-field editor-wide"><span>' + t('customRampStages') +
     '</span><input type="text" name="stages" maxlength="160" required ' +
     'value="5:2,5:0" aria-describedby="ramp-hint"><span id="ramp-hint">' +
     t('customRampHelp') + '</span></label>' +
-    editField('maxRequests', 'maxRequests', state.maxRequests ?? 10000, 100, state.maxRequests ?? 10000) +
-    editField('maxP95Ms', 'customP95', state.sloMaxP95Ms ?? 0, 0, 120000) +
+    editField('maxRequests', 'maxRequests', state.maxRequests ?? LIMITS.maxRequests.default, LIMITS.maxRequests.min, state.maxRequests ?? LIMITS.maxRequests.default) +
+    editField('maxP95Ms', 'customP95', state.sloMaxP95Ms ?? 0, LIMITS.maxP95Ms.min, LIMITS.maxP95Ms.max) +
     '</div><p class="fineprint">' + t('customTargetNote') + ' ' +
     '<code>' + escapeHtml(redactTargetForDisplay(state.target)) + '</code></p>' +
     '<div class="action-row"><button class="button button-primary" type="submit"' +
@@ -395,6 +396,7 @@ export function dashboard(state: DashboardState, locale: string): string {
   ].join('');
   const script = [
     'const vscode=acquireVsCodeApi();',
+    'const LIMITS=' + JSON.stringify(LIMITS) + ';',
     'const previewLabels=' + JSON.stringify({
       closed: translate(locale,"scenarioClosed"), arrival: translate(locale,"scenarioOpen"),
       ramp: translate(locale,"scenarioRamp"), invalid: translate(locale,"previewInvalid"),
@@ -462,17 +464,17 @@ export function dashboard(state: DashboardState, locale: string): string {
     'const parts=value("stages").split(",").map(s=>s.trim());let total=0;',
     'for(const part of parts){const match=/^([0-9]+):([0-9]+)$/.exec(part);',
     'if(!match){invalid=true;break;}const duration=Number(match[1]),users=Number(match[2]);',
-    'if(!Number.isSafeInteger(duration)||duration<1||!Number.isSafeInteger(users)||users<0||users>vus){invalid=true;break;}',
+    'if(!Number.isSafeInteger(duration)||duration<LIMITS.stageDuration.min||!Number.isSafeInteger(users)||users<0||users>vus){invalid=true;break;}',
     'stages.push({duration,users});total+=duration;}',
-    'if(parts.length<2||parts.length>8||total!==seconds)invalid=true;',
+    'if(parts.length<LIMITS.stageCount.min||parts.length>LIMITS.stageCount.max||total!==seconds)invalid=true;',
     '}else{stages=[{duration:seconds,users:vus}];}',
-    'if(!Number.isInteger(seconds)||seconds<5||seconds>120||!Number.isInteger(vus)||vus<1||',
-    'vus>Number(field("virtualUsers").max)||!Number.isInteger(budget)||budget<100||',
+    'if(!Number.isInteger(seconds)||seconds<LIMITS.duration.min||seconds>LIMITS.duration.max||!Number.isInteger(vus)||vus<LIMITS.virtualUsers.min||',
+    'vus>Number(field("virtualUsers").max)||!Number.isInteger(budget)||budget<LIMITS.maxRequests.min||',
     'budget>Number(field("maxRequests").max)||!value("name").trim())invalid=true;',
-    'if(!Number.isInteger(warmup)||warmup<0||warmup>30||',
-    '!Number.isInteger(cooldown)||cooldown<0||cooldown>30||measured<5)invalid=true;',
+    'if(!Number.isInteger(warmup)||warmup<LIMITS.phases.min||warmup>LIMITS.phases.max||',
+    '!Number.isInteger(cooldown)||cooldown<LIMITS.phases.min||cooldown>LIMITS.phases.max||measured<LIMITS.phases.minMeasured)invalid=true;',
     'if(model==="constant-arrival-rate"){const rate=Number(value("arrivalRate"));',
-    'if(!Number.isInteger(rate)||rate<1||rate>500)invalid=true;}',
+    'if(!Number.isInteger(rate)||rate<LIMITS.arrivalRate.min||rate>LIMITS.arrivalRate.max)invalid=true;}',
     'if(!invalid){for(const stage of stages){const segment=document.createElement("span");segment.className="stage-segment";',
     'segment.style.flexGrow=String(stage.duration);segment.style.opacity=String(Math.max(.22,stage.users/Math.max(1,vus)));',
     'segment.title=stage.duration+" "+previewLabels.seconds+" · "+stage.users+" VUs";',
