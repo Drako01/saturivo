@@ -1,37 +1,37 @@
-# Saturivo 0.3.0 — checklist vivo del upgrade
+# Saturivo 0.3.0 — checklist vivo de aceptación
 
-Base auditada: `main@f7320fe1e76cbe012852fe40bc5b1f6d59dc3620` (0.2.2, 73/100). Trabajo: [PR #9](https://github.com/Drako01/saturivo/pull/9) · `feat/saturivo-enterprise-aaaa-0.3.0`.
+Base: `main@f7320fe1e76cbe012852fe40bc5b1f6d59dc3620` (0.2.2, auditoría 73/100). Upgrade: [PR #9](https://github.com/Drako01/saturivo/pull/9), rama `feat/saturivo-enterprise-aaaa-0.3.0`. Sin merge ni release.
 
-> Estados DONE / PARTIAL / BLOCKED / TODO. El trabajo de código no cuenta como check PASS hasta ejecutarlo sobre el SHA definitivo.
+> DONE = código/cambio entregado y evidencia indicada; PARTIAL = validación específica pendiente; BLOCKED = requiere acceso o pruebas ajenas al entorno. Los resultados de CI corresponden **solo al SHA indicado**.
 
-| Fase | Estado | Evidencia / bloqueo |
+| Fase | Estado | Archivos y evidencia |
 |---|---|---|
-| 0 · machine settings | PARTIAL | Código + test negativo añadidos; test de host contra setting hostil pendiente de CI final |
-| 0 · release environments | BLOCKED | Compuerta automática fail-closed añadida; configurar required reviewers y política exclusiva `main` en los 3 entornos desde GitHub Settings |
-| 1 · lifecycle | PARTIAL | Seis flujos migrados al mutex de reserva sincrónica y cancelación tipada; compilación/tests sobre SHA final pendientes |
-| 1 · límites/versión/WS | PARTIAL | `limits.ts` compartido, userAgent del manifiesto, lector de evidencia acotado; CI final pendiente |
-| 2 · cobertura | PARTIAL | Umbral medido del core ≥90 % y lifecycle ≥80 % sin repetir suite; validar resultados reales finales |
-| 2 · property tests | PARTIAL | 10.000 entradas maliciosas + 1.000 escenarios válidos deterministas; CI final pendiente |
-| 2 · diálogos nativos | BLOCKED | Sin prueba automatizada real de rechazo de consentimiento y borrado cancelado en el Extension Host |
-| 3 · rulesets | BLOCKED | Definición de siete jobs y strict actualizada; live ruleset todavía requiere `rulesets:apply` y readback |
-| 3 · seguridad repo | BLOCKED | Secret scanning, push protection y Dependabot requieren cambios administrativos y verificación live |
-| 3 · screenshot CI | PARTIAL | Job manual sin `contents: write`; nuevas capturas 0.3.0 todavía no generadas |
-| 4 · documentación | PARTIAL | README/STATUS/CHANGELOG y versiones reconciliados; pantallas 0.3.0 pendientes |
-| Distribución | PARTIAL | 0.3.0 estable sin Preview en manifiesto, VSIX y smoke tests de instalación todavía no validados |
+| 0 · Ejecutables machine-scoped | DONE | `package.json`, `manifest-security.cjs`, `test/vscode-host.ts`; tests reales de Extension Host en [CI 42856082718](https://github.com/Drako01/saturivo/actions/runs/42856082718) |
+| 0 · Gobernanza live de entornos | BLOCKED | `verify-release-environments.cjs` y `publish.yml` fallan cerrados; falta habilitar required reviewers y permitir únicamente rama `main` en `marketplace`, `open-vsx`, `github-release` |
+| 1 · RunLifecycle y consentimiento | PARTIAL | `run-lifecycle.ts`, `consent-gate.ts`, `extension.ts`, tests; protección contra excepción inicial agregada tras CI 42856082718. Revalidación SHA nuevo pendiente |
+| 1 · Límites/UI y evidencia | DONE | `core/limits.ts`, `validation.ts`, `history.ts`, `scenario-editor.ts`, `ui/html.ts`, `websocket.ts`, `version.ts`; CI 42856082718 |
+| 2 · Pruebas/coverage | PARTIAL | CI 42856082718: **135 PASS / 0 FAIL / 1 SKIP**, core **91,05 %** (gate 90), lifecycle **100 %** (gate 80); nuevo test lifecycle posterior pendiente de ejecución |
+| 2 · Consentimiento/destrucción en host nativo | PARTIAL | Contratos de consentimiento cancelado, borrado y doble ejecución con unit tests; E2E de diálogos nativos de VS Code NO EJECUTADO |
+| 3 · Definición CI/rulesets | DONE (fuente), BLOCKED (live) | `protect-main.json` define 7 checks con `strict:true`; `rulesets.mjs` valida contra `REQUIRED_JOBS`. API de GitHub 2026-11-10 todavía muestra **3 checks y strict:false** en ruleset ID 26766004 |
+| 3 · Seguridad repo | BLOCKED | Aplicación efectiva de secret scanning, push protection y Dependabot requiere configuración admin y lectura posterior |
+| 3 · Screenshot job | DONE (hardening) | `ci.yml` retiró commits automáticos y permisos write del job de captura; la acción manual no genera commits |
+| 4 · Documentación y metadatos | DONE (texto) | README, STATUS, CHANGELOG, lockfile, manifest 0.3.0 estable sin Preview, test documental |
+| 4 · Capturas nuevas | BLOCKED | Las 4 PNG existentes corresponden al renderer real 0.2.x; para capturas verificables 0.3.0 ejecutar `npm run build && npm run screenshots:readme` con Chrome/Chromium real, revisar y agregar PNGs al PR |
+| VSIX y smoke de actualización | PARTIAL | **7/7 checks obligatorios PASS en CI 42856082718**, incl. instalación/upgrade real sobre Windows, macOS y Linux y VSIX audit; último SHA posterior pendiente |
 
-## Evidencia histórica reutilizable
+## Evidencia validada del SHA `28d4e9528bc79e50b774b264dd0259eafe83cd11`
 
-- `main@f7320fe`: unit tests 123 PASS / 1 SKIP y core 91,56 % (excluye orquestación); no son evidencia de 0.3.0.
-- [CI #42851652847](https://github.com/Drako01/saturivo/actions/runs/42851652847): verde sobre `ce19af3`, un commit anterior del PR. No permite afirmar PASS para los cambios siguientes.
-- No se ha hecho merge, bypass ni publicación.
+- [GitHub Actions 42856082718](https://github.com/Drako01/saturivo/actions/runs/42856082718): 7 jobs obligatorios **success** (3 Verify, k6 real, Go race/pprof, Extension Host, browser). Screenshot manual skipped, **no cuenta como PASS**.
+- Verify Ubuntu: unit tests **135 pass, 0 fail, 1 skip**; core **91,05 % / 28 archivos**, RunLifecycle **100 %**.
+- Empaquetado VSIX: **57 entradas**, auditoría de contenido **PASS**, `runtimeNpmDependencies = 0`. SHA-256 del VSIX de ese run: `e6a570c604ca5cad1021cdef2452301c47745f38dd8dd9a8801ffecbaa2dc618`.
+- Checks posteriores a `28d4e95` deberán ejecutarse sobre el SHA final. Un PASS anterior no se hereda automáticamente.
 
-## Operaciones administrativas pendientes (owner)
+## Acciones administrativas concretas del owner
 
-1. Configurar los entornos `marketplace`, `open-vsx` y `github-release`: al menos un `required reviewer`, política explícita `main`, proteger la aprobación.
-2. Aplicar `npm run rulesets:check` y `node scripts/rulesets.mjs --apply --confirm=Drako01/saturivo` con `GH_TOKEN` autorizado; luego `npm run rulesets:status`. Los permisos GitHub Administración: write no están disponibles mediante la conexión actual.
-3. Activar `secret scanning`, `push protection` y `Dependabot security updates` en Settings > Code security.
-4. Ejecutar CI en el último SHA; recopilar build, cobertura, VSIX audit, real Extension Host, 7 jobs y artefactos.
-5. Capturar UI 0.3.0 real y revisar rutas README. Sin evidencia real, continuar como BLOCKED.
-6. Opcional antes de release: WSL/SSH/Containers, NVDA/VoiceOver, zoom 200 %, pentest de rebinding remoto (no sustituibles por mocks).
+1. [Settings → Environments](https://github.com/Drako01/saturivo/settings/environments): configurar `marketplace`, `open-vsx` y `github-release` con al menos un required reviewer y deployment branch solo `main`. Comprobar política real, sin publicar.
+2. [Settings → Rulesets](https://github.com/Drako01/saturivo/settings/rules): aplicar la definición versionada de `Protect main` (7 checks, strict true) sin crear un ruleset duplicado. `node scripts/rulesets.mjs --apply --confirm=Drako01/saturivo` necesita `GH_TOKEN` con Administration: write; verificar con `npm run rulesets:status`.
+3. [Settings → Code security](https://github.com/Drako01/saturivo/settings/security_analysis): activar secret scanning, push protection y Dependabot; verificar el estado después.
+4. Generar capturas nuevas **reales** con Chrome/Chromium y `npm run screenshots:readme` y agregarlas al mismo PR; no usar imágenes simuladas.
+5. Completar pruebas manuales obligatorias según alcance (diálogos nativos, WSL/SSH/Containers, lectores de pantalla/zoom, pentest DNS remoto). Las evidencias históricas no certifican esos escenarios.
 
-**Veredicto actual: NOT READY.** No fusionar ni publicar hasta cerrar los bloqueos de aceptación.
+**Veredicto:** NOT READY hasta cerrar bloqueos y validar el SHA final. No merge, no Bypass, no publicación.
