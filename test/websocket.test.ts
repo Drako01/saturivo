@@ -1,6 +1,9 @@
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
-import { parseWebSocketSummary, renderWebSocketProbe, validateWebSocketTarget, webSocketReport } from "../src/core/websocket";
+import { parseWebSocketSummary, renderWebSocketProbe, validateWebSocketTarget, webSocketReport, runWebSocketProbe } from "../src/core/websocket";
 
 test("WebSocket probe rejects external targets, credentials, fragments and non-WS schemes", () => {
   for (const target of [
@@ -35,4 +38,18 @@ test("WebSocket evidence uses honest session metrics, not HTTP latency", () => {
   assert.equal(result.p95SessionMs, 15.5);
   assert.match(webSocketReport(result), /not HTTP request latency/);
   assert.throws(() => parseWebSocketSummary({metrics:{}}, "ws://127.0.0.1/socket"), /No WebSocket/);
+});
+
+test("WebSocket probe rejects cancelled work before spawning and cleans temporary scripts on missing binary", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-websocket-cleanup-"));
+  try {
+    const cancelled = new AbortController();
+    cancelled.abort();
+    await assert.rejects(runWebSocketProbe("ws://127.0.0.1:4040/", "k6", dir,
+      cancelled.signal), /Cancelled/);
+    await assert.rejects(runWebSocketProbe("ws://127.0.0.1:4040/",
+      "__saturivo_executable_that_does_not_exist__", dir, new AbortController().signal));
+    assert.deepEqual(await readdir(join(dir, "temporary")), [],
+      "Failed subprocess must not leave any probe evidence or executable scripts");
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
