@@ -23,7 +23,7 @@ const run: RunResult = {
   warnings: ["Known load caveat"],
 };
 const comparison: Comparison = {
-  status: "regression", reasons: ["Different host"], deltaP95Percent: 20,
+  status: "regression", comparable: true, reasons: ["Different host"], deltaP95Percent: 20,
   deltaRpsPercent: -10, deltaFailedPercentagePoints: 1,
 };
 const trials: StatisticalComparison = {
@@ -43,9 +43,9 @@ test("report preserves evidence for phases, arrivals, status classes, SLO and re
   }
 });
 test("report produces explicit numeric unavailability and comparison caveat fallback", () => {
-  const incomplete = { ...run,
+  const incomplete: RunResult = { ...run,
     metrics: { ...run.metrics, p95Ms: Number.NaN },
-    environment: { ...run.environment, environmentHash: undefined },
+    environment: { platform: "linux", arch: "x64", node: "v22", cpuCount: 8 },
     sloAssessment: { status: "pass" as const, violations: [] },
   };
   const report = markdownReport(incomplete, { ...comparison, reasons: [] }, { ...trials, reasons: [] });
