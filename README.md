@@ -186,7 +186,7 @@ Saturivo is built **local-first and permission-first**:
 - Bounded subprocess output, cancellation, deadlines and process termination; no shell expansion for external tool arguments.
 - Go profiling is restricted to literal loopback origins, without credentials or redirects, and with time/size limits.
 - Untrusted/virtual workspaces are not supported; the Control Center Webview has a Content Security Policy.
-- No built-in telemetry, automatic cloud upload, AI data transfer or marketplace publication workflow.
+- No built-in telemetry, automatic cloud upload or AI data transfer. Publication uses the auditable `.github/workflows/publish.yml` pipeline and must pass independent deployment-environment gates.
 
 **Never stress a third-party or production service without explicit authorization.** Even bounded load can impact a local database or downstream systems; use synthetic data and isolated dependencies.
 
@@ -223,17 +223,11 @@ Design decisions and limitations are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Engineering quality
 
-An earlier PR #5 commit, `cbd3724`, passed [GitHub Actions run #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) (7/7 jobs):
+Saturivo's quality gates combine strict TypeScript, Node unit/property tests, real k6 HTTP/WebSocket fixtures, Go race/pprof tests, real VS Code Extension Host 1.99, Chromium interactions, and Windows/macOS/Linux VSIX installation and upgrades. The candidate enforces measured coverage thresholds (core ≥90% and RunLifecycle ≥80%) and binds releases to a single exact commit tree.
 
-| Validation | Observed result |
-|---|---|
-| TypeScript strict checks and unit tests on Linux, Windows, macOS | **PASS** |
-| Disposable loopback service under real k6 load | **PASS** |
-| Packaged VSIX installation and real VS Code 1.99 Extension Host (Linux) | **PASS** |
-| Real Go race and pprof fixture (Linux) | **PASS** |
-| VSIX candidate and CycloneDX SBOM artifact generation (historical SHA) | **PASS** |
+**Verified historical baseline:** [CI #42431627015](https://github.com/Drako01/saturivo/actions/runs/42431627015) and [release CI #42431868619](https://github.com/Drako01/saturivo/actions/runs/42431868619) validate the previously published 0.2.2 tree, not the present 0.3.0 candidate.
 
-CI is commit-specific and does not certify later revisions. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) passed 7/7 on SHA `0d73879` (including real VSIX CLI upgrade/persisted history Windows/macOS/Linux). Four screenshots were regenerated from the production renderer with synthetic data in [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f). **Post-screenshot CI #42424211042 passed 7/7 on `e777dda`; the next documentation commit requires a new exact-SHA CI. Manual UX/security review remains BLOCKED. The owner authorized merge only after all required gates pass; tags and publication are not authorized.** PR #5 is Ready for review.
+**Current candidate:** [PR #9](https://github.com/Drako01/saturivo/pull/9) — its [Actions runs](https://github.com/Drako01/saturivo/actions?query=branch%3Afeat%2Fsaturivo-enterprise-aaaa-0.3.0) are the authoritative source of execution results. Never infer a green check from a previous SHA. Manual native dialogs, remote hosts, assistive-technology testing and screenshots remain explicitly scoped in the [0.3.0 evidence checklist](docs/RELEASE_0_3_0_CHECKLIST.md).
 
 Development commands:
 
@@ -252,14 +246,14 @@ npm run test:integration:websocket
 npm run test:integration:vscode
 ~~~
 
-**The source repository is public.** The package manifest does not use a private-repository flag. Publication to Marketplace, Open VSX or GitHub Releases is a separate, explicitly approved release decision, gated by a protected version tag and environment approvals. This PR does not publish an extension.
+**The source repository is public.** The package manifest does not use a private-repository flag. 0.3.0 publication to Marketplace, Open VSX or GitHub Releases is a separate, explicitly approved release decision, gated by the exact CI-verified source tree, immutable tag and verified reviewer-protected deployment environments. This PR does not publish an extension.
 
 ## Project documents
 
 | Document | Purpose |
 |---|---|
 | [Enterprise AAAA Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md) | Architecture, delivery phases and measurable Definition of Done |
-| [Enterprise AAAA Checklist](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md) | Verified evidence, current blockers and next gates |
+| [0.3.0 release checklist](docs/RELEASE_0_3_0_CHECKLIST.md) | Current acceptance evidence, blockers and owner-only administrative actions |
 | [Status](STATUS.md) / [Roadmap](ROADMAP.md) | Current implementation vs. planned features |
 | [Architecture](ARCHITECTURE.md) | Components, boundaries and current technical limitations |
 | [Methodology](docs/METHODOLOGY.md) | Load models, comparison, measurement caveats |
@@ -273,7 +267,7 @@ npm run test:integration:vscode
 
 Saturivo's source is now **public and MIT-licensed**. Contributions are welcome through [issues](https://github.com/Drako01/saturivo/issues/new/choose) and focused [pull requests](https://github.com/Drako01/saturivo/pulls). Before contributing, review the [contribution guide](CONTRIBUTING.md), [Code of Conduct](CODE_OF_CONDUCT.md), [security disclosure policy](SECURITY.md) and [governance rules](docs/GOVERNANCE.md).
 
-**Repository protection:** both rulesets are **active in GitHub** — [Protect main](https://github.com/Drako01/saturivo/rules/26766004) requires PR review and Linux/Windows/macOS checks; [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) protects `v*` tags from alteration. Their definitions are versioned in `.github/rulesets/`; see [verified governance](docs/RULESETS.md).
+**Repository protection:** [Protect main](https://github.com/Drako01/saturivo/rules/26766004) and [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) were active at the 0.2.2 audit baseline. The versioned 0.3.0 policy requires all seven CI checks and strict update checking; **live application is not yet verified**. Deployment-environment and security settings require separate owner configuration. See [rulesets and governance](docs/RULESETS.md).
 
 ---
 
