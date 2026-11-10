@@ -9,6 +9,10 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { REQUIRED_JOBS } = require('./verify-merge-ci.cjs');
+const { verifyReleaseEnvironments } = require('./verify-release-environments.cjs');
 
 const repo = 'Drako01/saturivo';
 const base = 'https://api.github.com/repos/' + repo + '/rulesets';
@@ -17,11 +21,7 @@ const paths = [
   '.github/rulesets/protect-main.json',
   '.github/rulesets/protect-release-tags.json',
 ];
-const requiredContexts = [
-  'Verify (ubuntu-latest)',
-  'Verify (windows-latest)',
-  'Verify (macos-latest)',
-];
+const requiredContexts = REQUIRED_JOBS;
 
 const definitions = paths.map((path) => JSON.parse(readFileSync(resolve(root, path), 'utf8')));
 const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -58,7 +58,7 @@ function validate() {
     throw new Error('PR review policy drifted.');
   }
   const status = main.rules.find((rule) => rule.type === 'required_status_checks')?.parameters;
-  if (!status || status.strict_required_status_checks_policy !== false ||
+  if (!status || status.strict_required_status_checks_policy !== true ||
       !equal(status.required_status_checks.map((c) => c.context).sort(), [...requiredContexts].sort()) ||
       status.required_status_checks.some((c) => c.integration_id !== 15368)) {
     throw new Error('CI requirements drifted from verified GitHub Actions checks.');
@@ -156,6 +156,7 @@ async function main() {
       console.log('CREATED: '+desired.name);
     }
   }
+  if (mode === '--status') await verifyReleaseEnvironments(token);
   if (mode === '--status' && drift) process.exitCode = 1;
   if (mode === '--apply') console.log('Check GitHub Settings > Rules > Rulesets, then rerun --status.');
 }

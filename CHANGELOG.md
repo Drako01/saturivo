@@ -1,17 +1,31 @@
 # Changelog
 
+## [0.3.0] — 2026-11-10
+
+**Stable-channel release candidate; not yet published.** Release requires the final PR CI, operator approval, and verified GitHub deployment-environment rules.
+
+- Fixed the run-lock time-of-check/time-of-use race through a shared cancellable lifecycle with typed aborts.
+- Centralized safety limits for load scenarios, editor input and historical evidence.
+- Hardened WebSocket JSON summary reads; synchronized k6/WebSocket identification with the packaged version.
+- Prevented workspace-controlled executable paths via machine-scoped settings and manifest/Extension Host regression checks.
+- Added deterministic property testing and measured coverage gates; expanded branch ruleset to the seven release-required jobs.
+- Added fail-closed checks for required deployment reviewers and main-only environment restrictions.
+- Removed legacy write-permission screenshot commits from CI; retained manual artifact capture.
+- Reconciled documentation and release metadata, retaining legacy evidence limitations.
+
+
 ## [0.2.2] — 2026-11-07
 
 - Run the full CI suite once on the pull request; prevent duplicate CI on merge to `main`.
 - Automatically start the protected Trusted Publisher release on version-bumping merges to `main` after verifying the exact merged PR HEAD and its successful CI. Preserve immutable `v*` release tags, checksums, SBOM and OIDC distribution without rerunning the PR test matrix.
 
-## [0.2.1] — 2026-11-07
+## [0.2.1] — 2026-11-07 (source-only; no tag or GitHub Release)
 
 - Fix incorrect Control Center logo branding and align the VS Code Activity Bar icon with the official Saturivo gauge.
 
 ## [0.2.0] — 2026-11-07
 
-- Owner authorized publication of 0.2.0 after verified automated gates (CI #42425033225: 7/7 PASS on `ebac70f`). Actual release must verify final SHA after this documentation change, protected tag and Marketplace/Open VSX jobs.
+- Owner authorized publication of 0.2.0 after verified automated gates (CI #42425033225: 7/7 PASS on `ebac70f`). Version 0.2.0 was subsequently published; refer to its immutable tag and GitHub Release for the final release evidence.
 - Manual installed-host validation is explicitly deferred by the owner to after publication, and remains **NOT RUN**, not PASS. Includes real UI dialogs, WSL/SSH/Dev Containers, accessibility and remote adversarial networks; see [post-publication QA](docs/POST_RELEASE_QA_0_2_0.md). Do not claim complete Enterprise AAAA certification.
 
 

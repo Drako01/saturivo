@@ -57,3 +57,27 @@ test("Go GC observation fails closed for redirects, oversized responses and forb
   await assert.rejects(readGoGcMetrics("http://127.0.0.1:6060/",
     aborted.signal), /Cancelled/);
 });
+
+test("Go GC observation rejects invalid JSON and both declared and streamed oversized responses", async () => {
+  const cases = [
+    { name: "invalid JSON", headers: {}, content: "{bad" },
+    { name: "declared oversize", headers: { "Content-Length": "65537" }, content: "tiny" },
+    { name: "streamed oversize", headers: {}, content: "x".repeat(65537) },
+  ];
+  for (const scenario of cases) {
+    const server = createServer((_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json", ...scenario.headers });
+      res.end(scenario.content);
+    });
+    await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    assert(address && typeof address !== "string");
+    try {
+      const observed = await readGoGcMetrics("http://127.0.0.1:" + address.port + "/",
+        new AbortController().signal);
+      assert.equal(observed.status, "NOT_SUPPORTED", scenario.name);
+    } finally {
+      await new Promise<void>(resolve => server.close(() => resolve()));
+    }
+  }
+});

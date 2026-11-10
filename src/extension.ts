@@ -22,14 +22,16 @@ import { assertAllowedTarget, isRemoteTarget, validateScenario } from "./core/va
 import { redactTargetForDisplay } from "./core/display-privacy";
 import { dashboard, type DashboardState } from "./ui/html";
 import { translate } from "./ui/localize";
+import { RunLifecycle, isCancellation } from "./run-lifecycle";
+import { confirmWhileActive } from "./consent-gate";
 
 type Preset = "smoke" | "stress" | "arrival" | "ramp";
 
 class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   private panel: vscode.WebviewPanel | undefined;
   private launcher?: vscode.WebviewView;
-  private controller: AbortController | undefined;
-  private busy = false;
+  private readonly lifecycle = new RunLifecycle();
+  private get busy(): boolean { return this.lifecycle.busy; }
   private message = "";
   private latest: RunResult | undefined;
   private history: RunResult[] = [];
@@ -272,7 +274,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   async websocketProbe(): Promise<void> {
-    if (this.busy) return;
+    await this.lifecycle.withBusy(async signal => {
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const proposal = this.target().replace(/^https?:/i, "ws:");
     const entered = await vscode.window.showInputBox({
@@ -290,15 +292,13 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       this.t("websocketConsent") + " " + entered,
       { modal: true }, this.t("websocketAuthorize")
     );
-    if (consent !== this.t("websocketAuthorize") || this.busy) return;
-    this.busy = true;
-    this.controller = new AbortController();
+    if (consent !== this.t("websocketAuthorize")) return;
     this.message = this.t("websocketRunning");
     this.refresh();
     try {
       const evidence = await executeWebSocketProbe(
         entered, this.config().get<string>("k6Path", "k6"),
-        this.storageDir, this.controller.signal
+        this.storageDir, signal
       );
       this.output.appendLine("WebSocket probe: " + JSON.stringify(evidence));
       const document = await vscode.workspace.openTextDocument({
@@ -307,15 +307,13 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       await vscode.window.showTextDocument(document, { preview: false });
       this.message = this.t("websocketComplete");
     } catch (error) {
-      this.message = error instanceof Error ? error.message : String(error);
-      if (this.message !== "Cancelled") {
+      this.message = isCancellation(error, signal) ? "Cancelled" :
+        (error instanceof Error ? error.message : String(error));
+      if (!isCancellation(error, signal)) {
         void vscode.window.showErrorMessage("Saturivo: " + this.message);
       }
-    } finally {
-      this.busy = false;
-      this.controller = undefined;
-      this.refresh();
     }
+    }, () => this.refresh());
   }
 
   async runPreset(preset: Preset): Promise<void> {
@@ -332,7 +330,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   private async executeScenario(input: Scenario): Promise<void> {
-    if (this.busy) { void vscode.window.showWarningMessage("Saturivo: " + this.t("taskAlreadyRunning")); return; }
+    await this.lifecycle.withBusy(async signal => {
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const policy = { allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
       maxRequests: this.config().get<number>("maxRequests", 10000) };
@@ -349,14 +347,12 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       );
       if (agreed !== this.t("remoteLoadAuthorize")) return;
     }
-    this.busy = true;
     this.message = this.t("running") + ": " + scenario.name;
-    this.controller = new AbortController();
     this.refresh();
     try {
       const run = await runK6(
         scenario, policy, this.config().get<string>("k6Path", "k6"),
-        this.storageDir, this.controller.signal, sourceRoot
+        this.storageDir, signal, sourceRoot
       );
       await this.store.save(run);
       await this.loadHistory();
@@ -365,21 +361,19 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         " ms · " + run.metrics.requestsPerSecond.toFixed(2) + " req/s";
       this.output.appendLine(this.message);
     } catch (error) {
-      this.message = error instanceof Error ? error.message : String(error);
+      this.message = isCancellation(error, signal) ? "Cancelled" :
+        (error instanceof Error ? error.message : String(error));
       this.output.appendLine(this.message);
-      if (this.message !== "Cancelled") {
+      if (!isCancellation(error, signal)) {
         void vscode.window.showErrorMessage("Saturivo: " + this.message +
           ". " + this.t("k6UnavailableHelp"));
       }
-    } finally {
-      this.busy = false;
-      this.controller = undefined;
-      this.refresh();
     }
+    }, () => this.refresh());
   }
 
   async runCapacityPilot(): Promise<void> {
-    if (this.busy) return;
+    await this.lifecycle.withBusy(async signal => {
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const maxP95Ms = this.config().get<number>("sloMaxP95Ms", 0);
     if (!Number.isFinite(maxP95Ms) || maxP95Ms < 1) {
@@ -401,9 +395,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         " " + this.t("capacityRequests"),
       { modal: true }, this.t("capacityAuthorize")
     );
-    if (confirmed !== this.t("capacityAuthorize") || this.busy) return;
-    this.busy = true;
-    this.controller = new AbortController();
+    if (confirmed !== this.t("capacityAuthorize")) return;
     this.message = this.t("capacityRunning");
     this.refresh();
     try {
@@ -422,7 +414,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         await this.loadHistory();
         this.latest = run;
         return run;
-      }, this.controller.signal, (rate, step) => {
+      }, signal, (rate, step) => {
         this.message = this.t("capacityRunning") + " " + step + "/3 · " + rate + " arrivals/s";
         this.refresh();
       });
@@ -432,18 +424,16 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
           this.t("capacityNone") : String(result.highestPassingArrivalRate) + " arrivals/s") +
         " · " + result.stopReason + ". " + this.t("capacityCaution");
     } catch (error) {
-      this.message = error instanceof Error ? error.message : String(error);
+      this.message = isCancellation(error, signal) ? "Cancelled" :
+        (error instanceof Error ? error.message : String(error));
       this.output.appendLine("Saturivo capacity pilot: " + this.message);
-      if (this.message !== "Cancelled") void vscode.window.showErrorMessage(
+      if (!isCancellation(error, signal)) void vscode.window.showErrorMessage(
         "Saturivo: " + this.message);
-    } finally {
-      this.busy = false;
-      this.controller = undefined;
-      this.refresh();
     }
+    }, () => this.refresh());
   }
 
-  cancel(): void { this.controller?.abort(); }
+  cancel(): void { this.lifecycle.cancel(); }
 
   async compare(): Promise<void> {
     const items = await this.store.list(40);
@@ -534,15 +524,18 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   async clearProfiles(): Promise<void> {
-    if (this.busy) return;
-    const confirmation = await vscode.window.showWarningMessage(
-      this.t("clearProfilesWarning"), { modal: true }, this.t("clearProfilesConfirm")
-    );
-    if (confirmation !== this.t("clearProfilesConfirm")) return;
-    await rm(vscode.Uri.joinPath(vscode.Uri.file(this.storageDir), "go-profiles").fsPath,
-      { recursive: true, force: true });
-    this.message = this.t("clearProfilesSuccess");
-    this.refresh();
+    await this.lifecycle.withBusy(async signal => {
+      const accepted = await confirmWhileActive(signal, async () =>
+        (await vscode.window.showWarningMessage(
+          this.t("clearProfilesWarning"), { modal: true }, this.t("clearProfilesConfirm")
+        )) === this.t("clearProfilesConfirm")
+      );
+      if (!accepted) return;
+      await rm(vscode.Uri.joinPath(vscode.Uri.file(this.storageDir), "go-profiles").fsPath,
+        { recursive: true, force: true });
+      this.message = this.t("clearProfilesSuccess");
+      this.refresh();
+    }, () => this.refresh());
   }
 
   async exportRaceSarif(): Promise<void> {
@@ -596,16 +589,19 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   async clearHistory(): Promise<void> {
-    if (this.busy) return;
-    const choice = await vscode.window.showWarningMessage(
-      this.t("historyClearWarning"), { modal: true }, this.t("historyClearConfirm")
-    );
-    if (choice !== this.t("historyClearConfirm")) return;
-    const deleted = await this.store.clear();
-    this.history = [];
-    this.latest = undefined;
-    this.message = this.t("historyCleared") + " (" + deleted + ")";
-    this.refresh();
+    await this.lifecycle.withBusy(async signal => {
+      const accepted = await confirmWhileActive(signal, async () =>
+        (await vscode.window.showWarningMessage(
+          this.t("historyClearWarning"), { modal: true }, this.t("historyClearConfirm")
+        )) === this.t("historyClearConfirm")
+      );
+      if (!accepted) return;
+      const deleted = await this.store.clear();
+      this.history = [];
+      this.latest = undefined;
+      this.message = this.t("historyCleared") + " (" + deleted + ")";
+      this.refresh();
+    }, () => this.refresh());
   }
 
   private folder(): string | undefined {
@@ -618,7 +614,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
   }
 
   async runGoTask(task: GoTask): Promise<void> {
-    if (this.busy) return;
+    await this.lifecycle.withBusy(async signal => {
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const folders = vscode.workspace.workspaceFolders ?? [];
     let folder: string | undefined;
@@ -643,12 +639,10 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       this.raceFindings = [];
       this.raceWorkspace = undefined;
     }
-    this.busy = true;
     this.message = this.t("runningGo") + ": " + task;
-    this.controller = new AbortController();
     this.refresh();
     try {
-      const result = await runGo(task, folder, this.controller.signal);
+      const result = await runGo(task, folder, signal);
       this.output.appendLine("Go " + task + " exited: " + result.exitCode);
       if (task === "race") {
         this.raceDiagnostics.clear();
@@ -679,17 +673,15 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       });
       await vscode.window.showTextDocument(doc, { preview: false });
     } catch (error) {
-      this.message = error instanceof Error ? error.message : String(error);
-      if (this.message !== "Cancelled") void vscode.window.showErrorMessage("Saturivo: " + this.message);
-    } finally {
-      this.busy = false;
-      this.controller = undefined;
-      this.refresh();
+      this.message = isCancellation(error, signal) ? "Cancelled" :
+        (error instanceof Error ? error.message : String(error));
+      if (!isCancellation(error, signal)) void vscode.window.showErrorMessage("Saturivo: " + this.message);
     }
+    }, () => this.refresh());
   }
 
   async correlateGo(): Promise<void> {
-    if (this.busy) return;
+    await this.lifecycle.withBusy(async signal => {
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const origin = this.config().get<string>("goProfilerOrigin", "http://127.0.0.1:6060/");
     const target = this.target();
@@ -700,14 +692,12 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       ". " + this.t("correlateCaution"),
       { modal: true }, this.t("correlateAuthorize")
     );
-    if (approved !== this.t("correlateAuthorize") || this.busy) return;
+    if (approved !== this.t("correlateAuthorize")) return;
     const policy = {
       allowRemoteTargets: false, maxVirtualUsers: this.maxVus(),
       maxRequests: this.config().get<number>("maxRequests", 10000),
     };
     const scenario = validateScenario(this.scenario("smoke"), policy);
-    this.busy = true;
-    this.controller = new AbortController();
     this.message = this.t("correlateRunning");
     this.refresh();
     try {
@@ -715,7 +705,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         async (_phase, signal) => captureGoProfile(origin, "goroutine", this.storageDir, signal),
         async signal => runK6(scenario, policy,
           this.config().get<string>("k6Path", "k6"), this.storageDir, signal),
-        this.controller.signal,
+        signal,
         phase => {
           this.message = this.t("correlateRunning") + ": " + phase;
           this.refresh();
@@ -731,18 +721,16 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       this.message = this.t("correlateComplete");
       this.output.appendLine("Go correlation: " + this.message);
     } catch (error) {
-      this.message = error instanceof Error ? error.message : String(error);
+      this.message = isCancellation(error, signal) ? "Cancelled" :
+        (error instanceof Error ? error.message : String(error));
       this.output.appendLine("Go correlation: " + this.message);
-      if (this.message !== "Cancelled") void vscode.window.showErrorMessage("Saturivo: " + this.message);
-    } finally {
-      this.busy = false;
-      this.controller = undefined;
-      this.refresh();
+      if (!isCancellation(error, signal)) void vscode.window.showErrorMessage("Saturivo: " + this.message);
     }
+    }, () => this.refresh());
   }
 
   async captureProfile(): Promise<void> {
-    if (this.busy) return;
+    await this.lifecycle.withBusy(async signal => {
     if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
     const kinds: readonly GoProfileKind[] = ["goroutine", "cpu", "heap", "mutex", "block", "trace"];
     const selection = await vscode.window.showQuickPick(kinds, {
@@ -758,12 +746,10 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       { modal: true }, this.t("profileAuthorize")
     );
     if (accepted !== this.t("profileAuthorize")) return;
-    this.busy = true;
-    this.controller = new AbortController();
     this.message = this.t("profileRunning");
     this.refresh();
     try {
-      const evidence = await captureGoProfile(origin, kind, this.storageDir, this.controller.signal);
+      const evidence = await captureGoProfile(origin, kind, this.storageDir, signal);
       this.output.appendLine("Go pprof " + evidence.kind + ": " + evidence.localPath +
         " (" + evidence.bytes + " bytes)");
       this.message = this.t("profileSaved") + " (" + evidence.bytes + " bytes)";
@@ -792,7 +778,7 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       } else {
         try {
           const workspace = this.folder() ?? this.storageDir;
-          const top = await summarizeGoPprof(evidence.localPath, workspace, this.controller.signal);
+          const top = await summarizeGoPprof(evidence.localPath, workspace, signal);
           const document = await vscode.workspace.openTextDocument({
             content: "Saturivo · Go " + kind + " profile\n" +
               "Saved locally: " + evidence.localPath + "\n\n" + top,
@@ -806,13 +792,11 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         }
       }
     } catch (error) {
-      this.message = error instanceof Error ? error.message : String(error);
-      if (this.message !== "Cancelled") void vscode.window.showErrorMessage("Saturivo: " + this.message);
-    } finally {
-      this.busy = false;
-      this.controller = undefined;
-      this.refresh();
+      this.message = isCancellation(error, signal) ? "Cancelled" :
+        (error instanceof Error ? error.message : String(error));
+      if (!isCancellation(error, signal)) void vscode.window.showErrorMessage("Saturivo: " + this.message);
     }
+    }, () => this.refresh());
   }
 
   dispose(): void { this.cancel(); this.panel?.dispose(); this.output.dispose(); this.raceDiagnostics.dispose(); }

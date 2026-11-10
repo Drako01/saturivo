@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       capture_screenshots:
-        description: 'Final README screenshot refresh only after UX sign-off (PR #5)'
+        description: 'Manual evidence capture for review; never commits or pushes'
         type: boolean
         required: false
         default: false
@@ -37,6 +37,12 @@ jobs:
           node-version: 22
       - name: Install
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Runtime-only dependency advisories (informational)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          mkdir -p reports
+          npm audit --omit=dev --json > reports/npm-audit-runtime.json || true
       - name: Verify TypeScript, tests and manifest
         run: npm run verify
       - name: Package candidate VSIX for Windows/macOS upgrade
@@ -62,6 +68,7 @@ jobs:
             reports/saturivo-sbom.cdx.json
             reports/saturivo-licenses.json
             reports/saturivo-licenses.md
+            reports/npm-audit-runtime.json
           if-no-files-found: error
       - name: Package candidate VSIX
         if: runner.os == 'Linux'
@@ -231,18 +238,17 @@ jobs:
   screenshots:
     name: Capture actual Control Center views for README
     # Manual final stage only: ordinary PR CI must not mutate README screenshots.
-    # The historical feature branch is retained for PR #5; never writes to main or forks.
-    if: github.event_name == 'workflow_dispatch' && inputs.capture_screenshots == true && github.ref == 'refs/heads/feat/enterprise-aaaa-v0.1.1' && github.repository == 'Drako01/saturivo'
+    # Read-only, manual capture on the selected branch; screenshots remain review artifacts.
+    if: github.event_name == 'workflow_dispatch' && inputs.capture_screenshots == true && github.repository == 'Drako01/saturivo'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
-      actions: write
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.ref_name }}
-          persist-credentials: true # only this trusted documentation screenshot job
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -256,18 +262,3 @@ jobs:
           name: saturivo-control-center-screenshots
           path: media/screenshots/*.png
           if-no-files-found: error
-      - name: Commit changed generated screenshots to THIS feature branch only
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add media/screenshots/
-          if git diff --staged --quiet; then
-            echo "Readme screenshots are unchanged."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "docs(readme): capture 0.2.0 control center from production renderer"
-          git push origin "HEAD:refs/heads/feat/enterprise-aaaa-v0.1.1"
-          # GitHub-token pushes do not trigger workflows. Dispatch explicitly at the new commit.
-          GH_TOKEN="${{ github.token }}" gh workflow run ci.yml --ref feat/enterprise-aaaa-v0.1.1

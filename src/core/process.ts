@@ -1,3 +1,4 @@
+import { CancelledError } from "./cancelled-error";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 
 /** A single bounded subprocess. No shell, no background completion, no telemetry. */
@@ -32,7 +33,7 @@ function terminateTree(child: ChildProcessWithoutNullStreams, force: boolean): v
 }
 
 export async function runBoundedProcess(request: ProcessRequest): Promise<ProcessOutcome> {
-  if (request.signal.aborted) throw new Error("Cancelled");
+  if (request.signal.aborted) throw new CancelledError();
   if (!Number.isFinite(request.timeoutMs) || request.timeoutMs < 1_000 || request.timeoutMs > 600_000) {
     throw new Error("Invalid subprocess timeout");
   }
@@ -83,7 +84,7 @@ export async function runBoundedProcess(request: ProcessRequest): Promise<Proces
       clearTimeout(timeout);
       if (forceTimer.current) clearTimeout(forceTimer.current);
       request.signal.removeEventListener("abort", onAbort);
-      if (aborted || request.signal.aborted) reject(new Error("Cancelled"));
+      if (aborted || request.signal.aborted) reject(new CancelledError());
       else if (timedOut) reject(new Error("Process deadline exceeded"));
       else if (spawnError) reject(spawnError);
       else resolve({ exitCode: code ?? -1, stdout: out, stderr: err, truncated });

@@ -22,28 +22,54 @@
 
 ---
 
-> **Public source · 0.2.0 non-preview release candidate (PR #5; unreleased).** The extension is now packaged without the VS Code Marketplace Preview badge, but **this is not a release approval or Enterprise AAAA certification**. See [implementation status](STATUS.md) and [measurable Enterprise AAAA plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md). Local measurements do not certify production capacity.
+> **Saturivo 0.3.0 — stable-channel source candidate (PR #9; NOT RELEASED).** The latest published version at the audit baseline is 0.2.2. This PR is not an approval to publish. The 0.3.0 security/release gate remains blocked until live GitHub environment rules are configured and validated. No Enterprise AAAA third-party certification is claimed.
 
-## Control Center — 0.2.0
+## Saturivo 0.3.0 — engineering upgrade
 
-The new Control Center opens in a **full editor tab**, not a narrow sidebar. The screenshots below are captured from the **real dashboard renderer** with a fixed **synthetic test dataset**; the displayed metrics are illustrative, not real performance measurements.
+The 0.3.0 candidate strengthens execution correctness and release governance without changing the observed load-testing semantics:
 
-![Saturivo Control Center — overview](media/screenshots/control-center-overview.png)
+- **Exclusive execution lifecycle:** the run slot is reserved synchronously before modal dialogs, preventing concurrent k6 / Go operations and allowing cancellation to release it deterministically.
+- **Typed cancellation:** cancellation is independent of the literal error message, including subprocess aborts.
+- **Consistent safety bounds:** scenario input, validation and persisted evidence share the same workload limits.
+- **Evidence hardening:** WebSocket summary reads use bounded, single-link, file-identity-checked access.
+- **Accurate identification:** k6 and WebSocket probes derive their User-Agent version from the packaged manifest.
+- **Release safety:** executable paths cannot be overridden by workspace settings; automated publication fails closed without reviewer-protected, main-only GitHub environments. All seven CI job names are versioned in the branch ruleset.
+- **Verification:** deterministic property tests, explicit lifecycle regression tests and measured coverage thresholds for the core and lifecycle.
+
+Version 0.3.0 is prepared for the stable release channel (no Preview metadata). **It has not been published.** Release approval remains separate from source verification.
+
+## Control Center — Saturivo 0.3.0
+
+Saturivo opens its Control Center in a **full editor tab**, with a workspace for scenario design, recorded performance evidence, comparisons and Go concurrency diagnostics.
+
+These screenshots were captured in **headless Chromium from the extension's actual production dashboard renderer** (`src/ui/html.ts`) at version **0.3.0**, using a deterministic **synthetic documentation fixture**. Metrics are illustrative; they are **not results of a real benchmark**. The screenshot process never starts a load test or contacts a remote target. The four 1480 × 960 PNGs are checked into the PR as versioned assets. [Capture and browser-check evidence](https://github.com/Drako01/saturivo/actions/runs/42865237314).
+
+**Overview — inspection at a glance**
+
+![Saturivo 0.3.0 Control Center overview with synthetic performance metrics](media/screenshots/control-center-0.3.0-overview.png)
 
 <details>
-<summary>View load scenarios, run history and Go diagnostics</summary>
+<summary><strong>Explore the other Control Center views — Scenario Studio, History and Go diagnostics</strong></summary>
 
-![Bounded load scenarios](media/screenshots/control-center-load.png)
+**Scenario Studio — bounded workload design and live preview**
 
-![Saved run evidence and comparisons](media/screenshots/control-center-history.png)
+![Saturivo 0.3.0 Scenario Studio with validated load parameters and workload preview](media/screenshots/control-center-0.3.0-load.png)
 
-![Go runtime and concurrency diagnostics](media/screenshots/control-center-diagnostics.png)
+**History — saved evidence, comparisons and run inspection**
+
+![Saturivo 0.3.0 run history and comparative evidence rendered from synthetic fixture data](media/screenshots/control-center-0.3.0-history.png)
+
+**Go diagnostics — opt-in runtime investigation**
+
+![Saturivo 0.3.0 Go concurrency diagnostics and profiling tools](media/screenshots/control-center-0.3.0-diagnostics.png)
 
 </details>
 
+*Reproduce the images:* `npm ci --ignore-scripts && npm run build && npm run screenshots:readme`. The capture generator runs browser interaction checks before writing screenshots. It produces `control-center-{overview,load,history,diagnostics}.png` locally; the screenshots committed for 0.3.0 use versioned filenames to avoid mixing them with older releases.
+
 ### A workflow designed for developers
 
-The 0.2.0 Control Center is more than a set of commands: it guides setup, bounded execution, comparison and investigation. The **Scenario Studio** provides a live workload preview, readable safety budgets, interactive ramp editing, and preset cards that can be customized **without starting traffic**. Results include an accessible exact-value table and clear evidence limitations.
+The Control Center is more than a set of commands: it guides setup, bounded execution, comparison and investigation. The **Scenario Studio** provides a live workload preview, readable safety budgets, interactive ramp editing, and preset cards that can be customized **without starting traffic**. Results include an accessible exact-value table and clear evidence limitations.
 
 The dashboard uses VS Code theme tokens, responsive layouts, keyboard navigation, and reduced-motion support. Preview and selection are local interactions; only an explicit run action can begin a workload.
 
@@ -63,7 +89,7 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 
 ## Capabilities
 
-| Area | Implemented in the PR #5 development branch | Important boundary |
+| Area | Implemented in source (0.3.0 candidate) | Important boundary |
 |---|---|---|
 | **Load testing** | k6 presets, ramping VUs, and a bilingual editor for bounded v2 HTTP GET/HEAD workloads | HTTP(S) GET/HEAD only; local target by default |
 | **Metrics & SLOs** | RPS, failures, P50/P95/P99, dropped iterations; configurable P95 SLO | Single-run status is not a statistical confidence guarantee |
@@ -73,7 +99,7 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 | **Evidence** | Markdown/JSON export; SARIF for observed Go race findings | Profiling files and reports may contain sensitive project information |
 | **Developer experience** | Full editor-tab Control Center launched from Activity Bar, ES/EN interface, scenario form persistence, explicit cancellation and history deletion | No background stress testing; trusted workspaces only |
 
-**Experimental bounded capacity pilot:** up to three explicitly authorized loopback arrival-rate steps with a P95 SLO; passing rates do not certify production capacity. Saturivo 0.2.0 includes isolated warm-up/measurement/cool-down for v2, 3×3 regressions with uncertainty, Go race source evidence, pprof/trace/GC observations, real fixture-backed HTTP Go/Node/Python and bounded RFC6455 WebSocket. **Not implemented or not verified:** general gRPC/ghz, language-specific profilers Node/Java/Python, WSL/SSH/Dev Containers E2E and BYO AI. See [roadmap](ROADMAP.md).
+**Experimental bounded capacity pilot:** up to three explicitly authorized loopback arrival-rate steps with a P95 SLO; passing rates do not certify production capacity. Saturivo includes isolated warm-up/measurement/cool-down for v2, 3×3 regressions with uncertainty, Go race source evidence, pprof/trace/GC observations, real fixture-backed HTTP Go/Node/Python and bounded RFC6455 WebSocket. **Not implemented or not verified:** general gRPC/ghz, language-specific profilers Node/Java/Python, WSL/SSH/Dev Containers E2E and BYO AI. See [roadmap](ROADMAP.md).
 
 ## Quick start
 
@@ -85,12 +111,12 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 - **Node.js 22+** and npm for building this extension from source.
 - Git access to the public Saturivo source repository.
 
-### Build and install the 0.2.0 candidate from source
+### Build and install the 0.3.0 candidate from source
 
 ~~~bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-git switch feat/enterprise-aaaa-v0.1.1
+git switch feat/saturivo-enterprise-aaaa-0.3.0
 npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
@@ -172,7 +198,7 @@ Saturivo is built **local-first and permission-first**:
 - Bounded subprocess output, cancellation, deadlines and process termination; no shell expansion for external tool arguments.
 - Go profiling is restricted to literal loopback origins, without credentials or redirects, and with time/size limits.
 - Untrusted/virtual workspaces are not supported; the Control Center Webview has a Content Security Policy.
-- No built-in telemetry, automatic cloud upload, AI data transfer or marketplace publication workflow.
+- No built-in telemetry, automatic cloud upload or AI data transfer. Publication uses the auditable `.github/workflows/publish.yml` pipeline and must pass independent deployment-environment gates.
 
 **Never stress a third-party or production service without explicit authorization.** Even bounded load can impact a local database or downstream systems; use synthetic data and isolated dependencies.
 
@@ -209,17 +235,11 @@ Design decisions and limitations are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Engineering quality
 
-An earlier PR #5 commit, `cbd3724`, passed [GitHub Actions run #42404881890](https://github.com/Drako01/saturivo/actions/runs/42404881890) (7/7 jobs):
+Saturivo's quality gates combine strict TypeScript, Node unit/property tests, real k6 HTTP/WebSocket fixtures, Go race/pprof tests, real VS Code Extension Host 1.99, Chromium interactions, and Windows/macOS/Linux VSIX installation and upgrades. The candidate enforces measured coverage thresholds (core ≥90% and RunLifecycle ≥80%) and binds releases to a single exact commit tree.
 
-| Validation | Observed result |
-|---|---|
-| TypeScript strict checks and unit tests on Linux, Windows, macOS | **PASS** |
-| Disposable loopback service under real k6 load | **PASS** |
-| Packaged VSIX installation and real VS Code 1.99 Extension Host (Linux) | **PASS** |
-| Real Go race and pprof fixture (Linux) | **PASS** |
-| VSIX candidate and CycloneDX SBOM artifact generation (historical SHA) | **PASS** |
+**Verified historical baseline:** [CI #42431627015](https://github.com/Drako01/saturivo/actions/runs/42431627015) and [release CI #42431868619](https://github.com/Drako01/saturivo/actions/runs/42431868619) validate the previously published 0.2.2 tree, not the present 0.3.0 candidate.
 
-CI is commit-specific and does not certify later revisions. [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667) passed 7/7 on SHA `0d73879` (including real VSIX CLI upgrade/persisted history Windows/macOS/Linux). Four screenshots were regenerated from the production renderer with synthetic data in [`6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f). **Post-screenshot CI #42424211042 passed 7/7 on `e777dda`; the next documentation commit requires a new exact-SHA CI. Manual UX/security review remains BLOCKED. The owner authorized merge only after all required gates pass; tags and publication are not authorized.** PR #5 is Ready for review.
+**Current candidate:** [PR #9](https://github.com/Drako01/saturivo/pull/9) — its [Actions runs](https://github.com/Drako01/saturivo/actions?query=branch%3Afeat%2Fsaturivo-enterprise-aaaa-0.3.0) are the authoritative source of execution results. Never infer a green check from a previous SHA. Manual native dialogs, remote hosts, assistive-technology testing and screenshots remain explicitly scoped in the [0.3.0 evidence checklist](docs/RELEASE_0_3_0_CHECKLIST.md).
 
 Development commands:
 
@@ -238,14 +258,14 @@ npm run test:integration:websocket
 npm run test:integration:vscode
 ~~~
 
-**The source repository is public.** The package manifest does not use a private-repository flag. Publication to Marketplace, Open VSX or GitHub Releases is a separate, explicitly approved release decision, gated by a protected version tag and environment approvals. This PR does not publish an extension.
+**The source repository is public.** The package manifest does not use a private-repository flag. 0.3.0 publication to Marketplace, Open VSX or GitHub Releases is a separate, explicitly approved release decision, gated by the exact CI-verified source tree, immutable tag and verified reviewer-protected deployment environments. This PR does not publish an extension.
 
 ## Project documents
 
 | Document | Purpose |
 |---|---|
 | [Enterprise AAAA Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md) | Architecture, delivery phases and measurable Definition of Done |
-| [Enterprise AAAA Checklist](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md) | Verified evidence, current blockers and next gates |
+| [0.3.0 release checklist](docs/RELEASE_0_3_0_CHECKLIST.md) | Current acceptance evidence, blockers and owner-only administrative actions |
 | [Status](STATUS.md) / [Roadmap](ROADMAP.md) | Current implementation vs. planned features |
 | [Architecture](ARCHITECTURE.md) | Components, boundaries and current technical limitations |
 | [Methodology](docs/METHODOLOGY.md) | Load models, comparison, measurement caveats |
@@ -259,7 +279,7 @@ npm run test:integration:vscode
 
 Saturivo's source is now **public and MIT-licensed**. Contributions are welcome through [issues](https://github.com/Drako01/saturivo/issues/new/choose) and focused [pull requests](https://github.com/Drako01/saturivo/pulls). Before contributing, review the [contribution guide](CONTRIBUTING.md), [Code of Conduct](CODE_OF_CONDUCT.md), [security disclosure policy](SECURITY.md) and [governance rules](docs/GOVERNANCE.md).
 
-**Repository protection:** both rulesets are **active in GitHub** — [Protect main](https://github.com/Drako01/saturivo/rules/26766004) requires PR review and Linux/Windows/macOS checks; [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) protects `v*` tags from alteration. Their definitions are versioned in `.github/rulesets/`; see [verified governance](docs/RULESETS.md).
+**Repository protection:** [Protect main](https://github.com/Drako01/saturivo/rules/26766004) and [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) were active at the 0.2.2 audit baseline. The versioned 0.3.0 policy requires all seven CI checks and strict update checking; **live application is not yet verified**. Deployment-environment and security settings require separate owner configuration. See [rulesets and governance](docs/RULESETS.md).
 
 ---
 
