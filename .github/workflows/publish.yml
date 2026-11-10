@@ -37,6 +37,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      deployments: read
       pull-requests: read
     outputs:
       publish: ${{ steps.gate.outputs.publish }}
