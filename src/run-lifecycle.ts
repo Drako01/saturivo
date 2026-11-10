@@ -16,8 +16,8 @@ export class RunLifecycle {
     if (this.current) return false;
     const controller = new AbortController();
     this.current = controller;
-    onChange();
     try {
+      onChange();
       await work(controller.signal);
       return true;
     } finally {

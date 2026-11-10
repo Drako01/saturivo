@@ -41,3 +41,15 @@ test("typed cancellation never relies on the message text", () => {
   abort.abort();
   assert.equal(isCancellation(new Error("Other"), abort.signal), true);
 });
+
+test("a renderer exception before the first await cannot leak the busy reservation", async () => {
+  const lifecycle = new RunLifecycle();
+  let invoked = false;
+  await assert.rejects(
+    lifecycle.withBusy(async () => { invoked = true; }, () => { throw new Error("Render unavailable"); }),
+    /Render unavailable/
+  );
+  assert.equal(invoked, false);
+  assert.equal(lifecycle.busy, false);
+  assert.equal(await lifecycle.withBusy(async () => undefined), true);
+});
