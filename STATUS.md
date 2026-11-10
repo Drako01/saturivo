@@ -1,31 +1,18 @@
-# Saturivo 0.2.0 — Estado verificable (2026-11-07)
+# Saturivo — estado verificable (2026-11-10)
 
-**Repositorio:** [Drako01/saturivo](https://github.com/Drako01/saturivo) · **PR #5 Ready for review** · rama `feat/enterprise-aaaa-v0.1.1` · versión candidata **0.2.0 sin Preview**. El repositorio público no autoriza publicar la extensión.
+**Versión fuente candidata:** 0.3.0, sin Preview. **PR de implementación:** [#9](https://github.com/Drako01/saturivo/pull/9). **Estado:** NO PUBLICADO, sujeto a pruebas y controles administrativos.
 
-## Evidencias por commit
+**Base publicada:** v0.2.0 y v0.2.2, disponibles históricamente. La entrada v0.2.1 del changelog fue un cambio de código sin tag ni GitHub Release independientes.
 
-| Gate | Resultado | Evidencia |
-|---|---|---|
-| TS estricto, tests/manifiesto Linux/Windows/macOS | PASS | [CI #42422983667](https://github.com/Drako01/saturivo/actions/runs/42422983667), SHA `0d73879` |
-| Extension Host VS Code 1.99 Linux, ejecución/cancelación k6 real | PASS | Mismo CI `0d73879` |
-| VSIX 0.1.0→0.2.0 instalado por CLI y migración/reload/borrado de historial v1/v2 a nivel almacenamiento, tres OS | PASS | Mismo CI `0d73879` |
-| HTTP Go/Node/Python, WebSocket, Docker Compose, k6 3×3 y 64 controles de ruido sintético | PASS | Mismo CI `0d73879` |
-| Go race/pprof/trace/GC, overhead real controlado, Windows kill-tree y proxy/redirect local adversarial | PASS para fixtures declarados | Mismo CI `0d73879` |
-| Control Center central, ES/EN en host, teclado/foco, CSS forced-colors y Chromium | PASS para pruebas automatizadas | Mismo CI `0d73879` |
-| SBOM/licencias/notices, inventario shipped, SHA-256/manifest | PASS automatizado | Mismo CI `0d73879` |
-| Cuatro capturas del renderer real con datos sintéticos | Generadas | [Commit `6387739`](https://github.com/Drako01/saturivo/commit/638773987f894c178621a95e020874eef7dc454f), [run #42423371472](https://github.com/Drako01/saturivo/actions/runs/42423371472) |
-| CI del último SHA previo a esta actualización documental | **PASS 7/7** | [CI #42424211042](https://github.com/Drako01/saturivo/actions/runs/42424211042), SHA `e777dda`; el nuevo commit documental requiere su propio CI |
+## Evidencia y criterio de aceptación
 
-## Bloqueantes de aceptación
+- Auditoría de partida: `main` @ `f7320fe1e76cbe012852fe40bc5b1f6d59dc3620`, 0.2.2, 73/100. Los 123 tests PASS + 1 SKIP y 91,56 % del núcleo pertenecen **exclusivamente** a esa revisión.
+- Upgrade 0.3.0: commits incrementales en [PR #9](https://github.com/Drako01/saturivo/pull/9). Ningún test histórico certifica el SHA final nuevo.
+- Gobernanza: los entornos `marketplace`, `open-vsx`, `github-release` deben exigir revisión humana y restringir deployments a `main`. El workflow de publicación falla cerrado si estas reglas faltan; **su configuración real requiere permisos administrativos**.
+- Rulesets y seguridad del repositorio: la definición de main requiere siete checks y strict, pero **la aplicación efectiva de reglas, secret scanning, push protection y Dependabot no está comprobada**.
+- Capturas: las cuatro PNG existentes proceden de UI real 0.2.x, con datos sintéticos; **capturas nuevas de 0.3.0 pendientes**, sin sustitución por mocks.
+- Pruebas nativas de diálogos, entornos WSL/SSH/Containers, lectores de pantalla, zoom 200 % y pentest DNS remoto: **NO VERIFICADAS**.
 
-- **BLOCKED:** E2E de import/export/delete/reload y navegación Go desde diálogos de VS Code instalado. Los tests Chromium y storage-level no sustituyen diálogos nativos.
-- **BLOCKED:** pruebas reales WSL2, Remote-SSH y Dev Containers con host explícito, toolchains y limpieza de procesos. [Comandos y evidencias](docs/REMOTE_VALIDATION.md).
-- **BLOCKED:** NVDA/VoiceOver, zoom 200% real, contraste light/dark y gestión del foco con lector de pantalla.
-- **BLOCKED:** DNS/rebinding/proxy remoto, procesos adversariales WSL, attestation externa de provenance, revisión legal de licencias/vulnerabilidades y firma del threat model.
-- **BLOCKED:** revisión visual humana de las cuatro capturas. El propietario **autorizó condicionalmente el merge** cuando cierren todos los gates; tag Git y publicación requieren decisiones independientes.
+**Estado de merge:** no declarar READY TO MERGE mientras falten checks del SHA final, requisitos de gobernanza o capturas reales solicitadas.
 
-**Diferido por YAGNI (no incluido):** gRPC/ghz, profilers específicos de Node/Java/Python, Vegeta/Fortio e IA BYO. Las observaciones Go no demuestran causalidad, ausencia de races ni capacidad sostenible en producción.
-
-**Estado de release: NO APROBADO.** PR #5 está Ready for review; sin merge, tag, GitHub Release, Marketplace ni Open VSX. La autorización de merge es condicional; la evidencia manual no se infiere del CI.
-
-Fuente de verdad: [checklist de seis fases](docs/ENTERPRISE_AAAA_UPGRADE_CHECKLIST.md), [release tracker](docs/RELEASE_0_2_0_CHECKLIST.md), [Master Plan](docs/ENTERPRISE_AAAA_MASTER_PLAN.md) y [threat model](docs/THREAT_MODEL.md).
+Ver [checklist vivo de 0.3.0](docs/RELEASE_0_3_0_CHECKLIST.md), [reglas](docs/RULESETS.md) y [modelo de amenazas](docs/THREAT_MODEL.md).

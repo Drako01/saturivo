@@ -2,7 +2,7 @@
   "name": "saturivo",
   "displayName": "Saturivo",
   "description": "Evidence-based load, concurrency and performance diagnostics for local APIs and Go services.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "publisher": "armotusitio",
   "author": {
     "name": "Alejandro Daniel Di Stefano",
@@ -18,7 +18,8 @@
   },
   "homepage": "https://armotusitio.com.ar",
   "engines": {
-    "vscode": "^1.99.0"
+    "vscode": "^1.99.0",
+    "node": ">=22"
   },
   "extensionKind": [
     "workspace"
@@ -284,7 +285,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.cjs",
     "smoke:manifest": "node scripts/verify-manifest.cjs",
-    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses && node --test test/vsix-audit.test.cjs test/release-governance.test.cjs test/rulesets-sync.test.cjs test/coverage-gate.test.cjs",
+    "verify": "npm run typecheck && npm run test && npm run smoke:manifest && npm run rulesets:check && npm run test:licenses && node --test test/vsix-audit.test.cjs test/release-governance.test.cjs test/rulesets-sync.test.cjs test/coverage-gate.test.cjs test/documentation-sync.test.cjs",
     "package:vsix": "npm run verify && vsce package --no-dependencies --out saturivo.vsix",
     "vscode:prepublish": "npm run build",
     "test:integration:k6": "node scripts/k6-smoke.cjs",
