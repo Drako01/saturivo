@@ -1,3 +1,4 @@
+import { LIMITS } from "./limits";
 import { mkdir, readdir, rename, lstat, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -30,34 +31,34 @@ export function isStoredRun(value: unknown): value is RunResult {
   if (!object(s) || !shortString(s.id, 80) || !shortString(s.name, 80) ||
       !shortString(s.target, 2048) || !["GET", "HEAD"].includes(String(s.method)) ||
       !["constant-vus", "constant-arrival-rate", "ramping-vus"].includes(String(s.model)) ||
-      !Number.isInteger(s.durationSeconds) || (s.durationSeconds as number) < 5 ||
-      (s.durationSeconds as number) > 120 ||
-      !Number.isInteger(s.virtualUsers) || (s.virtualUsers as number) < 1 ||
-      (s.virtualUsers as number) > 100) return false;
-  try { assertAllowedTarget(s.target as string, { allowRemoteTargets: true, maxVirtualUsers: 100 }); }
+      !Number.isInteger(s.durationSeconds) || (s.durationSeconds as number) < LIMITS.duration.min ||
+      (s.durationSeconds as number) > LIMITS.duration.max ||
+      !Number.isInteger(s.virtualUsers) || (s.virtualUsers as number) < LIMITS.virtualUsers.min ||
+      (s.virtualUsers as number) > LIMITS.virtualUsers.max) return false;
+  try { assertAllowedTarget(s.target as string, { allowRemoteTargets: true, maxVirtualUsers: LIMITS.virtualUsers.max }); }
   catch { return false; }
   if (s.workloadVersion !== undefined && s.workloadVersion !== 2) return false;
   const warmup = (s.warmupSeconds as number | undefined) ?? 0;
   const cooldown = (s.cooldownSeconds as number | undefined) ?? 0;
   if (s.warmupSeconds !== undefined || s.cooldownSeconds !== undefined) {
     if (s.workloadVersion !== 2 ||
-        !Number.isInteger(warmup) || warmup < 0 || warmup > 30 ||
-        !Number.isInteger(cooldown) || cooldown < 0 || cooldown > 30 ||
-        warmup + cooldown > (s.durationSeconds as number) - 5) return false;
+        !Number.isInteger(warmup) || warmup < LIMITS.phases.min || warmup > LIMITS.phases.max ||
+        !Number.isInteger(cooldown) || cooldown < LIMITS.phases.min || cooldown > LIMITS.phases.max ||
+        warmup + cooldown > (s.durationSeconds as number) - LIMITS.phases.minMeasured) return false;
   }
   if (s.maxRequests !== undefined && (!Number.isInteger(s.maxRequests) ||
-      (s.maxRequests as number) < 100 || (s.maxRequests as number) > 100000)) return false;
+      (s.maxRequests as number) < LIMITS.maxRequests.min || (s.maxRequests as number) > LIMITS.maxRequests.max)) return false;
   if (s.slo !== undefined) {
     if (!object(s.slo)) return false;
     try { assertValidSlo(s.slo as SloDefinition); } catch { return false; }
   }
   if (s.model !== "ramping-vus" && s.stages !== undefined) return false;
   if (s.model === "constant-arrival-rate" && (!Number.isInteger(s.arrivalRate) ||
-      (s.arrivalRate as number) < 1 || (s.arrivalRate as number) > 500)) return false;
+      (s.arrivalRate as number) < LIMITS.arrivalRate.min || (s.arrivalRate as number) > LIMITS.arrivalRate.max)) return false;
   if (s.model === "ramping-vus" && (s.workloadVersion !== 2 ||
-      !Array.isArray(s.stages) || s.stages.length < 2 || s.stages.length > 8 ||
+      !Array.isArray(s.stages) || s.stages.length < LIMITS.stageCount.min || s.stages.length > LIMITS.stageCount.max ||
       !s.stages.every(st => object(st) && Number.isInteger(st.durationSeconds) &&
-        (st.durationSeconds as number) >= 1 && Number.isInteger(st.targetVus) &&
+        (st.durationSeconds as number) >= LIMITS.stageDuration.min && Number.isInteger(st.targetVus) &&
         (st.targetVus as number) >= 0 && (st.targetVus as number) <= (s.virtualUsers as number)) ||
       s.stages.reduce((sum: number, st: { durationSeconds: number }) =>
         sum + st.durationSeconds, 0) !== s.durationSeconds)) return false;
@@ -70,10 +71,10 @@ export function isStoredRun(value: unknown): value is RunResult {
       !Number.isInteger(m.droppedIterations)) return false;
   if (m.totalRequests !== undefined &&
       (!Number.isInteger(m.totalRequests) || (m.totalRequests as number) < (m.requests as number) ||
-       (m.totalRequests as number) > ((s.maxRequests as number | undefined) ?? 10000))) return false;
+       (m.totalRequests as number) > ((s.maxRequests as number | undefined) ?? LIMITS.maxRequests.default))) return false;
   if (warmup + cooldown > 0 && m.totalRequests === undefined) return false;
   if (m.targetArrivalRate !== undefined && (!Number.isInteger(m.targetArrivalRate) ||
-      (m.targetArrivalRate as number) < 1 || (m.targetArrivalRate as number) > 500)) return false;
+      (m.targetArrivalRate as number) < LIMITS.arrivalRate.min || (m.targetArrivalRate as number) > LIMITS.arrivalRate.max)) return false;
   if (m.achievedArrivalRate !== undefined && !finite(m.achievedArrivalRate)) return false;
   if (m.statusDistribution !== undefined) {
     if (!object(m.statusDistribution)) return false;
@@ -110,7 +111,7 @@ export function isStoredRun(value: unknown): value is RunResult {
         !assessment.violations.every(v => typeof v === "string" && v.length <= 500)) return false;
     if (value.schemaVersion === 2) {
       const expected = assessSlo(m as unknown as Metrics, s.slo as SloDefinition | undefined,
-        ((m.totalRequests ?? m.requests) as number) >= ((s.maxRequests as number | undefined) ?? 10000));
+        ((m.totalRequests ?? m.requests) as number) >= ((s.maxRequests as number | undefined) ?? LIMITS.maxRequests.default));
       if (assessment.status !== expected.status ||
           JSON.stringify(assessment.violations) !== JSON.stringify(expected.violations)) return false;
     }
@@ -136,7 +137,7 @@ export function migrateImportedRun(value: unknown): RunResult {
   if (value.scenarioHash && value.scenarioHash !== fingerprint) {
     throw new Error("Legacy workload fingerprint mismatch");
   }
-  const budget = value.scenario.maxRequests ?? 10000;
+  const budget = value.scenario.maxRequests ?? LIMITS.maxRequests.default;
   const requestBudgetReached = (value.metrics.totalRequests ?? value.metrics.requests) >= budget;
   const migrated: RunResult = {
     ...value, schemaVersion: 2, scenarioHash: fingerprint,

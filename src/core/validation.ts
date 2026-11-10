@@ -1,3 +1,4 @@
+import { LIMITS } from "./limits";
 import { isIP } from "node:net";
 import type { Scenario } from "./types";
 import { assertValidSlo } from "./slo";
@@ -39,21 +40,21 @@ export function validateScenario(input: Scenario, policy: TargetPolicy): Scenari
   assertAllowedTarget(input.target, policy);
   if (input.method !== "GET" && input.method !== "HEAD") throw new Error("Only read-only GET/HEAD requests are supported");
   if (!["constant-vus", "constant-arrival-rate", "ramping-vus"].includes(input.model)) throw new Error("Unsupported load model");
-  if (!Number.isInteger(input.durationSeconds) || input.durationSeconds < 5 || input.durationSeconds > 120) throw new Error("Duration must be 5–120 seconds");
-  if (!Number.isInteger(policy.maxVirtualUsers) || policy.maxVirtualUsers < 1 || policy.maxVirtualUsers > 100) throw new Error("Invalid hard virtual-user ceiling");
-  if (!Number.isInteger(input.virtualUsers) || input.virtualUsers < 1 || input.virtualUsers > policy.maxVirtualUsers) throw new Error("Virtual users exceed the configured safety ceiling");
+  if (!Number.isInteger(input.durationSeconds) || input.durationSeconds < LIMITS.duration.min || input.durationSeconds > LIMITS.duration.max) throw new Error("Duration must be 5–120 seconds");
+  if (!Number.isInteger(policy.maxVirtualUsers) || policy.maxVirtualUsers < LIMITS.virtualUsers.min || policy.maxVirtualUsers > LIMITS.virtualUsers.max) throw new Error("Invalid hard virtual-user ceiling");
+  if (!Number.isInteger(input.virtualUsers) || input.virtualUsers < LIMITS.virtualUsers.min || input.virtualUsers > policy.maxVirtualUsers) throw new Error("Virtual users exceed the configured safety ceiling");
   if (input.model === "constant-arrival-rate" &&
-    (!Number.isInteger(input.arrivalRate) || (input.arrivalRate ?? 0) < 1 || (input.arrivalRate ?? 0) > 500)) {
+    (!Number.isInteger(input.arrivalRate) || (input.arrivalRate ?? 0) < LIMITS.arrivalRate.min || (input.arrivalRate ?? 0) > LIMITS.arrivalRate.max)) {
     throw new Error("Arrival rate must be between 1 and 500 iterations/s");
   }
   if (input.model === "ramping-vus") {
     if (input.workloadVersion !== 2 || !Array.isArray(input.stages) ||
-      input.stages.length < 2 || input.stages.length > 8) {
+      input.stages.length < LIMITS.stageCount.min || input.stages.length > LIMITS.stageCount.max) {
       throw new Error("Ramping workloads require version 2 and 2–8 stages");
     }
     const stages = input.stages;
     for (const stage of stages) {
-      if (!Number.isInteger(stage.durationSeconds) || stage.durationSeconds < 1 ||
+      if (!Number.isInteger(stage.durationSeconds) || stage.durationSeconds < LIMITS.stageDuration.min ||
         !Number.isInteger(stage.targetVus) || stage.targetVus < 0 ||
         stage.targetVus > input.virtualUsers) {
         throw new Error("Invalid ramp stage duration or target VUs");
@@ -74,14 +75,14 @@ export function validateScenario(input: Scenario, policy: TargetPolicy): Scenari
   const cooldown = input.cooldownSeconds ?? 0;
   if (input.warmupSeconds !== undefined || input.cooldownSeconds !== undefined) {
     if (input.workloadVersion !== 2) throw new Error("Load phases require workload version 2");
-    if (!Number.isInteger(warmup) || warmup < 0 || warmup > 30 ||
-        !Number.isInteger(cooldown) || cooldown < 0 || cooldown > 30 ||
-        warmup + cooldown > input.durationSeconds - 5) {
+    if (!Number.isInteger(warmup) || warmup < LIMITS.phases.min || warmup > LIMITS.phases.max ||
+        !Number.isInteger(cooldown) || cooldown < LIMITS.phases.min || cooldown > LIMITS.phases.max ||
+        warmup + cooldown > input.durationSeconds - LIMITS.phases.minMeasured) {
       throw new Error("Warm-up and cool-down must allow at least 5 measured seconds");
     }
   }
-  const maxRequests = input.maxRequests ?? policy.maxRequests ?? 10000;
-  if (!Number.isInteger(maxRequests) || maxRequests < 100 || maxRequests > 100000) {
+  const maxRequests = input.maxRequests ?? policy.maxRequests ?? LIMITS.maxRequests.default;
+  if (!Number.isInteger(maxRequests) || maxRequests < LIMITS.maxRequests.min || maxRequests > LIMITS.maxRequests.max) {
     throw new Error("Maximum requests must be 100–100000");
   }
   if (policy.maxRequests !== undefined && maxRequests > policy.maxRequests) {

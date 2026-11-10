@@ -1,3 +1,4 @@
+import { LIMITS } from "./limits";
 import type { Scenario } from "./types";
 import { validateScenario, type TargetPolicy } from "./validation";
 
@@ -38,25 +39,25 @@ export function parseScenarioEditorInput(
       model !== "ramping-vus") {
     throw new Error("Unsupported editor load model");
   }
-  const durationSeconds = integer(fields.durationSeconds, "Duration", 5, 120);
-  const virtualUsers = integer(fields.virtualUsers, "Virtual users", 1, policy.maxVirtualUsers);
-  const maxRequests = integer(fields.maxRequests, "Request budget", 100, 100000);
-  const p95 = integer(fields.maxP95Ms, "P95 SLO", 0, 120000);
-  const warmupSeconds = integer(fields.warmupSeconds ?? "0", "Warm-up", 0, 30);
-  const cooldownSeconds = integer(fields.cooldownSeconds ?? "0", "Cool-down", 0, 30);
+  const durationSeconds = integer(fields.durationSeconds, "Duration", LIMITS.duration.min, LIMITS.duration.max);
+  const virtualUsers = integer(fields.virtualUsers, "Virtual users", LIMITS.virtualUsers.min, policy.maxVirtualUsers);
+  const maxRequests = integer(fields.maxRequests, "Request budget", LIMITS.maxRequests.min, LIMITS.maxRequests.max);
+  const p95 = integer(fields.maxP95Ms, "P95 SLO", LIMITS.maxP95Ms.min, LIMITS.maxP95Ms.max);
+  const warmupSeconds = integer(fields.warmupSeconds ?? "0", "Warm-up", LIMITS.phases.min, LIMITS.phases.max);
+  const cooldownSeconds = integer(fields.cooldownSeconds ?? "0", "Cool-down", LIMITS.phases.min, LIMITS.phases.max);
   const stages = (() => {
     if (model !== "ramping-vus") return undefined;
     if (typeof fields.stages !== "string" || fields.stages.length > 160) {
       throw new Error("Ramping requires 2–8 duration:VUs stages");
     }
     const tokens = fields.stages.split(",");
-    if (tokens.length < 2 || tokens.length > 8) {
+    if (tokens.length < LIMITS.stageCount.min || tokens.length > LIMITS.stageCount.max) {
       throw new Error("Ramping requires 2–8 duration:VUs stages");
     }
     return tokens.map(token => {
       const match = /^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$/.exec(token.trim());
       if (!match) throw new Error("Ramp stages must use duration:VUs format");
-      const duration = integer(match[1], "Stage duration", 1, 120);
+      const duration = integer(match[1], "Stage duration", LIMITS.stageDuration.min, LIMITS.duration.max);
       const vus = integer(match[2], "Stage VUs", 0, virtualUsers);
       return { durationSeconds: duration, targetVus: vus };
     });
@@ -67,7 +68,7 @@ export function parseScenarioEditorInput(
     ...(warmupSeconds > 0 ? { warmupSeconds } : {}),
     ...(cooldownSeconds > 0 ? { cooldownSeconds } : {}),
     ...(model === "constant-arrival-rate"
-      ? { arrivalRate: integer(fields.arrivalRate, "Arrival rate", 1, 500) } : {}),
+      ? { arrivalRate: integer(fields.arrivalRate, "Arrival rate", LIMITS.arrivalRate.min, LIMITS.arrivalRate.max) } : {}),
     ...(p95 > 0 ? { slo: { maxP95Ms: p95 } } : {}),
     ...(stages ? { stages } : {}),
   };
