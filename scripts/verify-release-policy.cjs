@@ -24,6 +24,8 @@ function jobBlock(source, job) {
 }
 
 function inspectWorkflow(source) {
+  // Windows checkout may use CRLF; inspect the same logical YAML everywhere.
+  source = source.replace(/\r\n/g, "\n");
   assert.match(source, /^on:\s*\n  push:\s*\n    branches: \[main\]/m,
     "Publish must trigger on main only");
   assert.doesNotMatch(source, /^  pull_request:/m,

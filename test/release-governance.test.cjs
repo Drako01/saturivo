@@ -41,6 +41,8 @@ test("solo owner can release from protected main without a second deployment rev
 
 test("workflow retains exact PR evidence and all required OIDC environments", () => {
   assert.equal(inspectWorkflow(workflow), true);
+  assert.equal(inspectWorkflow(workflow.replace(/\n/g, "\r\n")), true,
+    "Windows CRLF checkout must preserve the release policy");
   for (const tampered of [
     workflow.replace("    environment: marketplace", "    environment: marketplace-unsafe"),
     workflow.replace("    environment: open-vsx", "    environment: generic"),
