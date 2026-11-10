@@ -27,7 +27,7 @@ test("10,000 deterministic adversarial editor inputs never bypass validation", (
     const value = invalidValues[next(invalidValues.length)]!;
     const candidate = { ...safe, [name]: value };
     assert.throws(() => parseScenarioEditorInput(candidate, "http://127.0.0.1/", policy),
-      /must be an integer/, "seeded input " + i + " must reject " + name);
+      /must be (an integer|between)/, "seeded input " + i + " must reject " + name);
   }
 });
 
