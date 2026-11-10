@@ -17,7 +17,7 @@
 |---|---|
 | Main branch | `Protect main`, active, matches `~DEFAULT_BRANCH` |
 | History | Block branch deletion, non-fast-forward pushes; require linear history |
-| Pull requests | 1 approval, stale reviews dismissed on new commits, CODEOWNERS approval, last-push approval, all review threads resolved |
+| Pull requests | **0 human approvals** (sole owner); PR required, review threads resolved; no CODEOWNER/last-push approval |
 | Merge | Squash only (enforced by ruleset policy; repository merge settings should also permit squash) |
 | CI required | All seven entries exported by `scripts/verify-merge-ci.cjs::REQUIRED_JOBS`, with `strict_required_status_checks_policy: true` and GitHub Actions integration ID `15368` |
 | Admin exception | Repository-admin role may bypass **only through a PR**, like the reference extensions |
@@ -59,7 +59,7 @@ Alternative: create the rulesets through [Saturivo → Settings → Rules → Ru
 
 ## Important considerations
 
-**Solo maintainer:** the code owner is `@Drako01`, but GitHub will not count the PR author's own approval. The repository-admin **PR-only bypass** offers a traceable exception; do not globally disable review rules. Test how the bypass works on a real feature PR before treating it as a reliable solo-maintainer workflow.
+**Solo maintainer:** CODEOWNERS remains `@Drako01` for ownership, but a sole PR author cannot approve their own PR. The 0.3.1 ruleset therefore requires **zero human approvals** while preserving PRs, strict seven-job CI, squash-only merges and resolved review threads. The administrative PR-only bypass remains available but should not be needed just to omit a second reviewer.
 
 **Exact status names:** do not rename `Verify (ubuntu-latest)`, `Verify (windows-latest)` or `Verify (macos-latest)` without updating the rulesets and the governance checker first.
 
@@ -80,12 +80,12 @@ Alternative: create the rulesets through [Saturivo → Settings → Rules → Ru
 
 Do not mark these gates PASS merely because a PR is green. Documentation and the live GitHub settings are distinct.
 
-## Release environments and human approval (0.3.0)
+## Release environments for solo owner (0.3.1)
 
-The `publish.yml` authorization job now invokes `scripts/verify-release-environments.cjs` **before packaging**. Each environment `marketplace`, `open-vsx`, `github-release` must contain at least one required reviewer and a custom branch policy permitting `main` only. Environments with zero rules are not protected and cause a fail-closed publish.
+The publish preflight does **not** require an independent human approver or query optional `environments/*/deployment-branch-policies` API endpoints. The 0.3.0 release attempt [#42866596867](https://github.com/Drako01/saturivo/actions/runs/42866596867) passed exact PR/CI validation but received GitHub HTTP 404 at that endpoint. Version 0.3.1 uses `verify-release-policy.cjs`, which requires the correct repository, protected `main`, identical SHA and OIDC-named publish jobs, in addition to exact successful seven-job PR evidence.
 
-The configured reviewer must make an actual deployment approval after the merge. A solo maintainer can configure a reviewer under the repository's deployment environment rules; if `prevent_self_review` is enabled, an eligible independent reviewer is required. No approval is inferred from PR merge or Bypass.
+GitHub Environments `marketplace`, `open-vsx` and `github-release` remain in the workflow. **If they have required reviewers configured at GitHub Settings, those platform settings will still block the jobs**, regardless of code. The sole owner can disable those settings under [Settings → Environments](https://github.com/Drako01/saturivo/settings/environments).
 
-Apply the three environment policies manually in [Settings → Environments](https://github.com/Drako01/saturivo/settings/environments), then verify with an authenticated `npm run rulesets:status`. This is an **administrative dependency**; committed YAML alone does not configure the live environments.
+The versioned `Protect main` ruleset now requires zero human approvals. Apply it to the live repository with an explicit administration-scoped token; committed JSON does not change GitHub Settings. The authenticated `rulesets:status` command verifies rulesets only; it no longer queries optional Environment policies.
 
 For supply-chain tracking, the 2026-11-10 audit found three moderate `minimatch` advisories through development-only `@vscode/vsce`. The distributed extension has no runtime dependencies, and `npm audit --omit=dev` was zero at the audited SHA. The informational CI runtime audit does not waive unresolved build-tool advisories; revisit when upstream fixes become available. Secret scanning, push protection and Dependabot require independent GitHub Settings verification.

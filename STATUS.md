@@ -1,18 +1,25 @@
 # Saturivo — estado verificable (2026-11-10)
 
-**Versión fuente candidata:** 0.3.0, sin Preview. **PR de implementación:** [#9](https://github.com/Drako01/saturivo/pull/9). **Estado:** NO PUBLICADO, sujeto a pruebas y controles administrativos.
+**Versión fuente propuesta:** 0.3.1 **estable, sin Preview**, nuevo PR independiente hacia `main`. **Estado:** NO PUBLICADO hasta completar CI, merge y verificación de los registries y de GitHub Release.
 
-**Base publicada:** v0.2.0 y v0.2.2, disponibles históricamente. La entrada v0.2.1 del changelog fue un cambio de código sin tag ni GitHub Release independientes.
+## Antecedente confirmado
 
-## Evidencia y criterio de aceptación
+- [PR #9](https://github.com/Drako01/saturivo/pull/9) integró upgrade 0.3.0 a `main` mediante squash `9e5d8a8`, con [CI #42865906405](https://github.com/Drako01/saturivo/actions/runs/42865906405) **7/7 PASS**; no generó `v0.3.0`.
+- [publish #42866596867](https://github.com/Drako01/saturivo/actions/runs/42866596867) **FAIL** después de autorizar SHA, merge y CI: GitHub API devolvió **HTTP 404** en `environments/marketplace/deployment-branch-policies`.
+- Última GitHub Release confirmada antes del patch: `v0.2.2`. `0.3.0` es una revisión de fuente fusionada, no una versión publicada.
 
-- Auditoría de partida: `main` @ `f7320fe1e76cbe012852fe40bc5b1f6d59dc3620`, 0.2.2, 73/100. Los 123 tests PASS + 1 SKIP y 91,56 % del núcleo pertenecen **exclusivamente** a esa revisión.
-- Upgrade 0.3.0: [CI 42857123274](https://github.com/Drako01/saturivo/actions/runs/42857123274) aprobó los 7 jobs sobre `62cbbd6` (136 unit PASS, 0 FAIL, 1 SKIP; core 91,05 %, lifecycle 100 %; VSIX audit PASS; 0 dependencias npm runtime). Las modificaciones documentales y capturas posteriores exigen CI final en el nuevo SHA.
-- Gobernanza: los entornos `marketplace`, `open-vsx`, `github-release` deben exigir revisión humana y restringir deployments a `main`. El workflow de publicación falla cerrado si estas reglas faltan; **su configuración real requiere permisos administrativos**.
-- Rulesets y seguridad del repositorio: el ruleset activo `Protect main` tiene `strict=true` verificado mediante API el 10/11/2026, pero todavía muestra **3 de los 7 checks** deseados. Secret scanning, push protection y Dependabot requieren verificación administrativa independiente.
-- Capturas 0.3.0: **4 PNG reales del renderer de producción**, 1480 × 960, con fixture sintético identificado; [captura Chromium PASS](https://github.com/Drako01/saturivo/actions/runs/42865237314) y commit `184dcf1`. README actualizado para apuntar a las imágenes versionadas y conservar las 0.2.x históricas.
-- Pruebas nativas de diálogos, entornos WSL/SSH/Containers, lectores de pantalla, zoom 200 % y pentest DNS remoto: **NO VERIFICADAS**.
+## Gate 0.3.1 para único propietario
 
-**Estado de merge:** no declarar READY TO MERGE mientras falten checks del SHA final, requisitos de gobernanza o capturas reales solicitadas.
+- **Sin segundo aprobador humano:** se exige `Drako01/saturivo`, `refs/heads/main`, SHA idéntico a la rama protegida, árbol del merge idéntico al PR original y los **siete checks de CI** verdes en el SHA exacto.
+- OIDC Trusted Publishers separados en los environments `marketplace` y `open-vsx`; no se requieren consultas a políticas de despliegue opcionales ni required reviewers como precondición del script.
+- Se conservan `v0.3.1` inmutable, VSIX auditable, SHA-256/manifiesto, SBOM/licencias y verificación de GitHub Release.
+- Ruleset versionado: PR obligatorio, `strict:true`, siete checks, squash y **cero aprobaciones**. El ajuste del ruleset vivo requiere privilegios del propietario.
+- UI y capturas de 0.3.0 se conservan; el parche 0.3.1 no modifica comportamiento visual ni la carga. [Evidencia Chromium de las cuatro PNG](https://github.com/Drako01/saturivo/actions/runs/42865237314).
 
-Ver [checklist vivo de 0.3.0](docs/RELEASE_0_3_0_CHECKLIST.md), [reglas](docs/RULESETS.md) y [modelo de amenazas](docs/THREAT_MODEL.md).
+## Validación pendiente
+
+- CI del SHA final del PR 0.3.1 y publicación posterior únicamente tras su merge a `main`.
+- Confirmar Marketplace, Open VSX y GitHub Release `v0.3.1`; no anunciar publicación antes de verificarlos.
+- WSL/SSH/Containers, diálogos nativos, accesibilidad/zoom y DNS remoto continúan **NOT RUN**; no se declara certificación Enterprise AAAA.
+
+Ver [automatización](docs/RELEASE_AUTOMATION.md), [rulesets](docs/RULESETS.md), [modelo de amenazas](docs/THREAT_MODEL.md) y [checklist 0.3.1](docs/RELEASE_0_3_1_CHECKLIST.md).

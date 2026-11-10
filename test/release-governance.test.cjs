@@ -1,9 +1,12 @@
 "use strict";
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const { assertMachineOnlyExecutableSettings } = require("../scripts/manifest-security.cjs");
-const { inspectReleaseEnvironment, REQUIRED_ENVIRONMENTS } =
-  require("../scripts/verify-release-environments.cjs");
+const {
+  inspectReleasePolicy, inspectWorkflow, REQUIRED_ENVIRONMENTS, githubBranch,
+} = require("../scripts/verify-release-policy.cjs");
 
 test("hostile workspace cannot control executable path through contribution schema", () => {
   const packageJson = require("../package.json");
@@ -17,19 +20,44 @@ test("hostile workspace cannot control executable path through contribution sche
   assert.throws(() => assertMachineOnlyExecutableSettings(hostile), /machine-scoped/);
 });
 
-test("all release environments fail closed without human approval and main-only policy", () => {
+const workflow = fs.readFileSync(
+  path.join(__dirname, "..", ".github", "workflows", "publish.yml"), "utf8");
+const sha = "a".repeat(40);
+const context = { repository: "Drako01/saturivo", ref: "refs/heads/main", sha, eventName: "push" };
+const protectedMain = { name: "main", protected: true, commit: { sha } };
+
+test("solo owner can release from protected main without a second deployment reviewer", () => {
   assert.deepEqual(REQUIRED_ENVIRONMENTS, ["marketplace", "open-vsx", "github-release"]);
-  for (const name of REQUIRED_ENVIRONMENTS) {
-    const env = {
-      name, protection_rules: [{ type: "required_reviewers", reviewers: [{ login: "Drako01" }] }],
-      deployment_branch_policy: { custom_branch_policies: true, protected_branches: false },
-      prevent_self_review: false,
-    };
-    const main = [{ name: "main" }];
-    assert.doesNotThrow(() => inspectReleaseEnvironment(env, main));
-    assert.throws(() => inspectReleaseEnvironment({ ...env, protection_rules: [] }, main), /reviewer/);
-    assert.throws(() => inspectReleaseEnvironment(env, [{ name: "develop" }]), /main/);
-    assert.throws(() => inspectReleaseEnvironment({ ...env,
-      deployment_branch_policy: { custom_branch_policies: false } }, main), /main branch/);
-  }
+  assert.equal(inspectReleasePolicy(context, protectedMain, workflow), true);
+  assert.equal(inspectReleasePolicy({ ...context, eventName: "workflow_dispatch" }, protectedMain, workflow), true);
+  assert.doesNotMatch(workflow, /verify-release-environments\.cjs|required human review/i);
+  assert.throws(() => inspectReleasePolicy({ ...context, repository: "evil/fork" }, protectedMain, workflow), /repository/);
+  assert.throws(() => inspectReleasePolicy({ ...context, ref: "refs/heads/feature" }, protectedMain, workflow), /main/);
+  assert.throws(() => inspectReleasePolicy({ ...context, sha: "oops" }, protectedMain, workflow), /SHA/);
+  assert.throws(() => inspectReleasePolicy({ ...context, eventName: "pull_request" }, protectedMain, workflow), /event/);
+  assert.throws(() => inspectReleasePolicy(context, { ...protectedMain, protected: false }, workflow), /not protected/);
+  assert.throws(() => inspectReleasePolicy(context, { ...protectedMain, commit: { sha: "b".repeat(40) } }, workflow), /changed/);
+});
+
+test("workflow retains exact PR evidence and all required OIDC environments", () => {
+  assert.equal(inspectWorkflow(workflow), true);
+  for (const tampered of [
+    workflow.replace("    environment: marketplace", "    environment: marketplace-unsafe"),
+    workflow.replace("    environment: open-vsx", "    environment: generic"),
+    workflow.replace("    environment: github-release", "    environment: generic"),
+    workflow.replace("run: node scripts/verify-merge-ci.cjs", "run: echo skip"),
+    workflow.replace("run: node scripts/verify-release-policy.cjs", "run: echo skip"),
+    workflow.replace("    branches: [main]", "    branches: [develop]"),
+    workflow.replace("  push:", "  pull_request:"),
+  ]) assert.throws(() => inspectWorkflow(tampered));
+});
+
+test("protected-main branch query fails closed without token or on HTTP errors", async () => {
+  await assert.rejects(githubBranch(null), /token/);
+  await assert.rejects(githubBranch("synthetic", async () => ({ ok: false, status: 403 })), /403/);
+  const branch = await githubBranch("synthetic", async (_url, options) => {
+    assert.match(options.headers.Authorization, /^Bearer /);
+    return { ok: true, json: async () => protectedMain };
+  });
+  assert.equal(branch.protected, true);
 });

@@ -7,6 +7,12 @@ test("protect-main requires the exact seven CI jobs with strict status checking"
   const ruleset = JSON.parse(fs.readFileSync(".github/rulesets/protect-main.json", "utf8"));
   const gate = ruleset.rules.find(rule => rule.type === "required_status_checks").parameters;
   assert.equal(gate.strict_required_status_checks_policy, true);
+  const pr = ruleset.rules.find(rule => rule.type === 'pull_request').parameters;
+  assert.equal(pr.required_approving_review_count, 0);
+  assert.equal(pr.require_code_owner_review, false);
+  assert.equal(pr.require_last_push_approval, false);
+  assert.equal(pr.required_review_thread_resolution, true);
+  assert.deepEqual(pr.allowed_merge_methods, ['squash']);
   assert.deepEqual(gate.required_status_checks.map(job => job.context).sort(),
     [...REQUIRED_JOBS].sort());
 });
