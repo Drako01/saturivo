@@ -2,7 +2,7 @@
 
 **Reference implementation:** active rulesets verified on 2026-11-07 from [Probato PR](https://github.com/Drako01/probato-pr), [Indizivo](https://github.com/Drako01/indizivo) and [Orquestivo](https://github.com/Drako01/orquestivo).
 
-**Verified live state (2026-11-07):** Both repository rulesets are now **ACTIVE**, installed by the owner. [Protect main](https://github.com/Drako01/saturivo/rules/26766004) (ID `26766004`) and [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) (ID `26766025`) were read back from GitHub and their conditions, required reviews/checks, and bypass actors match the versioned definitions and Orquestivo. Previously the list was empty; those earlier observations are superseded. The local authenticated `npm run rulesets:status` command is still **NOT RUN** from this session.
+**Historical live state (2026-11-07):** Both original repository rulesets were active. The 0.3.0 versioned policy now requires seven jobs and strict checking; this updated policy has NOT been verified live. [Protect main](https://github.com/Drako01/saturivo/rules/26766004) (ID `26766004`) and [Protect release tags](https://github.com/Drako01/saturivo/rules/26766025) (ID `26766025`) were read back from GitHub and their conditions, required reviews/checks, and bypass actors match the versioned definitions and Orquestivo. Previously the list was empty; those earlier observations are superseded. The local authenticated `npm run rulesets:status` command is still **NOT RUN** from this session.
 
 ## Source of truth
 
@@ -19,7 +19,7 @@
 | History | Block branch deletion, non-fast-forward pushes; require linear history |
 | Pull requests | 1 approval, stale reviews dismissed on new commits, CODEOWNERS approval, last-push approval, all review threads resolved |
 | Merge | Squash only (enforced by ruleset policy; repository merge settings should also permit squash) |
-| CI required | `Verify (ubuntu-latest)`, `Verify (windows-latest)`, `Verify (macos-latest)` with GitHub Actions App integration ID `15368` |
+| CI required | All seven entries exported by `scripts/verify-merge-ci.cjs::REQUIRED_JOBS`, with `strict_required_status_checks_policy: true` and GitHub Actions integration ID `15368` |
 | Admin exception | Repository-admin role may bypass **only through a PR**, like the reference extensions |
 | Tags | `Protect release tags` active on `refs/tags/v*`; disallow update, deletion and non-fast-forward |
 | Tag exception | Repository-admin role may bypass when genuinely required; document the reason |
@@ -37,7 +37,7 @@ This command verifies the versioned definitions, expected GitHub Actions job con
 
 ## Administration (only if the rulesets are missing or drifted)
 
-**Current status: already installed; do not import duplicate rulesets.** Only use `--apply` if rulesets are missing or show verified drift. Prerequisites for changes: repository owner/admin access and a token scoped to **Drako01/saturivo** with repository **Administration: Read and write**. Never copy or paste the token into this repository, issues, PRs, screenshots or chat.
+**Current 0.3.0 status: updated definitions are versioned but application to the live repository is NOT VERIFIED. Do not import duplicate rulesets.** Only use `--apply` if rulesets are missing or show verified drift. Prerequisites for changes: repository owner/admin access and a token scoped to **Drako01/saturivo** with repository **Administration: Read and write**. Never copy or paste the token into this repository, issues, PRs, screenshots or chat.
 
 Using PowerShell 7 with authenticated GitHub CLI:
 
@@ -79,3 +79,13 @@ Alternative: create the rulesets through [Saturivo → Settings → Rules → Ru
 | Release workflow/tag bypass smoke | **NOT RUN** |
 
 Do not mark these gates PASS merely because a PR is green. Documentation and the live GitHub settings are distinct.
+
+## Release environments and human approval (0.3.0)
+
+The `publish.yml` authorization job now invokes `scripts/verify-release-environments.cjs` **before packaging**. Each environment `marketplace`, `open-vsx`, `github-release` must contain at least one required reviewer and a custom branch policy permitting `main` only. Environments with zero rules are not protected and cause a fail-closed publish.
+
+The configured reviewer must make an actual deployment approval after the merge. A solo maintainer can configure a reviewer under the repository's deployment environment rules; if `prevent_self_review` is enabled, an eligible independent reviewer is required. No approval is inferred from PR merge or Bypass.
+
+Apply the three environment policies manually in [Settings → Environments](https://github.com/Drako01/saturivo/settings/environments), then verify with an authenticated `npm run rulesets:status`. This is an **administrative dependency**; committed YAML alone does not configure the live environments.
+
+For supply-chain tracking, the 2026-11-10 audit found three moderate `minimatch` advisories through development-only `@vscode/vsce`. The distributed extension has no runtime dependencies, and `npm audit --omit=dev` was zero at the audited SHA. The informational CI runtime audit does not waive unresolved build-tool advisories; revisit when upstream fixes become available. Secret scanning, push protection and Dependabot require independent GitHub Settings verification.
