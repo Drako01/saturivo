@@ -196,11 +196,26 @@ export class HistoryStore {
     return files;
   }
 
+  /** Corrupt evidence is never counted as a valid retained measurement.
+   * It remains on disk for explicit operator cleanup or recovery.
+   */
+  private async readOwnedRun(name: string): Promise<RunResult | undefined> {
+    try {
+      const value: unknown = JSON.parse(
+        await readBoundedRegularTextFile(join(this.directory, name), MAX_REPORT_BYTES));
+      return isStoredRun(value) ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   async prune(keep: number): Promise<number> {
     this.validRetention(keep);
     const files = await this.ownedFiles();
-    let deleted = 0;
-    for (const name of files.slice(keep)) {
+    let retained = 0, deleted = 0;
+    for (const name of files) {
+      if (!await this.readOwnedRun(name)) continue;
+      if (++retained <= keep) continue;
       await unlink(join(this.directory, name));
       deleted++;
     }
@@ -215,15 +230,11 @@ export class HistoryStore {
 
   async list(limit = 30): Promise<RunResult[]> {
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("Invalid history limit");
-    const filenames = (await this.ownedFiles()).slice(0, 100);
     const runs: RunResult[] = [];
-    for (const name of filenames) {
-      try {
-        const value: unknown = JSON.parse(
-          await readBoundedRegularTextFile(join(this.directory, name), MAX_REPORT_BYTES));
-        if (isStoredRun(value)) runs.push(value);
-        if (runs.length >= limit) break;
-      } catch { /* Corrupt, interrupted or hostile files do not crash the extension. */ }
+    for (const name of await this.ownedFiles()) {
+      const run = await this.readOwnedRun(name);
+      if (run) runs.push(run);
+      if (runs.length >= limit) break;
     }
     return runs;
   }

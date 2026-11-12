@@ -30,12 +30,29 @@ test("durable history, newest first, corrupt records ignored, explicit deletion"
     assert.equal(values.length, 2);
     assert.equal(values[0]?.schemaVersion, 2);
     assert.equal(values[1]?.id, sample.id);
-    assert.equal(await store.prune(1), 2); // corrupt JSON also pruned
-    assert.equal((await store.list()).length, 0); // newest malformed file was retained
-    assert.equal(await store.clear(), 1);
+    assert.equal(await store.prune(1), 1); // retain newest *valid* evidence
+    assert.deepEqual((await store.list()).map(run => run.id),
+      ["22222222-2222-4222-8222-222222222222"]);
+    assert.equal(await store.clear(), 2); // explicit cleanup also removes corrupt file
     assert.deepEqual(await store.list(), []);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+test("corrupt newest evidence cannot hide an older valid run beyond the first 100 filenames", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "saturivo-corrupt-index-"));
+  try {
+    const store = new HistoryStore(dir);
+    await store.save(sample);
+    for (let i = 0; i < 101; i++) {
+      const name = "202611081200" + String(i).padStart(4, "0") +
+        "-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.json";
+      await writeFile(join(dir, "runs", name), "{not-json");
+    }
+    assert.deepEqual((await store.list(1)).map(run => run.id), [sample.id]);
+    assert.equal(await store.prune(1), 0, "Corrupt entries are not counted toward retention");
+    assert.deepEqual((await store.list()).map(run => run.id), [sample.id]);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test("legacy reports read; malicious, oversized and invalid metrics rejected", async () => {
   const dir = await mkdtemp(join(tmpdir(), "saturivo-untrusted-history-"));
   try {

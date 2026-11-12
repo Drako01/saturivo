@@ -41,11 +41,27 @@ export function readK6Summary(raw: unknown, targetArrivalRate?: number,
         totalCount < count) {
       throw new Error("k6 summary is missing the full-run request budget count");
     }
-    const buckets = ["1xx", "2xx", "3xx", "4xx", "5xx", "unknown"] as const;
-    const observed = buckets.reduce((sum, key) => sum + finite(metric(metrics, prefix + key).count), 0);
-    if (!Object.keys(metrics).some(key => key.startsWith(prefix)) || observed !== count) {
-      throw new Error("k6 measured HTTP status evidence is incomplete");
+  }
+  // k6 omits counters with zero observations; present counters must still
+  // reconcile exactly with HTTP responses, in both phased and legacy runs.
+  const buckets = ["1xx", "2xx", "3xx", "4xx", "5xx", "unknown"] as const;
+  const hasStatuses = buckets.some(key => Object.hasOwn(metrics, prefix + key));
+  if (phased && !hasStatuses) throw new Error("k6 measured HTTP status evidence is incomplete");
+  if (hasStatuses) {
+    let observed = 0;
+    for (const key of buckets) {
+      if (!Object.hasOwn(metrics, prefix + key)) continue;
+      const value = metric(metrics, prefix + key).count;
+      if (!Number.isInteger(value) || (value as number) < 0) {
+        throw new Error("k6 HTTP status evidence has an invalid counter");
+      }
+      observed += value as number;
     }
+    if (observed !== count) throw new Error("k6 HTTP status evidence is incomplete");
+  }
+  if (Object.hasOwn(metrics, "dropped_iterations") &&
+      (!Number.isInteger(dropped.count) || (dropped.count as number) < 0)) {
+    throw new Error("k6 dropped-iteration evidence is invalid");
   }
   return {
     requests: count,
@@ -61,7 +77,7 @@ export function readK6Summary(raw: unknown, targetArrivalRate?: number,
     ...(targetArrivalRate !== undefined ? {
       targetArrivalRate, achievedArrivalRate: phased ? count / measurementSeconds! : finite(requests.rate),
     } : {}),
-    ...(Object.keys(metrics).some(key => key.startsWith(prefix)) ? {
+    ...(hasStatuses ? {
       statusDistribution: {
         "1xx": finite(metric(metrics, prefix + "1xx").count),
         "2xx": finite(metric(metrics, prefix + "2xx").count),
