@@ -9,7 +9,7 @@ export async function run(): Promise<void> {
   // Control Center must be reachable as an editor tab, not just a narrow sidebar.
   const commands = await vscode.commands.getCommands(true);
   for (const command of [
-    "saturivo.openHome", "saturivo.runSmoke", "saturivo.cancel",
+    "saturivo.openHome", "saturivo.runSmoke", "saturivo.cancel", "saturivo.checkSetup",
     "saturivo.goRace", "saturivo.navigateRace", "saturivo.captureGoProfile", "saturivo.configureSlo",
     "saturivo.capacityPilot", "saturivo.correlateGo", "saturivo.runRamp", "saturivo.importJson", "saturivo.clearProfiles",
     "saturivo.websocketProbe",

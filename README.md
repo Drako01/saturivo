@@ -22,7 +22,21 @@
 
 ---
 
-> **Saturivo 0.3.1 — stable release candidate, no Preview.** The 0.3.0 upgrade was merged but its automated publication was blocked. Version 0.3.1 fixes publication governance for the project's sole maintainer while retaining the seven-job PR evidence gate, protected `main`, immutable release tag, VSIX checksum and OIDC registry identities. The latest GitHub Release remains v0.2.2 until this candidate is merged and the publish workflow succeeds. No external Enterprise AAAA certification is claimed.
+> **Published stable version: [0.3.1](https://github.com/Drako01/saturivo/releases/tag/v0.3.1).** This source branch proposes **Saturivo 0.4.0** with correctness, privacy and first-run diagnostics improvements. The 0.4.0 candidate is **not published** until exact-SHA PR CI, squash merge and the protected release pipeline complete. The icon, branding, Control Center layout and visual styling are preserved. No third-party certification is claimed.
+
+## Saturivo 0.4.0 — reliability and onboarding (candidate)
+
+- **History integrity:** malformed or truncated reports no longer consume valid retention slots or hide valid evidence behind a fixed scan cutoff. Corrupt files remain untouched until explicitly deleted.
+- **Strict HTTP evidence:** when status-class counters exist, they must reconcile with the observed request count; invalid or contradictory counters and dropped-iteration values fail closed.
+- **Private WebSocket diagnostics:** URL query parameters are redacted from Markdown reports and the extension's output channel, without changing the actual authorized target.
+- **New opt-in Check setup action:** detects local k6 and optional Go versions, checks URL policy and provides an ES/EN setup report **without contacting the target or launching a load test**.
+- **Compatibility:** historical JSON schemas, scenario semantics and all prior user-facing actions are preserved. A local setup check does not verify the remote environment or service health.
+
+### First-run diagnostic (no traffic)
+
+Open **Control Center → Check setup** (Spanish: **Verificar instalación**), or use the command **Saturivo: Check Local Setup (No Load)**. The report shows local tool availability, the configured target's safety-policy status, official installation guidance and any missing prerequisite. After setup, run Smoke **manually** against an authorized disposable service. Go is optional; k6 is needed for load tests.
+
+Read the [technical audit](docs/AUDITORIA_TECNICA_SATURIVO_2026-11-11.md), [upgrade roadmap](docs/UPGRADE_ROADMAP_SATURIVO_2026-11-11.md) and [0.4.0 verification checklist](docs/RELEASE_0_4_0_CHECKLIST.md).
 
 ## Saturivo 0.3.0 — engineering upgrade
 
@@ -36,7 +50,7 @@ The 0.3.0 candidate strengthens execution correctness and release governance wit
 - **Release safety:** executable paths cannot be overridden by workspace settings; automated publication validates protected `main` and the exact seven green PR CI jobs without depending on a second human deployment reviewer. All seven CI job names are versioned in the branch ruleset.
 - **Verification:** deterministic property tests, explicit lifecycle regression tests and measured coverage thresholds for the core and lifecycle.
 
-**0.3.1 is the proposed stable publication version (no Preview metadata).** It preserves the 0.3.0 product features and screenshots; no UI behavior was changed in this patch. Publication is authorized only from protected `main` after successful PR CI and a version-bumping squash merge.
+**0.3.1 is already published.** The 0.4.0 candidate adds one setup action using existing Control Center button styles; current 0.3.0 screenshots remain historical, explicitly synthetic UI evidence. There are no logo, color, typography or layout redesigns.
 
 ## Control Center — Saturivo 0.3.0
 
@@ -111,12 +125,12 @@ Instead of replacing mature load engines, Saturivo orchestrates **Grafana k6**, 
 - **Node.js 22+** and npm for building this extension from source.
 - Git access to the public Saturivo source repository.
 
-### Build and install the 0.3.0 candidate from source
+### Build and install the 0.4.0 candidate from source
 
 ~~~bash
 git clone https://github.com/Drako01/saturivo.git
 cd saturivo
-git switch feat/saturivo-enterprise-aaaa-0.3.0
+git switch feat/saturivo-0.4.0-reliability-onboarding
 npm ci --ignore-scripts
 npm run verify
 npm run package:vsix
@@ -239,7 +253,7 @@ Saturivo's quality gates combine strict TypeScript, Node unit/property tests, re
 
 **Verified historical baseline:** [CI #42431627015](https://github.com/Drako01/saturivo/actions/runs/42431627015) and [release CI #42431868619](https://github.com/Drako01/saturivo/actions/runs/42431868619) validate the previously published 0.2.2 tree, not the present 0.3.0 candidate.
 
-**Current candidate:** [PR #9](https://github.com/Drako01/saturivo/pull/9) — its [Actions runs](https://github.com/Drako01/saturivo/actions?query=branch%3Afeat%2Fsaturivo-enterprise-aaaa-0.3.0) are the authoritative source of execution results. Never infer a green check from a previous SHA. Manual native dialogs, remote hosts, assistive-technology testing and screenshots remain explicitly scoped in the [0.3.0 evidence checklist](docs/RELEASE_0_3_0_CHECKLIST.md).
+**Current source candidate:** 0.4.0 on `feat/saturivo-0.4.0-reliability-onboarding` — consult the new PR and its exact-head CI before merging. The [0.4.0 evidence checklist](docs/RELEASE_0_4_0_CHECKLIST.md) separates unexecuted manual, remote-host, assistive-technology and distribution checks. Prior green CI is not evidence for this candidate.
 
 Development commands:
 

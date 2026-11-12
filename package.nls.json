@@ -1,6 +1,7 @@
 {
   "command.home": "Open Control Center",
   "command.target": "Configure Target",
+  "command.checkSetup": "Check Local Setup (No Load)",
   "command.smoke": "Run Smoke Test",
   "command.stress": "Run Bounded Stress Test",
   "command.arrival": "Run Arrival-Rate Test",

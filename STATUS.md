@@ -1,25 +1,28 @@
-# Saturivo — estado verificable (2026-11-10)
+# Saturivo — estado verificable (2026-11-11)
 
-**Versión fuente propuesta:** 0.3.1 **estable, sin Preview**, nuevo PR independiente hacia `main`. **Estado:** NO PUBLICADO hasta completar CI, merge y verificación de los registries y de GitHub Release.
+**Versión publicada verificada:** 0.3.1 estable, sin Preview — [GitHub Release v0.3.1](https://github.com/Drako01/saturivo/releases/tag/v0.3.1), publicada el 10/11/2026. [Workflow de publicación](https://github.com/Drako01/saturivo/actions/runs/42871351253): success.
 
-## Antecedente confirmado
+**Versión fuente propuesta:** 0.4.0, rama `feat/saturivo-0.4.0-reliability-onboarding`, basada en `main` `c34b22ffabcfed24d681b5a46457a49c07a2ad10`. **Estado: NO PUBLICADO** hasta que CI de PR, merge y release verifiquen la revisión exacta.
 
-- [PR #9](https://github.com/Drako01/saturivo/pull/9) integró upgrade 0.3.0 a `main` mediante squash `9e5d8a8`, con [CI #42865906405](https://github.com/Drako01/saturivo/actions/runs/42865906405) **7/7 PASS**; no generó `v0.3.0`.
-- [publish #42866596867](https://github.com/Drako01/saturivo/actions/runs/42866596867) **FAIL** después de autorizar SHA, merge y CI: GitHub API devolvió **HTTP 404** en `environments/marketplace/deployment-branch-policies`.
-- Última GitHub Release confirmada antes del patch: `v0.2.2`. `0.3.0` es una revisión de fuente fusionada, no una versión publicada.
+## Alcance 0.4.0
 
-## Gate 0.3.1 para único propietario
+- Evidencia HTTP estricta: reconciliación de contadores por status y rechazo de métricas inválidas.
+- Historial confiable: archivos corruptos no desplazan ni podan informes válidos.
+- Privacidad WebSocket: query strings ocultos en informes y output.
+- Verificación voluntaria de instalación: versiones locales de k6 y Go, configuración de destino y guía ES/EN; no genera tráfico de carga.
+- UI y branding: se preservan logo, Activity Bar, colores, tipografía, estructura, capturas previas y estilo de controles.
 
-- **Sin segundo aprobador humano:** se exige `Drako01/saturivo`, `refs/heads/main`, SHA idéntico a la rama protegida, árbol del merge idéntico al PR original y los **siete checks de CI** verdes en el SHA exacto.
-- OIDC Trusted Publishers separados en los environments `marketplace` y `open-vsx`; no se requieren consultas a políticas de despliegue opcionales ni required reviewers como precondición del script.
-- Se conservan `v0.3.1` inmutable, VSIX auditable, SHA-256/manifiesto, SBOM/licencias y verificación de GitHub Release.
-- Ruleset versionado: PR obligatorio, `strict:true`, siete checks, squash y **cero aprobaciones**. El ajuste del ruleset vivo requiere privilegios del propietario.
-- UI y capturas de 0.3.0 se conservan; el parche 0.3.1 no modifica comportamiento visual ni la carga. [Evidencia Chromium de las cuatro PNG](https://github.com/Drako01/saturivo/actions/runs/42865237314).
+## Seguridad y CI/CD
 
-## Validación pendiente
+- Se conserva el gate de siete jobs de CI en PR y publicación solo desde `main` protegido, con evidencia del mismo árbol y SHA.
+- Se mantiene la publicación OIDC separada a Marketplace/Open VSX, VSIX checksum, manifiesto, SBOM y tags inmutables.
+- Las vulnerabilidades solo de desarrollo se clasifican según alcanzabilidad; no se bloquean como runtime sin evidencia.
+- Ningún PASS se afirma sobre el SHA nuevo antes del resultado de GitHub Actions.
 
-- CI del SHA final del PR 0.3.1 y publicación posterior únicamente tras su merge a `main`.
-- Confirmar Marketplace, Open VSX y GitHub Release `v0.3.1`; no anunciar publicación antes de verificarlos.
-- WSL/SSH/Containers, diálogos nativos, accesibilidad/zoom y DNS remoto continúan **NOT RUN**; no se declara certificación Enterprise AAAA.
+## Pendientes explícitos
 
-Ver [automatización](docs/RELEASE_AUTOMATION.md), [rulesets](docs/RULESETS.md), [modelo de amenazas](docs/THREAT_MODEL.md) y [checklist 0.3.1](docs/RELEASE_0_3_1_CHECKLIST.md).
+- Ejecutar/verificar CI exact-head para la nueva rama (siete jobs) y pruebas reales de integración incluidas.
+- QA manual de accesibilidad con lector de pantalla, instalación/upgrade en entornos remotos WSL/SSH/Containers y dispositivos de asistencia.
+- Verificar Marketplace, Open VSX y GitHub Release si se decide fusionar la propuesta (fuera del alcance del PR).
+
+Documentación: [auditoría](docs/AUDITORIA_TECNICA_SATURIVO_2026-11-11.md), [roadmap](docs/UPGRADE_ROADMAP_SATURIVO_2026-11-11.md), [release checklist](docs/RELEASE_0_4_0_CHECKLIST.md).

@@ -37,6 +37,10 @@ test("WebSocket evidence uses honest session metrics, not HTTP latency", () => {
   assert.equal(result.successfulHandshakesPercent, 100);
   assert.equal(result.p95SessionMs, 15.5);
   assert.match(webSocketReport(result), /not HTTP request latency/);
+  const sensitive = parseWebSocketSummary(summary, "ws://127.0.0.1/socket?token=PRIVATE-API-KEY&user=alice");
+  const rendered = webSocketReport(sensitive);
+  assert.match(rendered, /\[query redacted\]/);
+  assert.doesNotMatch(rendered, /PRIVATE-API-KEY|alice/);
   assert.throws(() => parseWebSocketSummary({metrics:{}}, "ws://127.0.0.1/socket"), /No WebSocket/);
 });
 

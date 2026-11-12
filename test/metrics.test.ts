@@ -70,6 +70,25 @@ test("status class distribution and target vs achieved arrivals survive k6 summa
   assert.equal(result.statusDistribution?.["4xx"], 0);
 });
 
+test("partial, negative or non-integer HTTP status counters cannot masquerade as valid evidence", () => {
+  const base = {
+    http_reqs: { values: { count: 100, rate: 10 } },
+    http_req_failed: { values: { rate: 0 } },
+    http_req_duration: { values: { avg: 10, med: 9, "p(95)": 20, "p(99)": 30 } },
+  };
+  for (const broken of [
+    { ...base, saturivo_status_2xx: { values: { count: 99 } } },
+    { ...base, saturivo_status_2xx: { values: { count: -1 } } },
+    { ...base, saturivo_status_2xx: { values: { count: 99.5 } } },
+    { ...base, dropped_iterations: { values: { count: -1 } } },
+    { ...base, dropped_iterations: { values: { count: "0" } } },
+  ]) assert.throws(() => readK6Summary({ metrics: broken }), /evidence/);
+  const valid = readK6Summary({ metrics: {
+    ...base, saturivo_status_2xx: { values: { count: 100 } },
+  } });
+  assert.equal(valid.statusDistribution?.["2xx"], 100);
+});
+
 test("generated k6 script instruments HTTP response statuses without unbounded output", () => {
   const scenario: Scenario = {
     id: "status", name: "Response distribution", target: "http://127.0.0.1/",

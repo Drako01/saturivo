@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.0] — 2026-11-11 (candidate; NOT PUBLISHED)
+
+- Added a bilingual, opt-in **Check setup** command and Control Center action, using the existing visual components. Version-only local tool checks and target-policy validation never send load traffic.
+- Fixed history retention when corrupt files appear among valid records: prune only counted valid reports, scan through malformed entries, and preserve malformed evidence for explicit cleanup.
+- Rejected partial or invalid HTTP status distributions and malformed dropped-iteration evidence instead of reporting incomplete metrics as valid.
+- Redacted WebSocket query parameters from Markdown evidence and extension output logs; workload execution continues using the original approved local URL.
+- Added regression tests for these failure modes and documentation/audit evidence; kept existing logo, palette, dashboard layout, historical schema and release governance intact.
+- Updated source/lockfile version to 0.4.0. Publishing is gated by exact-head PR CI and protected main release. Do not label 0.4.0 published based on this commit.
+
+
 ## [0.3.1] — 2026-11-10
 
 **Stable release candidate (no Preview); awaiting exact PR CI and squash merge.** The 0.3.0 source upgrade was merged in PR #9 but never published: its release-environment verifier required human approval and queried the unavailable deployment-branch-policies endpoint (HTTP 404).

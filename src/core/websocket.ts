@@ -1,4 +1,5 @@
 import { saturivoVersion } from "./version";
+import { redactTargetForDisplay } from "./display-privacy";
 import { CancelledError } from "./cancelled-error";
 import { randomUUID } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -125,7 +126,7 @@ export function webSocketReport(data: WebSocketObservation): string {
   return [
     "# Saturivo — WebSocket loopback probe", "",
     "Protocol: WebSocket (ws://, loopback only)",
-    "Target: " + data.target,
+    "Target: " + redactTargetForDisplay(data.target),
     "Observed sessions: " + data.sessions,
     "Observed session rate: " + data.sessionsPerSecond.toFixed(2) + "/s",
     "Successful handshakes: " + data.successfulHandshakesPercent + "%",

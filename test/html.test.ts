@@ -17,6 +17,7 @@ test("HTML escapes workspace-controlled values and has CSP", () => {
   assert(!markup.includes("<script>alert(1)"));
   assert.match(markup, /Content-Security-Policy/);
   assert.match(markup, /data-action="runSmoke"/);
+  assert.match(markup, /data-action="checkSetup"/);
   assert.match(markup, /data-action="capacityPilot"/);
 });
 

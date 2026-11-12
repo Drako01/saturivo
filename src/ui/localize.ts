@@ -2,6 +2,15 @@ export type Locale = "es" | "en";
 type Dictionary = Record<string, string>;
 const english: Dictionary = {
   title: "Saturivo Control Center", subtitle: "Evidence-based concurrency diagnostics",
+  preflightAction: "Check setup", preflightTitle: "Local setup diagnostics",
+  preflightRunning: "Checking local tools (no traffic)",
+  preflightAvailable: "Available", preflightUnavailable: "Unavailable",
+  preflightGoOptional: "optional for Go diagnostics", preflightTarget: "Configured target",
+  preflightNoTraffic: "No test traffic was sent. Only local versions and URL policy were checked; this does not confirm the target service is running.",
+  preflightInstallHelp: "If k6 is missing, install it from the official guide. Restart VS Code if PATH changed:",
+  preflightReady: "Setup ready for an explicitly started local test",
+  preflightNeedsAttention: "Review the setup diagnostic report",
+  preflightCancelled: "Setup check cancelled",
   taskAlreadyRunning: "Another task is already running.",
   remoteLoadPrefix: "Saturivo will send bounded load to",
   remoteLoadOwnership: "Confirm that you own or are authorized to test this service.",
@@ -230,6 +239,15 @@ const english: Dictionary = {
 };
 const spanish: Dictionary = {
   title: "Centro de Control Saturivo", subtitle: "Diagnóstico de concurrencia basado en evidencia",
+  preflightAction: "Verificar instalación", preflightTitle: "Diagnóstico de instalación local",
+  preflightRunning: "Verificando herramientas locales (sin tráfico)",
+  preflightAvailable: "Disponible", preflightUnavailable: "No disponible",
+  preflightGoOptional: "opcional para diagnóstico Go", preflightTarget: "Destino configurado",
+  preflightNoTraffic: "No se envió tráfico de prueba. Solo se comprobaron versiones locales y política de URL; esto no confirma que el servicio esté ejecutándose.",
+  preflightInstallHelp: "Si falta k6, instalalo con la guía oficial. Reiniciá VS Code si cambió PATH:",
+  preflightReady: "Instalación lista para una prueba local iniciada explícitamente",
+  preflightNeedsAttention: "Revisá el informe de diagnóstico de instalación",
+  preflightCancelled: "Verificación de instalación cancelada",
   taskAlreadyRunning: "Hay otra tarea en ejecución.",
   remoteLoadPrefix: "Saturivo enviará carga limitada a",
   remoteLoadOwnership: "Confirmá que sos propietario o tenés autorización para probar este servicio.",

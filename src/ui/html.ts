@@ -281,6 +281,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</span><h2>' + t('heroTitle') + '</h2><p>' + t('heroDescription') +
     '</p><div class="action-row">' + button('runSmoke', 'quickStart', 'primary', busy) +
     button('configureTarget', 'configure', 'secondary', busy) +
+    button('checkSetup', 'preflightAction', 'secondary', busy) +
     '</div></div><div class="endpoint"><span class="eyebrow">' + t('target') +
     '</span><code>' + escapeHtml(redactTargetForDisplay(state.target)) + '</code><span class="endpoint-hint">' +
     t(state.allowRemoteTargets ? 'remoteAllowed' : 'loopbackDefault') +
@@ -330,6 +331,7 @@ export function dashboard(state: DashboardState, locale: string): string {
     '</strong></div><div class="action-row spaced">' +
     button('configureTarget', 'configure', 'secondary', busy) +
     button('configureSlo', 'configureSlo', 'secondary', busy) +
+    button('checkSetup', 'preflightAction', 'secondary', busy) +
     '</div></article><article class="panel pilot"><span class="eyebrow green">' +
     t('experimental') + '</span><h3>' + t('capacityPilot') +
     '</h3><p>' + t('capacityDescription') + '</p>' +
