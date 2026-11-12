@@ -1,5 +1,11 @@
 # Changelog
 
+
+## [0.4.1] — 2026-11-11
+
+- Fixed the `release-tag` publish job failing with `gh: Not Found (HTTP 404)` right after creating the tag: the git refs API is eventually consistent, so the verification read now retries with backoff before failing.
+- The tag existence check now treats only HTTP 404 as "absent"; auth, rate-limit or outage errors fail the job instead of falling through to tag creation.
+- 0.4.0 was tagged (`v0.4.0`) but never published to any registry; 0.4.1 is the first published build containing the 0.4.0 changes.
 ## [0.4.0] — 2026-11-11 (candidate; NOT PUBLISHED)
 
 - Added a bilingual, opt-in **Check setup** command and Control Center action, using the existing visual components. Version-only local tool checks and target-policy validation never send load traffic.

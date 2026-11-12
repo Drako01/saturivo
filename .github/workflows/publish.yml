@@ -163,15 +163,32 @@ jobs:
           [[ "$main_sha" == "$GITHUB_SHA" ]] || {
             echo "::error::main advanced during release; refuse stale publication"; exit 1;
           }
-          if existing=$(gh api "repos/$GH_REPO/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null); then
-            [[ "$existing" == "$GITHUB_SHA" ]] || {
-              echo "::error::Protected tag exists for another commit"; exit 1;
-            }
-          else
+          # Prints the commit the tag points to, or nothing when the ref does not exist.
+          # Any error other than 404 (auth, rate limit, outage) fails the job.
+          tag_sha() {
+            local out
+            if out=$(gh api "repos/$GH_REPO/git/ref/tags/$tag" --jq '.object.sha' 2>&1); then
+              printf '%s' "$out"
+            elif [[ "$out" != *"HTTP 404"* ]]; then
+              echo "::error::Reading $ref failed: $out" >&2; return 1
+            fi
+          }
+          existing=$(tag_sha)
+          if [[ -z "$existing" ]]; then
             gh api --method POST "repos/$GH_REPO/git/refs" \
               --raw-field ref="$ref" --raw-field sha="$GITHUB_SHA" >/dev/null
+          elif [[ "$existing" != "$GITHUB_SHA" ]]; then
+            echo "::error::Protected tag exists for another commit"; exit 1
           fi
-          recorded=$(gh api "repos/$GH_REPO/git/ref/tags/$tag" --jq '.object.sha')
+          # The git refs API is eventually consistent: a ref created a moment ago
+          # can still answer 404, so poll with backoff before declaring failure.
+          recorded=""
+          for attempt in 1 2 3 4 5 6; do
+            recorded=$(tag_sha)
+            [[ -n "$recorded" ]] && break
+            echo "$ref not visible yet (attempt $attempt); retrying"
+            sleep $((attempt * 2))
+          done
           [[ "$recorded" == "$GITHUB_SHA" ]] || {
             echo "::error::Protected tag SHA verification failed"; exit 1;
           }

@@ -22,7 +22,7 @@
 
 ---
 
-> **Published stable version: [0.3.1](https://github.com/Drako01/saturivo/releases/tag/v0.3.1).** This source branch proposes **Saturivo 0.4.0** with correctness, privacy and first-run diagnostics improvements. The 0.4.0 candidate is **not published** until exact-SHA PR CI, squash merge and the protected release pipeline complete. The icon, branding, Control Center layout and visual styling are preserved. No third-party certification is claimed.
+> **Published stable version: [0.3.1](https://github.com/Drako01/saturivo/releases/tag/v0.3.1).** Source version **Saturivo 0.4.1** ships the 0.4.0 correctness, privacy and first-run diagnostics improvements plus a release-pipeline fix; 0.4.0 was tagged but never published. It is **not published** until exact-SHA PR CI, squash merge and the protected release pipeline complete. The icon, branding, Control Center layout and visual styling are preserved. No third-party certification is claimed.
 
 ## Saturivo 0.4.0 — reliability and onboarding (candidate)
 

@@ -2,7 +2,7 @@
 
 **Versión publicada verificada:** 0.3.1 estable, sin Preview — [GitHub Release v0.3.1](https://github.com/Drako01/saturivo/releases/tag/v0.3.1), publicada el 10/11/2026. [Workflow de publicación](https://github.com/Drako01/saturivo/actions/runs/42871351253): success.
 
-**Versión fuente propuesta:** 0.4.0, rama `feat/saturivo-0.4.0-reliability-onboarding`, basada en `main` `c34b22ffabcfed24d681b5a46457a49c07a2ad10`. **Estado: NO PUBLICADO** hasta que CI de PR, merge y release verifiquen la revisión exacta.
+**Versión fuente propuesta:** 0.4.1 (incluye el alcance de 0.4.0, que quedó etiquetada pero nunca publicada, más el fix del job `release-tag`). **Estado: NO PUBLICADO** hasta que CI de PR, merge y release verifiquen la revisión exacta.
 
 ## Alcance 0.4.0
 
