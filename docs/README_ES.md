@@ -9,9 +9,15 @@
 
 [English README](../README.md) · [Arquitectura](../ARCHITECTURE.md) · [Estado real](../STATUS.md) · [Plan Enterprise AAAA](ENTERPRISE_AAAA_MASTER_PLAN.md)
 
-> **Código fuente público · Candidato 0.2.0 sin etiqueta Preview (PR #5, sin publicar).** Quitar Preview del manifiesto no implica autorización de merge/publicación ni certificación Enterprise AAAA.
+> **Versión estable publicada: 0.3.1.** La rama de upgrade propone **0.4.0 (NO PUBLICADA)**. Conserva el logo, la identidad visual y la disposición del Centro de Control. La verificación de instalación y las mejoras de evidencia requieren pasar CI, merge y publicación antes de distribuirse.
 
-## Centro de Control — 0.2.0
+## Verificar instalación sin ejecutar pruebas (candidato 0.4.0)
+
+Desde el Centro de Control, elegí **Verificar instalación** o ejecutá el comando **Saturivo: Verificar instalación local (sin carga)**. Se comprueban la disponibilidad y versión de k6, la presencia opcional de Go y la política del endpoint. Se abre un reporte en español; no se inicia tráfico ni se comprueba que el servidor esté vivo. Si falta k6, instalalo según la guía oficial y reiniciá VS Code cuando cambies PATH. Luego ejecutá Smoke manualmente sobre un servicio autorizado y descartable.
+
+Las métricas de HTTP incompletas dejan de aceptarse como evidencia válida; el historial conserva las ejecuciones sanas aunque existan archivos corruptos. Los informes y logs de WebSocket ocultan parámetros de consulta. No se altera el logo ni el diseño.
+
+## Centro de Control — 0.3.0
 
 Saturivo ahora abre el Centro de Control en una **pestaña del editor**, con espacio para métricas, escenarios, historial y diagnóstico. Las capturas provienen del **renderizador real de la interfaz** con datos sintéticos y deterministas: **no representan mediciones reales**.
 
