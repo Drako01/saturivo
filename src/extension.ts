@@ -24,6 +24,8 @@ import { dashboard, type DashboardState } from "./ui/html";
 import { translate } from "./ui/localize";
 import { RunLifecycle, isCancellation } from "./run-lifecycle";
 import { confirmWhileActive } from "./consent-gate";
+import { checkLocalToolchain } from "./core/preflight";
+import { escapeMarkdownInline } from "./core/markdown-safety";
 
 type Preset = "smoke" | "stress" | "arrival" | "ramp";
 
@@ -87,7 +89,8 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
     if (!raw || typeof raw !== "object") return;
     const message = raw as { action?: unknown; payload?: unknown };
     const commands: Readonly<Record<string, string>> = {
-      configureTarget: "saturivo.configureTarget", runSmoke: "saturivo.runSmoke",
+      configureTarget: "saturivo.configureTarget", checkSetup: "saturivo.checkSetup",
+      runSmoke: "saturivo.runSmoke",
       runStress: "saturivo.runStress", runArrival: "saturivo.runArrival",
       runRamp: "saturivo.runRamp", capacityPilot: "saturivo.capacityPilot",
       compare: "saturivo.compare", export: "saturivo.export",
@@ -167,6 +170,51 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
       this.latest = this.history[0];
       this.refresh();
     } catch (error) { this.output.appendLine("History read failed: " + String(error)); }
+  }
+
+  /** Onboarding diagnosis: no load generation, no automatic network calls. */
+  async checkSetup(): Promise<void> {
+    await this.lifecycle.withBusy(async signal => {
+      if (!vscode.workspace.isTrusted) throw new Error("A trusted workspace is required.");
+      this.message = this.t("preflightRunning");
+      this.refresh();
+      try {
+        const tools = await checkLocalToolchain(
+          this.config().get<string>("k6Path", "k6"), this.storageDir, signal);
+        if (signal.aborted) return;
+        let validTarget = true;
+        try { assertAllowedTarget(this.target(), {
+          allowRemoteTargets: this.allowRemote(), maxVirtualUsers: this.maxVus(),
+        }); } catch { validTarget = false; }
+        const label = (status: { available: boolean; version?: string }): string =>
+          status.available
+            ? this.t("preflightAvailable") + (status.version
+              ? " — " + escapeMarkdownInline(status.version) : "")
+            : this.t("preflightUnavailable");
+        const report = [
+          "# Saturivo — " + this.t("preflightTitle"), "",
+          "- **k6:** " + label(tools.k6),
+          "- **Go:** " + label(tools.go) + " (" + this.t("preflightGoOptional") + ")",
+          "- **" + this.t("preflightTarget") + ":** " +
+            (validTarget ? this.t("preflightAvailable") : this.t("preflightUnavailable")),
+          "- **URL:** " + escapeMarkdownInline(redactTargetForDisplay(this.target())),
+          "", this.t("preflightNoTraffic"), "",
+          this.t("preflightInstallHelp"),
+          "https://grafana.com/docs/k6/latest/set-up/install-k6/", "",
+        ].join("\n");
+        const document = await vscode.workspace.openTextDocument({
+          content: report, language: "markdown",
+        });
+        await vscode.window.showTextDocument(document, { preview: false });
+        this.message = tools.k6.available && validTarget
+          ? this.t("preflightReady") : this.t("preflightNeedsAttention");
+      } catch (error) {
+        this.message = isCancellation(error, signal) ? this.t("preflightCancelled") :
+          (error instanceof Error ? error.message : String(error));
+        if (!isCancellation(error, signal))
+          void vscode.window.showErrorMessage("Saturivo: " + this.message);
+      }
+    }, () => this.refresh());
   }
 
   async configureTarget(): Promise<void> {
@@ -300,7 +348,9 @@ class Saturivo implements vscode.WebviewViewProvider, vscode.Disposable {
         entered, this.config().get<string>("k6Path", "k6"),
         this.storageDir, signal
       );
-      this.output.appendLine("WebSocket probe: " + JSON.stringify(evidence));
+      this.output.appendLine("WebSocket probe: " + JSON.stringify({
+        ...evidence, target: redactTargetForDisplay(evidence.target),
+      }));
       const document = await vscode.workspace.openTextDocument({
         content: webSocketReport(evidence), language: "markdown",
       });
@@ -810,6 +860,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const actions: Record<string, () => Promise<void> | void> = {
     openHome: () => app.openHome(),
     configureTarget: () => app.configureTarget(),
+    checkSetup: () => app.checkSetup(),
     configureSlo: () => app.configureSlo(),
     runSmoke: () => app.runPreset("smoke"),
     runStress: () => app.runPreset("stress"),

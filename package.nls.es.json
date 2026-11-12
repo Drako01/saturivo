@@ -1,6 +1,7 @@
 {
   "command.home": "Abrir centro de control",
   "command.target": "Configurar destino",
+  "command.checkSetup": "Verificar instalación local (sin carga)",
   "command.smoke": "Ejecutar prueba rápida",
   "command.stress": "Ejecutar prueba de estrés limitada",
   "command.arrival": "Ejecutar prueba de tasa de llegadas",
